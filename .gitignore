@@ -1,0 +1,85 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# Dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# Testing
+/coverage
+
+# Next.js
+/.next/
+/out/
+
+# Production
+/build
+
+# Misc
+.DS_Store
+*.pem
+Thumbs.db
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Environment
+.env
+.env*.local
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Prisma (lokale Datenbank)
+prisma/dev.db
+prisma/dev.db-journal
+
+# SQLite überall ausschließen (Safety-Net, z.B. Root-Level dev.db)
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Uploads (benutzergenerierte Dateien)
+/uploads/tracks/*
+/uploads/covers/*
+!/uploads/tracks/.gitkeep
+!/uploads/covers/.gitkeep
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Claude Code — Agenten-Worktrees (interne Arbeitskopien, gehören nicht ins Repo)
+/.claude/worktrees/
+
+# Python (Skript-Caches)
+__pycache__/
+*.pyc
+
+# SQLite WAL-Artefakte (dev)
+*.db-shm
+*.db-wal
+
+# Prozess-Bundle — server-resident (interne Prozess-Beschreibungen, nicht oeffentlich).
+# Lokal vom prebuild aus dem Brain generiert, auf dem Server per Symlink bereitgestellt.
+/src/data/processes-bundle.json
+
+# Interne Setup-/Generator-Scripts (nicht oeffentlich)
+/scripts/generate-hardphonk-covers.py
+/scripts/setup-discord-permissions.mjs
+/scripts/setup-discord-server.mjs

@@ -1,0 +1,601 @@
+// KaboomKartell - Datenbank Schema
+// Prisma ORM mit SQLite (Entwicklung) / PostgreSQL (Produktion)
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// === ENUMS (als String in SQLite, echte Enums in PostgreSQL) ===
+
+// Benutzer-Rollen
+// MITGLIED  = Normales Mitglied, kann Musik hören
+// KUENSTLER = Künstler, kann eigene Tracks haben
+// HELFER    = Helfer/Moderator
+// ADMIN     = Voller Zugriff (4Flow)
+
+// Track-Status (Lifecycle)
+// DRAFT     = Hochgeladen, in Bearbeitung
+// ARCHIVED  = Soft-deleted, versteckt aber nicht gelöscht
+// Hinweis: Airplay läuft seit der Pool-Restrukturierung (16.05.2026) über
+// Track.isPublic, nicht mehr über den Status — POOL/PUBLISHED sind Legacy-Werte.
+
+// === MODELLE ===
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  email        String   @unique
+  passwordHash String
+  role         String   @default("MITGLIED")
+  displayName  String?
+  avatarUrl    String?
+  bio          String?
+  // Social Links (optional, öffentlich sichtbar)
+  socialSoundcloud  String?
+  socialInstagram   String?
+  socialTelegram    String?
+  socialWebsite     String?
+  // v2.30 (13.05.2026, ADR-005 E): Anzeige-Channel fuer Artist-Streams.
+  // Reines Display-Feld (login-Name ohne URL-Prefix, z.B. "4flow_live").
+  // Verifiziertes OAuth-Linking laeuft separat ueber LinkedAccount.
+  twitchChannel     String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // === User-Identity (v2.6, 01.05.2026) ===
+  // realName ist Pflicht beim Register fuer neue User, aber nullable fuer
+  // Backwards-Compat mit existing Users (4Flow, boomy etc. die vor v2.6
+  // registriert wurden). Validation-Schema enforct die Pflicht beim Register,
+  // Schema bleibt nullable damit Migration kein Default-Backfill braucht.
+  realName     String?
+
+  // === Account-Security (v2.4, 01.05.2026) ===
+  // A) Login-Hardening
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime?
+
+  // B) Session-Management — JWT-tokenVersion erlaubt "Logout-all-Devices":
+  //    bei Increment werden alle alten JWTs ungültig (Compare im jwt-Callback).
+  tokenVersion        Int       @default(0)
+
+  // C) 2FA / Trust-Tier (v2.4 + erweitert v2.7)
+  // T0 = Email unverified (default seit v2.7)
+  // T1 = Email verified
+  // T2 = Email verified + 2FA enabled
+  trustTier           String    @default("T0")
+  twoFactorEnabled    Boolean   @default(false)
+  // 'totp' = Authenticator-App, 'email' = OTP per Mail (v2.7)
+  twoFactorMethod     String?
+  twoFactorSecret     String?   // verschlüsselt mit ENCRYPTION_KEY (nur bei TOTP)
+  twoFactorBackupCodes String?  // JSON-Array von bcrypt-Hashes (nur bei TOTP)
+  // Email-2FA-OTP: bcrypt-Hash des aktuellen 6-stelligen Codes (v2.7)
+  twoFactorEmailCode  String?
+  twoFactorEmailExpiry DateTime?
+  emailVerified       DateTime?
+
+  // Email-Verification (v2.7)
+  emailVerificationToken   String?  @unique
+  emailVerificationExpiry  DateTime?
+
+  // Newsletter-Opt-In (v2.7) — User gibt Recht das KBK ihn anschreiben darf.
+  // Aktuell nur Consent-Tracking, kein Automatismus.
+  newsletterOptIn     Boolean   @default(false)
+  newsletterOptInAt   DateTime?
+
+  // D) Password-Reset
+  resetToken          String?   @unique
+  resetTokenExpiry    DateTime?
+
+  // Relationen
+  artistTracks      Track[]             @relation("TrackArtist")
+  uploadedTracks    Track[]             @relation("TrackUploader")
+  featuringTracks   Track[]             @relation("TrackFeaturing") // v2.8
+  wallPosts         WallPost[]
+  votes             Vote[]
+  releaseSlots      ReleaseSlot[]       @relation("UserSlots") // Zugewiesene Release-Slots
+  ownedPools        Pool[]              @relation("UserPools") // Source-Pools für externe Künstler
+  securityEvents    SecurityEvent[]     // v2.5: Audit-Log
+  badges            Badge[]             // v2.27: ADR-005 Rollen-Reform Phase 1
+  linkedAccounts    LinkedAccount[]     // v2.27: Discord/Twitch via NextAuth-OAuth
+  radioVotes        RadioVote[]         // Crowd Control: Live-Vote auf den nächsten Track (ADR-026)
+  apiTokens         ApiToken[]          // Agenten-PATs (Phase 2, ADR-035) — an tokenVersion gekoppelt
+
+  @@map("users")
+}
+
+// Badge — Permission-Achse 2 (orthogonal zur User.role).
+//
+// Frei kombinierbare Privileg-Marker, alle nur durch Flow vergeben.
+// Erste Badge-Set siehe ADR-005:
+//   mod:community / mod:tracks / mod:timetable / mod:events
+//   artist:upload / artist:featured
+//   guest:streamer / verified / bot
+//
+// ADMIN-Rolle hat implizit alle Badges (kein DB-Eintrag nötig). Permission-
+// Helper `hasBadge` in src/lib/permissions.ts macht den Bypass.
+//
+// scope ist optional fuer scope-spezifische Badges in Zukunft (z.B.
+// `mod:community` nur fuer Channel "phonk"). SQLite hat keinen native
+// Json-Type → JSON als String, on-read parsen.
+model Badge {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  grantedBy String?
+  grantedAt DateTime @default(now())
+  scope     String?
+
+  @@unique([userId, type])
+  @@index([type])
+  @@map("badges")
+}
+
+// LinkedAccount — Verknuepfte Discord/Twitch-Identities (v2.27, ADR-005).
+//
+// KBK bleibt Identity-Master (Email/Password), externe Plattformen
+// werden ueber NextAuth-OAuth verknuepft.
+//
+// accessToken/refreshToken sind AES-GCM-verschluesselt mit demselben
+// ENCRYPTION_KEY wie 2FA-Secret. Stufe-1 (Discord-Webhook) braucht
+// noch keine OAuth-Tokens — nur Stufe-2 (Discord-Bot-Sync, Twitch-Live-
+// Polling) befuellt accessToken/refreshToken.
+model LinkedAccount {
+  id              String    @id @default(cuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider        String    // "discord" | "twitch"
+  providerUserId  String
+  providerName    String
+  accessToken     String?
+  refreshToken    String?
+  expiresAt       DateTime?
+  linkedAt        DateTime  @default(now())
+
+  @@unique([provider, providerUserId])
+  @@index([userId])
+  @@map("linked_accounts")
+}
+
+// SecurityEvent — Audit-Log fuer alle Account-Security-relevanten Events (v2.5).
+//
+// Pro Event wird eine Zeile geschrieben (immutable). Dient als Forensik-Trail
+// bei Account-Kompromittierung und gibt User+Admin Einblick in verdaechtige
+// Aktivitaeten. NICHT fuer Performance-Metrics (= eigene Tabelle).
+//
+// User-Beziehung ist optional (SetNull on delete) — wir behalten Audit-Spur
+// auch wenn User geloescht wurde. userId=null bedeutet:
+// - login_failed mit unbekannter Email (Account existiert nicht)
+// - register_failed (Validation-Error vor User-Create)
+// - register_rate_limited (kein User da)
+model SecurityEvent {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  // Event-Type: snake_case, siehe doc auth-und-rollen/06-security-events.md
+  // Gueltige Werte (v2.5):
+  //   login_success, login_failed, login_rate_limited
+  //   account_locked, account_unlocked
+  //   2fa_setup_started, 2fa_enabled, 2fa_disabled, 2fa_verify_failed, 2fa_backup_used
+  //   password_reset_requested, password_reset_completed
+  //   logout_all, register_success, register_failed, register_rate_limited
+  eventType String
+
+  ip        String?  // Client-IP (aus x-forwarded-for)
+  userAgent String?  // Browser-UA
+  metadata  String?  // JSON-Payload mit Event-spezifischen Feldern (z.B. failedAttempts, lockoutUntil)
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([eventType, createdAt])
+  @@index([createdAt])
+  @@map("security_events")
+}
+
+model Track {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+
+  // Track-Typ: "LOCAL" (eigene MP3) oder "SOUNDCLOUD" (Embed)
+  trackType   String   @default("LOCAL")
+
+  // Lokale Datei-Felder (nur für LOCAL Tracks)
+  fileName    String?
+  filePath    String?
+  fileSize    Int?
+
+  // SoundCloud-Felder (nur für SOUNDCLOUD Tracks)
+  soundcloudUrl       String?  // Original-URL (z.B. https://soundcloud.com/4-flow/track)
+  soundcloudEmbedUrl  String?  // Widget-URL (https://w.soundcloud.com/player/?url=...)
+  soundcloudArtwork   String?  // Artwork-URL von oEmbed
+
+  duration    Float    @default(0) // Sekunden (kompatibel mit formatTime())
+  coverUrl    String?
+  genre       String?
+  bpm         Int?
+  description String?
+  status      String   @default("DRAFT") // Lifecycle: DRAFT | ARCHIVED (POOL/PUBLISHED Legacy)
+  // isPublic — Pool-Restrukturierung 16.05.2026: entscheidet allein über Airplay.
+  // Ein Track ist über PoolTrack Mitglied genau eines Genre-Pools. isPublic=true
+  // heißt "darf in Sendeplan-Slots laufen", false = nur Pool-Vorrat. Ersetzt das
+  // alte status==='PUBLISHED'-Gate.
+  isPublic    Boolean  @default(false)
+  playCount   Int      @default(0)
+  sortOrder   Int      @default(0)
+
+  // AI-Disclosure (Transparenz über KI-Nutzung)
+  aiDisclosure String?  // "human" | "ai_assisted" | "ai_generated"
+  aiSource     String?  // "suno" | "boomy" | "andere" (nur wenn nicht "human")
+
+  // Voting-System (aggregierte Cache-Werte)
+  auraCount     Int   @default(0)
+  susCount      Int   @default(0)
+  totalVotes    Int   @default(0)
+  susPercentage Float @default(0) // susCount / totalVotes * 100
+
+  scheduledPublishAt DateTime? // Geplanter Veröffentlichungszeitpunkt (für Release-Kalender)
+  publishedAt        DateTime?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  // Relationen
+  artist      User         @relation("TrackArtist", fields: [artistId], references: [id])
+  artistId    String
+  uploader    User         @relation("TrackUploader", fields: [uploaderId], references: [id])
+  uploaderId  String
+  // Featuring-Artist (v2.8) — optional, fuer Hybrid-Releases wie
+  // "4Flow feat. Boomy". onDelete: SetNull damit User-Delete den Track
+  // nicht mit-killt. Display-Logic in src/lib/track-display.ts.
+  featuringArtist   User?  @relation("TrackFeaturing", fields: [featuringArtistId], references: [id], onDelete: SetNull)
+  featuringArtistId String?
+  votes       Vote[]
+  releaseSlot ReleaseSlot? // Verknüpfter Release-Slot (1:1)
+  playlists   PlaylistTrack[]
+  poolTracks  PoolTrack[]
+
+  @@index([status])
+  @@index([isPublic])
+  @@index([artistId])
+  @@index([slug])
+  @@index([trackType])
+  @@index([scheduledPublishAt])
+  @@map("tracks")
+}
+
+model Vote {
+  id              String   @id @default(cuid())
+  userId          String
+  trackId         String
+  aura            Boolean  @default(false)
+  sus             Boolean  @default(false)
+  listenedSeconds Int      // Muss >= 60 sein (serverseitig validiert)
+  createdAt       DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id])
+  track Track @relation(fields: [trackId], references: [id])
+
+  @@unique([userId, trackId]) // Ein Vote pro User pro Track
+  @@index([trackId])
+  @@map("votes")
+}
+
+model WallPost {
+  id        String   @id @default(cuid())
+  content   String   // Post-Text (max 500 Zeichen, wird im API-Route validiert)
+  type      String   @default("SHOUTOUT") // SHOUTOUT, MESSAGE, WELCOME
+  createdAt DateTime @default(now())
+
+  // Relation zum Autor
+  author   User   @relation(fields: [authorId], references: [id])
+  authorId String
+
+  @@index([createdAt])
+  @@index([authorId])
+  @@map("wall_posts")
+}
+
+model ReleaseSlot {
+  id            String    @id @default(cuid())
+  scheduledDate DateTime  // Wann soll der Track veröffentlicht werden
+  status        String    @default("OPEN") // OPEN | RESERVED | UPLOADED | APPROVED | PUBLISHED | EXPIRED
+  isBoomy       Boolean   @default(false)  // KI-Slot für Boomy
+  notes         String?   // Admin-Notizen
+  assigneeId    String?   // Zugewiesenes Crew-Mitglied
+  trackId       String?   @unique          // Verknüpfter Track (1:1)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  assignee User?  @relation("UserSlots", fields: [assigneeId], references: [id])
+  track    Track? @relation(fields: [trackId], references: [id])
+
+  @@index([scheduledDate])
+  @@index([status])
+  @@map("release_slots")
+}
+
+model Playlist {
+  id              String    @id @default(cuid())
+  name            String              // "Best of the Week", "Phonk Sessions"
+  slug            String    @unique   // URL-freundlich
+  description     String?
+  coverUrl        String?             // Playlist-Cover
+  type            String              // "manual" | "weekly-rotation" | "monthly-rotation" | "genre-rotation"
+  genre           String?             // Genre-Filter (null = alle Genres)
+  bpmMin          Int?                // BPM-Untergrenze für Genre-Playlists
+  bpmMax          Int?                // BPM-Obergrenze
+  rotationDays    Int?                // Rotationsintervall in Tagen (7, 14, 30...)
+  maxTracks       Int       @default(15) // Max Tracks in der Playlist
+  isActive        Boolean   @default(true)
+  isFeatured      Boolean   @default(false) // Auf Startseite hervorheben
+  lastRotatedAt   DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  tracks          PlaylistTrack[]
+
+  @@index([type])
+  @@index([isActive])
+  @@index([isFeatured])
+  @@index([lastRotatedAt])
+  @@map("playlists")
+}
+
+model PlaylistTrack {
+  id         String   @id @default(cuid())
+  position   Int              // Reihenfolge in der Playlist
+  addedAt    DateTime @default(now())
+
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  playlistId String
+  track      Track    @relation(fields: [trackId], references: [id])
+  trackId    String
+
+  @@unique([playlistId, trackId]) // Ein Track pro Playlist nur einmal
+  @@index([playlistId])
+  @@map("playlist_tracks")
+}
+
+// === RADIO-SYSTEM ===
+
+// Pool — Ungeordnete Sammlung von Tracks, ein Pool pro Genre.
+// Anders als Playlists: keine Position, wird geshuffled, kann groß sein.
+//
+// Pool-Restrukturierung 16.05.2026: Ein Pool = ein reiner Genre-Eimer.
+// Für KBK-Content gibt es genau 4 Pools (Phonk/Hardtek/Raggatek/Brazilian
+// Phonk, ownerArtistId=null). Externe Künstler bekommen eigene Pools
+// (ownerArtistId gesetzt). Der KI-Anteil eines Tracks ist Track-Metadatum
+// (Track.aiDisclosure), keine Pool-Eigenschaft — die alte 9-Pool-Matrix
+// (Genre × KI-Anteil) und die Source-/Playback-Trennung sind entfallen.
+// Airplay steuert Track.isPublic, nicht der Pool.
+model Pool {
+  id          String   @id @default(cuid())
+  name        String             // "Phonk", "Hardtek", "Raggatek", "Brazilian Phonk"
+  slug        String   @unique   // URL-freundlich
+  description String?
+  genre       String?            // "Phonk" | "Hardtek" | "Raggatek" | "Brazilian Phonk"
+  ownerArtistId String?          // FK auf User (NULL = KBK-Default-Pool, gesetzt = externer Künstler-Pool)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  ownerArtist User?    @relation("UserPools", fields: [ownerArtistId], references: [id])
+  tracks      PoolTrack[]
+  slots       TimetableSlot[]
+  events      TimetableEvent[]
+
+  @@index([isActive])
+  @@index([genre])
+  @@index([ownerArtistId])
+  @@map("pools")
+}
+
+// PoolTrack — Join-Table Pool ↔ Track (kein Position-Feld, wird per Seed geshuffled)
+model PoolTrack {
+  id      String   @id @default(cuid())
+  addedAt DateTime @default(now())
+
+  pool    Pool   @relation(fields: [poolId], references: [id], onDelete: Cascade)
+  poolId  String
+  track   Track  @relation(fields: [trackId], references: [id])
+  trackId String
+
+  @@unique([poolId, trackId]) // Ein Track pro Pool nur einmal
+  @@index([poolId])
+  @@map("pool_tracks")
+}
+
+// TimetableSlot — Wiederkehrender Wochen-Slot im Sendeplan
+// Beispiel: "Phonk Sessions jeden Montag 14:00–16:00"
+model TimetableSlot {
+  id        String  @id @default(cuid())
+  dayOfWeek Int              // 0=Sonntag, 1=Montag ... 6=Samstag
+  startHour Int              // 0-23
+  startMin  Int     @default(0) // 0-59
+  endHour   Int              // 0-23
+  endMin    Int     @default(0) // 0-59
+  label     String?          // "Phonk Sessions", "Late Night Rotation"
+  priority  Int     @default(0) // Höhere Priorität gewinnt bei Überlappung
+  isActive  Boolean @default(true)
+
+  // v2.26 (07.05.2026): Subgenre-Override fuer Special-Events.
+  // Erlaubt Werte: "raggatek" (im Hardtek-Channel), "brazilian-phonk" (im
+  // Phonk-Channel). Null = regulaerer Slot ohne Theme-Override.
+  // Wenn gesetzt, schaltet useChannelAccent auf gruene Akzentfarbe um und
+  // setzt den Equalizer-Akzent auf das Kontrast-Pendant (rot fuer Phonk,
+  // gelb fuer Hardtek). Marquee-Label wechselt analog auf das Subgenre.
+  subgenre  String?
+
+  pool      Pool   @relation(fields: [poolId], references: [id])
+  poolId    String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([dayOfWeek, startHour])
+  @@index([isActive])
+  @@map("timetable_slots")
+}
+
+// TimetableEvent — Einmaliges Event das den Wochenplan überschreibt
+// Beispiel: "4Flow Live-Stream am 14.04.2026 um 20:00"
+model TimetableEvent {
+  id          String   @id @default(cuid())
+  title       String             // "4Flow Live-Stream"
+  description String?
+  startTime   DateTime           // Exakter Start-Zeitpunkt
+  endTime     DateTime           // Exaktes Ende
+  eventType   String   @default("POOL") // "POOL" | "YOUTUBE" | "TWITCH"
+
+  // Für POOL-Events: welcher Pool wird gespielt
+  pool        Pool?    @relation(fields: [poolId], references: [id])
+  poolId      String?
+
+  // Für Live-Stream-Events: externe URL
+  streamUrl   String?            // YouTube/Twitch URL
+
+  // v2.26 (07.05.2026): Subgenre-Override (analog TimetableSlot.subgenre).
+  // Erlaubt einem Live-Event ein Special-Theme zu erzwingen, unabhaengig vom
+  // Pool-Genre.
+  subgenre    String?
+
+  // 08.06.2026: Wiederkehrendes Event (z.B. Freitags-Twitch-Stream). null =
+  // einmaliges Event (startTime/endTime absolut — bisheriges Verhalten, keine
+  // Regression). 0-6 = jede Woche an diesem Wochentag (0=So..6=Sa), wobei nur
+  // die UHRZEIT aus startTime/endTime gilt (Datum wird ignoriert). Engine-Logik:
+  // isEventActive/getUpcoming in lib/radio.ts. ADR-028.
+  recurringDayOfWeek Int?
+
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([startTime, endTime])
+  @@index([isActive])
+  @@map("timetable_events")
+}
+
+// === CROWD CONTROL (ADR-026) — server-stateful, voting-gesteuertes Radio ===
+//
+// Macht aus dem deterministischen Radio eine mitbestimmte Hausparty: der Server
+// waehlt pro Track probabilistisch aus dem Pool und laesst Mitglieder (T1+) live
+// abstimmen, welcher der 5 wahrscheinlichsten Songs als naechstes laeuft.
+// Die Sync-Invariante (alle Hoerer synchron) bleibt — Clients pollen weiter nur
+// now-playing, nur die Auswahl wandert vom Client-Seed in den Server-State.
+//
+// Bewusst OHNE Prisma-Relationen bei RadioPlay/RadioHead: RadioPlay ist append-only
+// History, RadioHead fluechtiger Channel-State; trackId/poolId werden defensiv gegen
+// die Live-Pool-Mitgliedschaft (isPublic/LOCAL) validiert statt ueber FK-Integritaet.
+// Haelt die Migration rein additiv (kein Touch an tracks/pools). RadioVote hat einen
+// FK auf users (CASCADE), damit Stimmen mit dem User verschwinden.
+// Voll-Doku + Algorithmus: prozesse/kbk-crowd-control.md
+
+// RadioPlay — append-only Play-Log: was lief wann auf welchem Channel.
+// Quelle fuer Recency (Wahrscheinlichkeits-Cooldown) UND "now playing" (juengster Eintrag).
+model RadioPlay {
+  id          String   @id @default(cuid())
+  channel     String              // "phonk" | "hardtek"
+  poolId      String              // Cooldown-Fenster ist pool-lokal
+  slotKey     String              // Slot-Identitaet ("<datum>_<slotId>" o. "<eventId>") — Slot-Wechsel-Erkennung
+  trackId     String              // kein FK: History ueberlebt Track-Edits (defensiver Lookup)
+  startedAt   DateTime            // autoritativer Start (Server-Clock); Position = now - startedAt
+  endsAt      DateTime            // startedAt + duration (denormalisiert, spart Track-Join im Hot-Path)
+  source      String   @default("RANDOM") // "VOTE" | "RANDOM" | "SEED"
+  decisionSeq Int                 // monotone Sequenz pro Channel (Catch-up-Anker + Doppel-Advance-Sperre)
+  createdAt   DateTime @default(now())
+
+  @@unique([channel, decisionSeq]) // verhindert Doppel-Vorruecken auf DB-Ebene
+  @@index([channel, startedAt])
+  @@index([poolId, startedAt])
+  @@map("radio_plays")
+}
+
+// RadioHead — genau eine Zeile pro Channel: aktueller Stand + fixes N+1 + eingefrorenes N+2-Vote-Fenster.
+//
+// ADR-033 (18.06.2026): Voting wandert aufs UEBERNAECHSTE Lied (N+2). Das naechste Lied
+// (N+1) steht beim Start des aktuellen Tracks (N) bereits fest und dient als ganzer-Track-
+// Preload-Puffer (behebt Stottern/Loop am Track-Start). Semantik:
+//   - candidateIds       = Kandidaten fuers N+2-Fenster (worueber gerade gevotet wird)
+//   - committedNextTrackId = fixer N+1 (Gewinner der vorigen Runde; null bei Bestands-Heads
+//     vor ADR-033 → advanceFrom-Migrationspfad loest ihn selbstheilend auf)
+//   - pendingNextTrackId  = beim Lock eingefrorener N+2-Gewinner (wird beim Advance zum neuen committedNextTrackId)
+model RadioHead {
+  channel            String   @id           // "phonk" | "hardtek" (natuerlicher PK = Singleton/Channel)
+  decisionSeq        Int      @default(0)    // == aktueller RadioPlay.decisionSeq
+  currentPlayId      String?                 // loser Verweis auf RadioPlay.id (kein FK)
+  slotKey            String?                 // aktueller Slot — Wechsel-Erkennung
+  candidateIds       String   @default("[]") // JSON-Array der 5 eingefrorenen Kandidaten-TrackIds fuers N+2-Fenster
+  committedNextTrackId String?               // ADR-033: fixer N+1 ab Track-Start (UP NEXT); null = Bestands-Head (Migrationspfad)
+  committedSource    String?                 // ADR-033: Herkunft des committeten N+1 (VOTE|RANDOM|SEED) — wird beim Advance RadioPlay.source
+  pendingNextTrackId String?                 // beim Lock eingefrorener N+2-Gewinner (bis Advance → neues committedNextTrackId)
+  lockedAt           DateTime?               // wann das N+2-Fenster gelockt wurde (null = offen)
+  updatedAt          DateTime @updatedAt
+
+  @@map("radio_heads")
+}
+
+// RadioVote — fluechtige Live-Stimme fuers aktuelle Entscheidungs-Fenster (decisionSeq).
+// Pro Advance geprunt; FK CASCADE raeumt Stimmen geloeschter User mit ab.
+model RadioVote {
+  id               String   @id @default(cuid())
+  channel          String
+  decisionSeq      Int                 // Fenster: zaehlt fuer die Wahl des naechsten Tracks
+  candidateTrackId String              // muss in RadioHead.candidateIds sein (server-validiert)
+  userId           String
+  createdAt        DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([channel, decisionSeq, userId]) // 1 Stimme pro User pro Fenster (Umentscheiden = Upsert)
+  @@index([channel, decisionSeq])           // Tally-Query
+  @@map("radio_votes")
+}
+
+model SiteSettings {
+  id           String   @id @default("singleton")
+  siteName     String   @default("KaboomKartell")
+  siteTagline  String   @default("Underground broadcast by 4Flow")
+  heroTitle    String   @default("Make Noise Together")
+  heroSubtitle String   @default("Phonk · Hardtek · Raggatek")
+  aboutText    String   @default("")
+  socialLinks  String?  // JSON-String: { soundcloud: "...", instagram: "..." }
+  // v2.30 (13.05.2026, ADR-005 E): KBK-eigener Twitch-Channel-Login (z.B. "kbk4flow").
+  // Wenn gesetzt und Helix-API sagt "live", uebernimmt Embed den Audio-Player auf
+  // /artists und im Radio. Polling laeuft via /api/twitch/live-status mit 30s-Cache.
+  twitchChannel String?
+  updatedAt    DateTime @updatedAt
+
+  @@map("site_settings")
+}
+
+// ApiToken — Personal Access Token fuer Agenten-Zugriff (Phase 2, ADR-035).
+//
+// EIN Token-Store, rein additiv: ein spaeterer OAuth-AS (Phase 3) absorbiert dieses
+// Modell, ersetzt es nicht. Das Token wird NUR als SHA-256-Hash gespeichert; der
+// Klartext (Format "kbk_pat_<32 Bytes base64url>") wird genau EINMAL bei der Erzeugung
+// gezeigt. Kopplung an User.tokenVersion: "Logout ueberall" (tokenVersion++) invalidiert
+// automatisch auch alle PATs (userTokenVersion-Vergleich in agent-auth.ts).
+model ApiToken {
+  id               String    @id @default(cuid())
+  userId           String
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash        String    @unique // SHA-256 (hex) des Klartext-Tokens
+  tokenPrefix      String    // Anzeige-Prefix, z.B. "kbk_pat_a1b2..." (kein Secret)
+  name             String    // vom User vergebenes Label
+  scopes           String    // CSV der Scopes (Start: nur "vote")
+  userTokenVersion Int       // Kopie von User.tokenVersion bei Erstellung
+  lastUsedAt       DateTime?
+  expiresAt        DateTime?
+  revokedAt        DateTime?
+  createdAt        DateTime  @default(now())
+
+  @@index([userId])
+  @@map("api_tokens")
+}

@@ -1,0 +1,1426 @@
+@import "tailwindcss";
+
+/* =============================================
+   KaboomKartell Design System
+   Reggae-Farben (Grün, Gelb, Rot) + Dark Mode
+   ============================================= */
+
+:root {
+  /* === Primaere Palette — Neon-Variante (Club/Party-Aesthetik) ===
+     Ableitung aus 4Flow-Logo (Rasta-Grün/Gelb/Rot),
+     aber voll neon-saturiert für Dark-Mode-Pop. */
+  --rasta-green: #3FCF4A;       /* Venom-Green, Primary Accent + Live-Indicator */
+  --rasta-green-light: #5EDD68; /* Hover/Focus states */
+  --rasta-green-dark: #2DB036;  /* Pressed/Active states */
+  --rasta-yellow: #F5D02E;      /* Piss-Yellow, Featured/Hot + Hardtek-Genre */
+  --rasta-yellow-light: #F7DD5E;
+  --rasta-yellow-dark: #D4B020;
+  --rasta-red: #E63B2E;         /* Blood-Red, Critical/Sus + Phonk-Genre */
+  --rasta-red-light: #F25A4E;
+  --rasta-red-dark: #B82918;
+
+  /* === Neutrale Dark-Palette (mit Tiefe) === */
+  --kbk-black: #0A0B0C;         /* Absolute Schwarz mit Hauch Blau */
+  --kbk-dark-900: #121315;
+  --kbk-dark-800: #1A1C1E;
+  --kbk-dark-700: #242628;
+  --kbk-dark-600: #33363A;
+  --kbk-gray-500: #666666;
+  --kbk-gray-400: #999999;
+  --kbk-gray-300: #B3B3B3;
+  --kbk-light-200: #E0E0E0;
+  --kbk-light-100: #F0F0F0;
+  --kbk-white: #FFFFFF;
+
+  /* === Hintergruende === */
+  --bg-primary: var(--kbk-black);
+  --bg-surface: var(--kbk-dark-900);
+  --bg-elevated: var(--kbk-dark-800);
+  --bg-border: var(--kbk-dark-700);
+
+  /* === Text === */
+  --text-primary: var(--kbk-light-100);
+  --text-secondary: var(--kbk-gray-300);
+  --text-muted: var(--kbk-gray-500);
+  --text-accent: var(--rasta-green);
+
+  /* === Funktional === */
+  --color-success: var(--rasta-green);
+  --color-warning: var(--rasta-yellow);
+  --color-error: var(--rasta-red);
+  --color-info: #4A9EDE;
+
+  /* === Gradienten ===
+     Rasta-Gradient ist weg — Flow's Call 24.04. abends.
+     Die Variable bleibt aus Kompatibilitaetsgruenden, liefert aber
+     nur noch solid Neon-Green mit subtiler Tiefe. */
+  --gradient-rasta: linear-gradient(135deg, var(--rasta-green) 0%, var(--rasta-green-dark) 100%);
+  --gradient-progress: linear-gradient(90deg, var(--rasta-green) 0%, var(--rasta-green-light) 100%);
+  --gradient-accent: linear-gradient(135deg, var(--rasta-green) 0%, var(--rasta-green-light) 100%);
+  --gradient-dark: linear-gradient(180deg, var(--kbk-black) 0%, var(--kbk-dark-900) 100%);
+}
+
+/* === Tailwind Theme Inline === */
+@theme inline {
+  --color-background: var(--bg-primary);
+  --color-foreground: var(--text-primary);
+  --color-surface: var(--bg-surface);
+  --color-elevated: var(--bg-elevated);
+  --color-border: var(--bg-border);
+  --color-muted: var(--text-muted);
+  --color-secondary: var(--text-secondary);
+
+  --color-rasta-green: var(--rasta-green);
+  --color-rasta-green-light: var(--rasta-green-light);
+  --color-rasta-green-dark: var(--rasta-green-dark);
+  --color-rasta-yellow: var(--rasta-yellow);
+  --color-rasta-yellow-light: var(--rasta-yellow-light);
+  --color-rasta-red: var(--rasta-red);
+  --color-rasta-red-light: var(--rasta-red-light);
+
+  --color-kbk-black: var(--kbk-black);
+  --color-kbk-dark-900: var(--kbk-dark-900);
+  --color-kbk-dark-800: var(--kbk-dark-800);
+  --color-kbk-dark-700: var(--kbk-dark-700);
+
+  /* Vorlage-konform: Space Grotesk für Body, Bungee für Display, JetBrains Mono
+     für Mono. Montserrat + Inter sind raus. --font-heading bleibt als Fallback
+     auf font-display, falls noch alter Code auf var(--font-heading) zugreift. */
+  --font-heading: 'Bungee', 'Archivo Black', Impact, sans-serif;
+  --font-body: 'Space Grotesk', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-display: 'Bungee', 'Archivo Black', Impact, sans-serif;
+}
+
+/* === Basis-Styles === */
+html, body {
+  /* Marquee-Banner ist absichtlich -8px breiter als der Viewport (skew-Effekt).
+     Globaler horizontaler Cut verhindert Scrollbar/Bouncing auf Mobile. */
+  overflow-x: hidden;
+}
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Safe-Area für Geraete mit Notch / Home-Indicator (v2.9 Landscape-Fix) */
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  padding-left: env(safe-area-inset-left, 0);
+  padding-right: env(safe-area-inset-right, 0);
+}
+
+/* === Skip-Link für Tastatur-Navigation === */
+.kbk-skip-link {
+  position: absolute;
+  top: -48px;
+  left: 16px;
+  background: var(--rasta-green);
+  color: var(--kbk-black);
+  padding: 12px 18px;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+  z-index: 200;
+  transition: top 0.15s ease;
+}
+.kbk-skip-link:focus {
+  top: 12px;
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+/* Tap-Highlight auf Mobile deaktivieren */
+@media (hover: none) {
+  button, a {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* === MiniPlayer-Reserve am Body-Boden ===
+   MiniPlayer ist position:fixed (sonst würde er hinter dem Footer verschwinden).
+   Damit der Footer-Content nicht hinter dem fixed Element gerät, schiebt der
+   MiniPlayer-Component selbst die `kbk-has-miniplayer`-Klasse auf <body>, sobald
+   er rendert (= alle Pages außer / und /admin/*). */
+body.kbk-has-miniplayer {
+  padding-bottom: calc(72px + env(safe-area-inset-bottom, 0));
+}
+
+/* === MiniPlayer Mobile + Tablet-Layout (Audit 12 P1 + v2.6 Tablet-Fix) ===
+   <768px (Mobile + Tablet-Portrait) sprengt der einzeilige Layout
+   (Logo + 3 Channel-Tabs + Track-Info + Mute + AURA + SUS) die Breite.
+   2-Zeilen-Layout via flex-wrap + order:
+     Zeile 1: [Logo] [Track-Info] [Mute] [AURA] [SUS]
+     Zeile 2: [Channels P|H|R] (full width)
+   Track-Info ist auf Zeile 1 mit flex:1, Channels rutschen auf Zeile 2
+   damit alle Touch-Targets >=44px Platz haben. v2.6: Breakpoint von 420px
+   auf 768px erhöht — Tablet-Portrait (z.B. iPad Mini 768px) profitiert
+   auch vom 2-Zeilen-Layout, sonst quetschen die 7 Elemente in eine Zeile. */
+@media (max-width: 767px) {
+  .kbk-miniplayer-row {
+    flex-wrap: wrap;
+    row-gap: 6px !important;
+    min-height: 96px;
+    padding: 8px 12px !important;
+  }
+  .kbk-miniplayer-row .kbk-miniplayer-channels {
+    order: 99;
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+  .kbk-miniplayer-row .kbk-miniplayer-channels button {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  body.kbk-has-miniplayer {
+    padding-bottom: calc(96px + env(safe-area-inset-bottom, 0));
+  }
+}
+
+/* === Tablet-Forms-Centering (v2.6) ===
+   Auf 768-1023px sind Auth-Forms (Login/Register/Reset) nicht zentriert
+   genug — Cockpit-Card sollte max ~520px breit sein, sonst zerfaellt der
+   Eindruck. Mobile-Layout bleibt full-width via padding. */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .kbk-auth-card {
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  /* === MiniPlayer Tablet-Stufe (v2.23, 02.05.2026 nacht) ===
+     Variante A: 1-Zeile aber kompakter. Volume-Slider sichtbar (60px statt
+     80px), AURA+/SUS nur Symbol (kein Label). Title-Wrapper bekommt eine
+     max-width damit der Marquee-Effekt triggert. v2.24-Fix: max-width sitzt
+     auf .kbk-miniplayer-title-wrap (innen), nicht auf .kbk-miniplayer-track
+     (Container) — sonst kollabiert die flex-Verteilung und der Player
+     wirkt links statt zentriert. */
+  .kbk-miniplayer-volume {
+    width: 60px !important;
+  }
+  .kbk-miniplayer-title-wrap {
+    max-width: 240px;
+  }
+  /* AURA+/SUS-Label: erst ab 1024px. Auf Tablet nur Symbol — sonst quetscht
+     sich die Reihe auf 768px iPad-Portrait. */
+  .kbk-aura-label,
+  .kbk-sus-label {
+    display: none;
+  }
+}
+
+/* AURA+/SUS-Label-Default: nur ab Desktop sichtbar (zuvor `hidden md:inline`,
+   also ab 768px — neu: ab 1024px, Tablet bekommt Symbol-only). */
+.kbk-aura-label,
+.kbk-sus-label {
+  display: none;
+}
+
+/* Title-Wrapper Default-Breite — Mobile (<768): genug Platz lassen damit auch
+   kurze Titel passen, aber lange Titel scrollen. Layout-Spacing kommt vom
+   2-Zeilen-Layout (channels in row 2), Title-Wrapper kann hier voll-breit
+   gehen. */
+.kbk-miniplayer-title-wrap {
+  max-width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .kbk-aura-label,
+  .kbk-sus-label {
+    display: inline;
+  }
+  .kbk-miniplayer-title-wrap {
+    max-width: 320px;
+  }
+}
+
+/* === iOS-Zoom-Fix (Audit 12, P1) ===
+   iOS Safari zoomt automatisch auf Inputs mit font-size <16px beim Fokus.
+   Ergebnis: Layout-Shift + Pinch-Reset. Globaler Fix für alle Touch-
+   Geraete; Desktop hat keine Visual-Änderung weil 16px gut lesbar ist. */
+@media (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* === Browser-Autofill Dark-Mode-Override (v2.6) ===
+   Chrome/Safari/Edge faerben autofilled Inputs hellgelb/weiss — bricht
+   das KBK-Cockpit-Theme. Fix: -webkit-autofill kann bg-color nicht direkt
+   überschreiben, aber `box-shadow inset` erzwingt die Hintergrund-Faerbung.
+   Plus: -webkit-text-fill-color setzt die Schriftfarbe (autofill überschreibt
+   normales `color`).
+   Gilt für alle States: rest, hover, focus, active. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.4) inset !important;
+  -webkit-text-fill-color: #ffffff !important;
+  caret-color: #3FCF4A !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+}
+
+/* Firefox-Variant: autofill-Klasse `-moz-autofill`. */
+input:-moz-autofill {
+  background-color: rgba(0, 0, 0, 0.4) !important;
+  color: #ffffff !important;
+}
+
+/* === Input :focus-State (v2.6) ===
+   Konsistent dunkles BG bei Focus + dezenter Glow — User soll wissen wo
+   er ist, ohne dass das Feld plötzlich weiss wird. Funktioniert auf den
+   inline-Style-Inputs auf Login/Register/Reset/2FA, weil :focus stärker
+   gewichtet wird als der Inline-Style (CSS-Pseudo-Class > Inline-Style
+   wenn beide gleichen Spezifizität haben — inline gewinnt aber, deshalb
+   nutzen wir !important). */
+input:focus,
+textarea:focus,
+select:focus {
+  background-color: rgba(0, 0, 0, 0.55) !important;
+  outline: none !important;
+  border-color: rgba(63, 207, 74, 0.6) !important;
+  box-shadow: 0 0 0 2px rgba(63, 207, 74, 0.15) !important;
+}
+
+/* === Pixel-Icon-Rendering ===
+   Die /icons/pixel/*.png Files sind low-res Pixel-Art (PixelFlow Mini).
+   Default-Browser-Skalierung interpoliert bilinear -> blurry, besonders
+   auf High-DPI-Displays (DPR 2-3). Mit image-rendering:pixelated nimmt
+   der Browser nearest-neighbor -> jedes Pixel bleibt scharf-eckig. */
+img[src*="/icons/pixel/"],
+.kbk-pixel-icon,
+.kbk-pixel-icon img {
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -webkit-crisp-edges;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* === Cockpit-Grid Cards dürfen NICHT über ihre Cell sprengen ===
+   Default für Grid-Items ist `min-width: auto` (= content-width). Das lässt
+   die Cards ihre natürliche Inhaltsbreite einnehmen, wenn ein Inneres
+   Element (z.B. ein Volume-Slider oder ein breiter Button-Text) breiter ist
+   als die Cell. min-width:0 zwingt Grid-Items in die Cell.
+   max-width:100% + box-sizing:border-box garantiert dass auch Border und
+   Padding mitgerechnet werden. */
+.kbk-cockpit-grid > * {
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+}
+.kbk-cockpit-grid > * * {
+  /* Auch verschachtelte Flex/Grid-Children dürfen schrumpfen statt sprengen.
+     Inputs + Buttons in der Card erben das Box-Sizing. */
+  box-sizing: border-box;
+}
+
+/* === Custom Scrollbar (migriert vom MP3-Player) === */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--kbk-dark-800);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--kbk-dark-600);
+  border-radius: 10px;
+  transition: background 0.2s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--rasta-green);
+}
+
+/* === Rasta-Gradient Text — neu: solid Neon-Green mit Glow ===
+   Gradient-Text ist weg, aber Klasse bleibt für Kompatibilität. */
+.text-rasta-gradient {
+  color: var(--rasta-green);
+  text-shadow: 0 0 20px rgba(63, 207, 74, 0.5);
+}
+
+.border-rasta-gradient {
+  border-color: var(--rasta-green);
+}
+
+/* === Focus-Styles (Accessibility) === */
+:focus-visible {
+  outline: 2px solid var(--rasta-green);
+  outline-offset: 2px;
+}
+
+/* === Selection ===
+   Vorlage-Spec: schwarz auf grün (nicht weiss auf grün) — knackiger Kontrast. */
+::selection {
+  background: var(--rasta-green);
+  color: var(--kbk-black);
+}
+
+/* === Smooth Transitions (global) === */
+* {
+  transition-property: color, background-color, border-color, opacity;
+  transition-timing-function: ease;
+  transition-duration: 150ms;
+}
+
+/* Ausnahme für Animationen die eigene Transitions brauchen */
+.no-transition,
+.no-transition * {
+  transition: none !important;
+}
+
+/* === Volume Slider (Custom Range Input) === */
+.volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--kbk-dark-700);
+  outline: none;
+  cursor: pointer;
+}
+
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--rasta-green);
+  cursor: pointer;
+  border: 2px solid var(--kbk-dark-900);
+  box-shadow: 0 0 6px rgba(63, 207, 74, 0.55);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.volume-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 12px rgba(63, 207, 74, 0.85);
+}
+
+.volume-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--rasta-green);
+  cursor: pointer;
+  border: 2px solid var(--kbk-dark-900);
+  box-shadow: 0 0 6px rgba(63, 207, 74, 0.55);
+}
+
+.volume-slider::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--kbk-dark-700);
+}
+
+/* === Thin Scrollbar für Playlist === */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--kbk-dark-600);
+  border-radius: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: var(--rasta-green);
+}
+
+/* === Equalizer Animation (NowPlaying Playing-Indicator) === */
+@keyframes equalizer {
+  0% {
+    height: 4px;
+  }
+  100% {
+    height: 12px;
+  }
+}
+
+/* === Toast Slide-In Animation === */
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s ease-out;
+}
+
+/* === Fade-In Animation (für About-Seite etc.) === */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.5s ease-out both;
+}
+
+/* Stagger-Delay Klassen */
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
+
+/* === Radio-Wave-Effekt (Hero-Hintergrund) ===
+   Konzentrische Kreise, die langsam nach außen "pulsieren".
+   Subtil gehalten (niedrige Opacity) — darf nicht vom Content ablenken. */
+@keyframes radio-wave {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.25;
+  }
+  70% {
+    opacity: 0.08;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.animate-radio-wave {
+  animation: radio-wave 4s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* === Mobile-Menu Slide-Down ===
+   Smoothes Aufklappen statt instant-render für Navbar-Hamburger. */
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-down {
+  animation: slide-down 0.25s ease-out both;
+}
+
+/* === Gradient-Pulse (Join-CTA Button) ===
+   Sanftes Pulsieren des Shadow-Rings — zieht Blick zum Primary-CTA,
+   ohne dass der Button taenzelt. */
+@keyframes gradient-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(63, 207, 74, 0.55),
+                0 10px 25px -5px rgba(63, 207, 74, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(63, 207, 74, 0),
+                0 10px 25px -5px rgba(63, 207, 74, 0.45);
+  }
+}
+
+.animate-gradient-pulse {
+  animation: gradient-pulse 2.4s ease-in-out infinite;
+}
+
+/* === Glitch-Text (Navbar-Brand, Hero-Title) ===
+   Subtile Variante für Branding — nicht epileptisch-laut, sondern
+   periodische Drift mit Red/Green-Shadow (Cyberpunk-Echo). */
+@keyframes kk-glitch-subtle {
+  0%, 100% {
+    transform: translate(0, 0);
+    text-shadow:
+      0 0 24px rgba(63, 207, 74, 0.3);
+  }
+  48% {
+    transform: translate(0, 0);
+    text-shadow:
+      0 0 24px rgba(63, 207, 74, 0.3);
+  }
+  50% {
+    transform: translate(-1px, 0);
+    text-shadow:
+      1.5px 0 var(--rasta-red),
+      -1.5px 0 var(--rasta-green),
+      0 0 28px rgba(63, 207, 74, 0.6);
+  }
+  52% {
+    transform: translate(0, 0);
+    text-shadow:
+      0 0 24px rgba(63, 207, 74, 0.3);
+  }
+}
+
+.animate-glitch-subtle {
+  animation: kk-glitch-subtle 5s ease-in-out infinite;
+}
+
+/* Aktive Glitch (Hover oder Boot-Intro) — rapid, intensiv */
+@keyframes kk-glitch-active {
+  0% { transform: translate(0, 0); text-shadow: 2px 0 var(--rasta-red), -2px 0 var(--rasta-green), 0 0 20px var(--rasta-green); }
+  100% { transform: translate(-1px, 0); text-shadow: -2px 0 var(--rasta-red), 2px 0 var(--rasta-green), 0 0 30px var(--rasta-green); }
+}
+
+.animate-glitch-active {
+  animation: kk-glitch-active 0.2s infinite alternate;
+}
+
+/* === Eye-Glow (Logo-Augen, beat-reaktives Flackern) ===
+   Schneller Puls im Phonk-BPM-Bereich (120 BPM = 0.5s).
+   Wird im AnimatedLogoMark über den Augen-Positionen des Wolf-Logos eingeblendet. */
+@keyframes kk-eye-glow {
+  0% { opacity: 0.35; transform: scale(0.75); }
+  50% { opacity: 1; transform: scale(1.15); }
+  100% { opacity: 0.35; transform: scale(0.75); }
+}
+
+.animate-eye-glow {
+  animation: kk-eye-glow 0.5s ease-in-out infinite;
+  will-change: opacity, transform;
+}
+
+/* === Card-Hover-Lift (einheitliches Lift-Feedback auf interaktiven Cards) === */
+@keyframes kk-hover-breathe {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-1px) scale(1.005); }
+}
+
+.animate-breathe {
+  animation: kk-hover-breathe 3s ease-in-out infinite;
+}
+
+/* === Live-Pulse-Dot (Status-Indicator) ===
+   Ein klassischer pulsierender Dot mit Glow-Halo. Für Live-Badge,
+   Now-Playing, ON-AIR Indicator. */
+@keyframes kk-live-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(63, 207, 74, 0.7);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(0.85);
+    box-shadow: 0 0 10px 4px rgba(63, 207, 74, 0.25);
+  }
+}
+
+.animate-live-pulse {
+  animation: kk-live-pulse 1.4s ease-in-out infinite;
+}
+
+/* === Marquee (Endless-Scroll Ticker) ===
+   Unter-Navbar-Ticker mit Now-Playing + Genre-Tags.
+   -33.333% weil der Inhalt 3x dupliziert wird. */
+@keyframes kk-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-33.333%); }
+}
+
+.animate-marquee {
+  animation: kk-marquee 40s linear infinite;
+  will-change: transform;
+}
+
+/* === Boot-Intro (Typewriter + Flash) ===
+   Einmalig pro Session, siehe IntroBoot-Component. */
+@keyframes kk-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+.animate-blink {
+  animation: kk-blink 0.8s steps(2) infinite;
+}
+
+/* === Intro-Drop-Flash ===
+   Weißer Vollbild-Flash beim "Drop"-Moment (Vorlage-Spec):
+   schwarz -> hellweiss -> wieder schwarz mit fade out + scale up. */
+@keyframes kk-introflash {
+  0% { background: #000; opacity: 1; transform: scale(1); }
+  30% { background: #fff; opacity: 1; }
+  100% { background: #000; opacity: 0; transform: scale(1.4); }
+}
+
+.animate-introflash {
+  animation: kk-introflash 0.6s ease-out forwards;
+}
+
+/* === Intro-Logo Einflug (Scale + Fade) ===
+   Nutzt cubic-bezier mit leichtem Overshoot für den "Boom"-Effekt. */
+/* === Intro-Logo Einflug ===
+   Vorlage-Spec: scale(0.5)+rotate(-8deg)+blur(10px) -> scale(1)+rotate(0)+sharp.
+   Cubic-bezier mit leichtem Overshoot für den "Boom"-Effekt. */
+@keyframes kk-logoin {
+  0% { transform: scale(0.5) rotate(-8deg); opacity: 0; filter: blur(10px); }
+  100% { transform: scale(1) rotate(0); opacity: 1; filter: blur(0); }
+}
+
+/* === Glitch-Text (Intro-Titel "KABOOMKARTELL") ===
+   Minimaler Offset-Wackler für Cyberpunk-Feel. */
+@keyframes kk-glitchtxt {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(1px, -1px); }
+  50% { transform: translate(-1px, 0); }
+  75% { transform: translate(0, 1px); }
+  100% { transform: translate(1px, 0); }
+}
+
+/* === Live-Dot Pulse (Nav + Badges) ===
+   Vorlage-Spec: Schrumpft + dimmt (1 -> 0.85 + opacity 1 -> 0.4) -> wirkt wie
+   ein leiser Heart-Beat statt einer wachsenden Welle. */
+@keyframes kk-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+/* === Speaker-Ripples (LogoMark) ===
+   3 konzentrische Wellen, gestaffelt. */
+@keyframes kk-ripple {
+  0% { transform: scale(1); opacity: 0.7; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+
+/* === Boom-Flash (LogoMark Intro) ===
+   Einmal-Flash nach Shard-Assemble. */
+@keyframes kk-flash {
+  0% { opacity: 0; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.1); }
+  100% { opacity: 0; transform: scale(1.3); }
+}
+
+/* === Fade-In für neu eingeschobene Einträge ===
+   Sanftes Einschieben von unten (z.B. Sendeplan-Detailansicht). */
+@keyframes kk-fadein {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* === Logo-Burst (Hero-Logo Click) ===
+   Kurzer Scale-Bounce + Glow-Booster bei User-Klick aufs Hero-Logo.
+   Wird per JS-State (className "kbk-logo-burst") für ~700ms aktiviert.
+   Ergaenzt das eingebaute Beat-Pulse vom LogoMark — wirkt wie ein sichtbares
+   "Wir haben dich registriert"-Echo auf den Klick. */
+.kbk-logo-burst {
+  animation: kk-logo-burst 0.7s ease-out;
+}
+@keyframes kk-logo-burst {
+  0% { transform: scale(1); }
+  20% {
+    transform: scale(1.12);
+    filter: drop-shadow(0 0 24px rgba(63, 207, 74, 0.85))
+      drop-shadow(0 0 48px rgba(230, 59, 46, 0.6));
+  }
+  60% { transform: scale(0.97); }
+  100% { transform: scale(1); }
+}
+
+/* === Neon-Glow Utility (Box-Shadow-Variants) ===
+   Klassen für inline-Anwendung ohne Tailwind-JIT-Problem. */
+.glow-green-sm { box-shadow: 0 0 12px rgba(63, 207, 74, 0.35); }
+.glow-green-md { box-shadow: 0 0 24px rgba(63, 207, 74, 0.5); }
+.glow-green-lg { box-shadow: 0 0 40px rgba(63, 207, 74, 0.6); }
+.glow-red-sm { box-shadow: 0 0 12px rgba(230, 59, 46, 0.35); }
+.glow-red-md { box-shadow: 0 0 24px rgba(230, 59, 46, 0.5); }
+.glow-yellow-sm { box-shadow: 0 0 12px rgba(245, 208, 46, 0.35); }
+.glow-yellow-md { box-shadow: 0 0 24px rgba(245, 208, 46, 0.5); }
+
+/* Text-Glow-Utilities */
+.text-glow-green { text-shadow: 0 0 20px rgba(63, 207, 74, 0.6); }
+.text-glow-red { text-shadow: 0 0 20px rgba(230, 59, 46, 0.6); }
+.text-glow-yellow { text-shadow: 0 0 20px rgba(245, 208, 46, 0.6); }
+
+/* === KBK-Card Hover-Lift ===
+   Gemeinsames Hover-Feedback für Cards (Stats, Features, Role-Cards).
+   2px Lift + Neon-Border-Glow + subtiler Shadow. */
+.kbk-card-hover {
+  transition: transform 0.22s cubic-bezier(0.3, 0.7, 0.4, 1),
+              border-color 0.22s ease,
+              box-shadow 0.22s ease,
+              background-color 0.22s ease;
+  will-change: transform;
+}
+
+.kbk-card-hover:hover {
+  transform: translateY(-3px);
+  border-color: rgba(63, 207, 74, 0.5);
+  box-shadow: 0 12px 32px -10px rgba(63, 207, 74, 0.3);
+}
+
+/* Hover-Lift mit Rot-Akzent (für warnende/CTA-Cards) */
+.kbk-card-hover-red:hover {
+  transform: translateY(-3px);
+  border-color: rgba(230, 59, 46, 0.5);
+  box-shadow: 0 12px 32px -10px rgba(230, 59, 46, 0.3);
+}
+
+.kbk-card-hover-yellow:hover {
+  transform: translateY(-3px);
+  border-color: rgba(245, 208, 46, 0.5);
+  box-shadow: 0 12px 32px -10px rgba(245, 208, 46, 0.3);
+}
+
+/* === Subtile Scanlines als Overlay (opt-in via Body-Class .kbk-scanlines) === */
+.kbk-scanlines::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.08) 0px,
+    rgba(0, 0, 0, 0.08) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  mix-blend-mode: multiply;
+  opacity: 0.4;
+}
+
+/* === Reduced-Motion Respektieren ===
+   Nutzer mit prefers-reduced-motion sollen keine wilden Animationen sehen.
+   Dezente Opacity-/Fade-Transitions bleiben erlaubt. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-radio-wave,
+  .animate-gradient-pulse,
+  .animate-slide-in-right,
+  .animate-slide-down,
+  .animate-fade-in-up,
+  .animate-bounce,
+  .animate-ping,
+  .animate-pulse,
+  .animate-glitch-subtle,
+  .animate-glitch-active,
+  .animate-live-pulse,
+  .animate-marquee,
+  .animate-blink,
+  .animate-introflash,
+  .animate-eye-glow,
+  .animate-breathe {
+    animation: none !important;
+  }
+  /* Inline-Animationen (animation: kk-pulse / kk-marquee / etc.) global stoppen,
+     damit Cockpit-Pulse, Marquee-Lauf, Glitch-Text, Eye-Glow etc. ruhig sind. */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* === Cockpit-Grid responsive — 3-Spalten auf Desktop, stacked auf kleinerem Viewport === */
+@media (max-width: 1024px) {
+  .kbk-cockpit-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* === TopNavBar Responsive Tuning ===
+   Auf <md (Mobile/Tablet): Brand-Subtitle "BY 4FLOW // EST. WHENEVER" verstecken
+   damit Logo-Block kompakt bleibt und JOIN/PROFILE + Hamburger Platz haben. */
+.kbk-cta-short { display: none; }
+.kbk-cta-full { display: inline; }
+
+@media (max-width: 768px) {
+  .kbk-navbar-brand-tag {
+    display: none !important;
+  }
+  /* Mobile CTA: kurzer Text "JOIN" / "PROFILE" statt "JOIN THE PACK" */
+  .kbk-cta-full { display: none !important; }
+  .kbk-cta-short { display: inline !important; }
+}
+
+@media (max-width: 420px) {
+  /* Auf sehr schmalen Phones (Pixel 7 = 412px) muss der Brand-Name kompakter werden,
+     damit der CTA + Hamburger ohne Overflow passen. */
+  .kbk-navbar-brand-name {
+    font-size: 13px !important;
+  }
+}
+
+/* === Mobile-Section-Padding — verhindert doppeltes Padding und Overflow ===
+   Page-Section hat padding 20px 24px, die innere Komponenten setzen oft
+   nochmal 20px 24px, was auf 412px-Viewport 96px Padding bedeutet (kein Platz für Cards).
+   Auf Mobile: innere Komponenten resetten ihren padding-x. */
+@media (max-width: 768px) {
+  .kbk-section-inner {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  .kbk-page-section {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+  /* Hero auf Mobile: kompakteres Padding und kein Watermark-Overflow */
+  .kbk-hero {
+    padding: 32px 16px 24px !important;
+  }
+  .kbk-hero-watermark {
+    display: none !important;
+  }
+  .kbk-hero-stats {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+  }
+  /* Section-Title auf Mobile: kompakter, Linie weg, Title bricht nicht 3-zeilig */
+  .kbk-section-title {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .kbk-section-title-line {
+    display: none !important;
+  }
+  .kbk-section-title-h2 {
+    font-size: 22px !important;
+    width: 100% !important;
+  }
+  /* Cockpit-Footer auf Mobile: Watermark kleiner, Logo zentriert */
+  .kbk-footer-watermark {
+    font-size: 36px !important;
+    word-break: break-word !important;
+  }
+  .kbk-footer-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  /* Hero-Headline auf Mobile noch lesbar — clamp greift bereits, hier letzte Sicherung */
+  .kbk-hero-headline {
+    font-size: clamp(36px, 11vw, 64px) !important;
+  }
+  /* Cockpit-Section padding kompakter */
+  .kbk-cockpit-section {
+    padding: 28px 16px !important;
+  }
+  /* Marquee-Spillover -8px deaktivieren auf Mobile (sonst Scrollbar-Bouncing). */
+  .kbk-marquee {
+    margin: 0 !important;
+  }
+}
+
+/* Sehr schmale Phones: Hero-Buttons mit verkürztem Stats-Text + ggf. eine Zeile */
+@media (max-width: 420px) {
+  .kbk-hero-tunein-text {
+    font-size: 13px !important;
+  }
+  /* Suffix " // X WOLVES" auf schmalen Phones verstecken — sprengt Button-Breite */
+  .kbk-hero-tunein-suffix {
+    display: none !important;
+  }
+}
+
+/* === Subpage-Helper: Mobile-only Hide ===
+   Tabellenzellen, die wir auf schmalen Viewports ausblenden wollen. */
+@media (max-width: 768px) {
+  .kbk-hide-on-mobile {
+    display: none !important;
+  }
+  .kbk-library-row {
+    grid-template-columns: 1fr 5rem !important;
+  }
+}
+
+/* === Subpage-Helper: Subpage-Grid responsive ===
+   Stats-Bars und Card-Grids stacken auf Mobile. */
+@media (max-width: 768px) {
+  .kbk-subpage-grid-3 {
+    grid-template-columns: 1fr !important;
+  }
+  .kbk-subpage-grid-2 {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* =============================================================
+   ★ OBSIDIAN-LAYER (eingefuehrt 02.05.2026 abend)
+
+   - body::before          passive Hintergrund-Bewegung (drift, 28s)
+   - .kbk-obsidian         Vulkanglas-Oberfläche (Multi-Gradient + Korn = rau)
+   - .kbk-obsidian.polished feinerer Korn (für Buttons)
+   - .kbk-obsidian.framed   pulsierender Neon-Border, default grün
+       .kbk-frame-red / .kbk-frame-yellow als Color-Varianten
+   ============================================================= */
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: -8vmax;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 50vmax 35vmax at 28% 22%, rgba(63, 207, 74, 0.022) 0%, transparent 55%),
+    radial-gradient(ellipse 60vmax 50vmax at 78% 78%, rgba(28, 30, 36, 0.55) 0%, transparent 60%),
+    radial-gradient(ellipse 40vmax 30vmax at 50% 95%, rgba(18, 19, 21, 0.45) 0%, transparent 65%);
+  animation: kk-body-drift 28s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+@keyframes kk-body-drift {
+  0%   { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
+  50%  { transform: translate3d(2.5%, -1.8%, 0) rotate(0.6deg) scale(1.04); }
+  100% { transform: translate3d(-1.8%, 2.2%, 0) rotate(-0.5deg) scale(1.02); }
+}
+
+/* === Vulkanglas-Oberfläche ===
+   Drei lineare Streifen-Gradients (Bruchkanten), ein radial-gradient als
+   Hauptverlauf, plus Inset-Shadows für physische Lichtkante. Pseudo-Layer:
+     ::before (z:1) Reflex-Highlights — mix-blend:screen
+     ::after  (z:2) Lichtgang + Korn (overlay-blend → "rau")
+     content  (z:3) liegt drüber, voll lesbar */
+.kbk-obsidian {
+  position: relative;
+  isolation: isolate;
+  background:
+    linear-gradient(118deg, transparent 28%, rgba(255, 255, 255, 0.038) 28.3%, transparent 28.6%),
+    linear-gradient(142deg, transparent 64%, rgba(255, 255, 255, 0.048) 64.2%, transparent 64.5%),
+    linear-gradient(95deg, transparent 41%, rgba(63, 207, 74, 0.045) 41.2%, transparent 41.4%),
+    radial-gradient(ellipse 120% 80% at 25% 15%,
+      var(--kbk-dark-600) 0%,
+      var(--kbk-dark-700) 25%,
+      var(--kbk-dark-800) 60%,
+      #060708 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(240, 245, 255, 0.18),
+    inset 1px 0 0 rgba(200, 210, 230, 0.05),
+    inset -1px 0 0 rgba(0, 0, 0, 0.5),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.7),
+    0 1px 2px rgba(0, 0, 0, 0.7),
+    0 4px 12px rgba(0, 0, 0, 0.55),
+    0 16px 40px rgba(0, 0, 0, 0.45);
+  transition: box-shadow 0.3s cubic-bezier(0.2, 0.7, 0.2, 1),
+              transform 0.2s ease;
+}
+
+.kbk-obsidian::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+  background:
+    radial-gradient(ellipse 60% 80% at 80% 30%, rgba(220, 230, 245, 0.075) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 70% at 20% 80%, rgba(63, 207, 74, 0.05) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 50% at 70% 90%, rgba(0, 0, 0, 0.45) 0%, transparent 70%),
+    conic-gradient(from 210deg at 30% 40%, transparent 0deg, rgba(220, 230, 245, 0.06) 15deg, transparent 35deg);
+  mix-blend-mode: screen;
+}
+
+.kbk-obsidian::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 2;
+  background:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='r'><feTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.55 0'/></filter><rect width='100%25' height='100%25' filter='url(%23r)'/></svg>"),
+    linear-gradient(165deg,
+      rgba(255, 255, 255, 0.09) 0%,
+      rgba(255, 255, 255, 0.02) 8%,
+      transparent 18%,
+      transparent 82%,
+      rgba(0, 0, 0, 0.18) 100%);
+  background-size: 240px 240px, 100% 100%;
+  background-repeat: repeat, no-repeat;
+  background-blend-mode: overlay, normal;
+  opacity: 0.85;
+}
+
+.kbk-obsidian > * {
+  position: relative;
+  z-index: 3;
+}
+
+/* Polished — feiner Korn für Buttons */
+.kbk-obsidian.polished::after {
+  background:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='r'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.25 0'/></filter><rect width='100%25' height='100%25' filter='url(%23r)'/></svg>"),
+    linear-gradient(165deg,
+      rgba(255, 255, 255, 0.09) 0%,
+      rgba(255, 255, 255, 0.02) 8%,
+      transparent 18%,
+      transparent 82%,
+      rgba(0, 0, 0, 0.18) 100%);
+  background-size: 200px 200px, 100% 100%;
+  background-repeat: repeat, no-repeat;
+  background-blend-mode: overlay, normal;
+  opacity: 0.75;
+}
+
+/* === Pulsierender Neon-Border ===
+   Innerer Glow (inset) reflektiert auf der Obsidian-Textur,
+   aeusserer Glow (mehrlagig) leuchtet in den Raum.
+   Animation 2.6s sanftes Atmen, kein Layout-Jitter. */
+.kbk-obsidian.framed {
+  --neon-r: 63;
+  --neon-g: 207;
+  --neon-b: 74;
+  border: 1px solid rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.5);
+  animation: kk-neon-frame-pulse 2.6s ease-in-out infinite;
+  will-change: box-shadow;
+}
+
+.kbk-obsidian.framed.kbk-frame-red {
+  --neon-r: 230;
+  --neon-g: 59;
+  --neon-b: 46;
+}
+
+.kbk-obsidian.framed.kbk-frame-yellow {
+  --neon-r: 245;
+  --neon-g: 208;
+  --neon-b: 46;
+}
+
+/* v2.26 (07.05.2026): Green frame variant für Special-Event-Subgenres
+   (Brazilian Phonk im Phonk-Channel, Raggatek im Hardtek-Channel). */
+.kbk-obsidian.framed.kbk-frame-green {
+  --neon-r: 63;
+  --neon-g: 207;
+  --neon-b: 74;
+}
+
+/* v2.26 (07.05.2026): /artists Movement-Welle — Hover-Pulse + Staggered-Fade-In + Live-Ping.
+   v2.26.2 (07.05.): opacity:1 als Default — animation startet von 0 nur während
+   sie läuft (animation-fill-mode: backwards). Verhindert „dauerhaft 0%-Zustand"
+   wenn Animation aus irgendeinem Grund nicht durchlaeuft (Tab background / GPU). */
+.kbk-artist-card {
+  opacity: 1;
+  animation: kk-fade-in-up 0.55s ease-out backwards;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.kbk-artist-card:hover,
+.kbk-artist-card[data-hovering='true'] {
+  transform: translateY(-2px);
+  animation: kk-neon-frame-pulse 1.4s ease-in-out infinite;
+}
+@keyframes kk-fade-in-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes kk-live-ping {
+  0%   { box-shadow: 0 0 0 0 rgba(63, 207, 74, 0.6); transform: scale(1); }
+  70%  { box-shadow: 0 0 0 8px rgba(63, 207, 74, 0); transform: scale(1.15); }
+  100% { box-shadow: 0 0 0 0 rgba(63, 207, 74, 0); transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kbk-artist-card {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+  .kbk-artist-card:hover,
+  .kbk-artist-card[data-hovering='true'] {
+    animation: none;
+  }
+}
+
+@keyframes kk-neon-frame-pulse {
+  0%, 100% {
+    box-shadow:
+      inset 0 1px 0 rgba(240, 245, 255, 0.18),
+      inset -1px 0 0 rgba(0, 0, 0, 0.5),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.7),
+      inset 0 0 14px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.08),
+      0 0 0 1px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.18),
+      0 0 14px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.28),
+      0 0 36px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.14),
+      0 4px 12px rgba(0, 0, 0, 0.55),
+      0 16px 40px rgba(0, 0, 0, 0.45);
+  }
+  50% {
+    box-shadow:
+      inset 0 1px 0 rgba(240, 245, 255, 0.22),
+      inset -1px 0 0 rgba(0, 0, 0, 0.5),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.7),
+      inset 0 0 22px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.18),
+      0 0 0 1px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.55),
+      0 0 26px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.6),
+      0 0 64px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.32),
+      0 4px 12px rgba(0, 0, 0, 0.55),
+      0 16px 40px rgba(0, 0, 0, 0.45);
+  }
+}
+
+.kbk-obsidian.framed:hover {
+  animation-duration: 1.6s;
+  transform: translateY(-1px);
+}
+
+button.kbk-obsidian:active,
+.kbk-obsidian.is-pressed {
+  transform: translateY(0) scale(0.998);
+}
+
+/* === Aura-Glow ===
+   Sanfter pulsierender Schimmer für kleinere Buttons (z.B. AURA+ im
+   MiniPlayer). Zarter als der framed-Pulse — Button ist klein, Glow soll
+   leicht atmen, nicht aufdringlich blinken. */
+@keyframes kk-aura-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 6px rgba(63, 207, 74, 0.35),
+      0 0 12px rgba(63, 207, 74, 0.15),
+      inset 0 0 6px rgba(63, 207, 74, 0.08);
+  }
+  50% {
+    box-shadow:
+      0 0 14px rgba(63, 207, 74, 0.6),
+      0 0 28px rgba(63, 207, 74, 0.28),
+      inset 0 0 10px rgba(63, 207, 74, 0.18);
+  }
+}
+
+.kbk-aura-glow {
+  animation: kk-aura-glow 2.4s ease-in-out infinite;
+}
+
+.kbk-aura-glow:hover {
+  animation-duration: 1.4s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before { animation: none !important; }
+  .kbk-obsidian.framed {
+    animation: none !important;
+    box-shadow:
+      inset 0 1px 0 rgba(240, 245, 255, 0.2),
+      inset -1px 0 0 rgba(0, 0, 0, 0.5),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.7),
+      inset 0 0 18px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.12),
+      0 0 0 1px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.4),
+      0 0 22px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.45),
+      0 0 48px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.22),
+      0 4px 12px rgba(0, 0, 0, 0.55),
+      0 16px 40px rgba(0, 0, 0, 0.45) !important;
+  }
+  .kbk-aura-glow {
+    animation: none !important;
+    box-shadow: 0 0 12px rgba(63, 207, 74, 0.45) !important;
+  }
+  .kbk-track-marquee-active {
+    animation: none !important;
+    transform: translateX(0) !important;
+  }
+}
+
+/* === Track-Title-Marquee (v2.23, 02.05.2026 nacht) ===
+   Wenn der Songtitel breiter ist als die Track-Info-Box, scrollt er wie auf
+   einem alten MP3-Player oder Auto-Radio von rechts nach links durch — mit
+   Pause am Anfang (10%) und Ende (10%), dann snap zurück. Distance + Speed
+   werden via CSS-Variablen aus dem MiniPlayer-Component gesetzt:
+
+     --kbk-marquee-end:      `-${overflowPx}px`     (negativer X-Versatz)
+     --kbk-marquee-duration: `${seconds}s`          (Loop-Dauer)
+
+   Wenn kein Marquee aktiv ist, wird die Klasse weggelassen — der Titel
+   rendert dann mit Standard-Ellipsis. */
+@keyframes kbk-track-marquee {
+  0%, 10%   { transform: translateX(0); }
+  90%, 100% { transform: translateX(var(--kbk-marquee-end, 0)); }
+}
+.kbk-track-marquee-active {
+  animation: kbk-track-marquee var(--kbk-marquee-duration, 12s) linear infinite;
+  will-change: transform;
+}
+
+/* === LIVESTREAM-Heavy-Animationen (v2.31, 13.05.2026) ===
+   Wenn ein Twitch-Live-Stream den Slot übernimmt, wird das gefeiert.
+   Mehrere parallele Effekte für maximale Aufmerksamkeit:
+
+     - `kbk-livestream-pulse`: schnelles Atem-Pulsen (Box-Shadow + Helligkeit)
+     - `kbk-livestream-blink`: harte LED-Blinker (0/1, 600ms)
+     - `kbk-livestream-bg`:    Hintergrund-Shimmer (RGB-Cycling Lila->Pink->Lila)
+     - `kbk-livestream-marquee`: horizontal scrollender Repeat-Text
+
+   Alle respektieren `prefers-reduced-motion` — bei Reduce-Mode bleiben die
+   Elemente sichtbar, aber statisch. */
+@keyframes kbk-livestream-pulse {
+  0%, 100% {
+    box-shadow: 0 0 24px rgba(145, 70, 255, 0.75), 0 0 60px rgba(145, 70, 255, 0.35), inset 0 0 0 2px rgba(145, 70, 255, 0.85);
+    filter: brightness(1.0);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(145, 70, 255, 1.0), 0 0 100px rgba(145, 70, 255, 0.6), inset 0 0 0 2px rgba(255, 255, 255, 0.95);
+    filter: brightness(1.15);
+  }
+}
+@keyframes kbk-livestream-blink {
+  0%, 49%   { opacity: 1; box-shadow: 0 0 14px currentColor; }
+  50%, 100% { opacity: 0.18; box-shadow: 0 0 4px currentColor; }
+}
+@keyframes kbk-livestream-bg {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@keyframes kbk-livestream-marquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@keyframes kbk-livestream-shake {
+  0%, 100% { transform: translateY(0); }
+  25%      { transform: translateY(-1px); }
+  75%      { transform: translateY(1px); }
+}
+
+.kbk-livestream-pulse { animation: kbk-livestream-pulse 1.4s ease-in-out infinite; }
+.kbk-livestream-blink { animation: kbk-livestream-blink 0.6s steps(2, end) infinite; }
+.kbk-livestream-bg {
+  background: linear-gradient(
+    90deg,
+    rgba(145, 70, 255, 0.18) 0%,
+    rgba(230, 59, 174, 0.22) 25%,
+    rgba(145, 70, 255, 0.32) 50%,
+    rgba(230, 59, 174, 0.22) 75%,
+    rgba(145, 70, 255, 0.18) 100%
+  );
+  background-size: 200% 100%;
+  animation: kbk-livestream-bg 6s ease-in-out infinite;
+}
+.kbk-livestream-marquee-track {
+  display: inline-block;
+  white-space: nowrap;
+  animation: kbk-livestream-marquee 18s linear infinite;
+  will-change: transform;
+}
+.kbk-livestream-shake { animation: kbk-livestream-shake 0.18s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .kbk-livestream-pulse,
+  .kbk-livestream-blink,
+  .kbk-livestream-bg,
+  .kbk-livestream-marquee-track,
+  .kbk-livestream-shake {
+    animation: none !important;
+    background-position: 50% 50% !important;
+  }
+  .kbk-livestream-pulse {
+    box-shadow: 0 0 24px rgba(145, 70, 255, 0.5) !important;
+  }
+}
+
+/* === Globaler Footer (SiteFooter) ===
+   Full-width Panel am Seitenende. Kein eigenes Bottom-Padding — der fixierte
+   MiniPlayer reserviert seinen Platz bereits über body.kbk-has-miniplayer. */
+.kbk-footer {
+  margin-top: 48px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(10, 11, 12, 0.6);
+  padding: 40px 24px 32px;
+}
+.kbk-footer-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 32px;
+}
+.kbk-footer-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.kbk-footer-logo {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  color: #fff;
+}
+.kbk-footer-tagline {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.55);
+  margin: 0;
+  max-width: 320px;
+}
+.kbk-footer-copy {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 8px 0 0;
+}
+.kbk-footer-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.kbk-footer-heading {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.35);
+  margin: 0 0 4px;
+}
+.kbk-footer-link {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.65);
+  text-decoration: none;
+  transition: color 0.15s ease;
+  width: fit-content;
+}
+.kbk-footer-link:hover {
+  color: #3fcf4a;
+}
+/* Tablet: 2 Spalten, Brand über volle Breite. */
+@media (max-width: 1023px) {
+  .kbk-footer-inner {
+    grid-template-columns: 1fr 1fr;
+  }
+  .kbk-footer-brand {
+    grid-column: 1 / -1;
+  }
+}
+/* Smartphone: eine Spalte, größere Tap-Targets. */
+@media (max-width: 767px) {
+  .kbk-footer-inner {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .kbk-footer-brand {
+    grid-column: auto;
+  }
+  .kbk-footer-link {
+    padding: 4px 0;
+  }
+}

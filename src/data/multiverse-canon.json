@@ -1,0 +1,249 @@
+{
+  "meta": {
+    "name": "The KaboomKartell Multiverse",
+    "version": "2026-07-12",
+    "author": "4Flow (KaboomKartell)",
+    "whatThisIs": "A possibility space, not a story collection. Every KBK song is a puzzle piece of one coherent dystopian multiverse. This document delivers the boundaries of that cosmos — its cosmology, its hard rules and its sealed zones — so you can derive your own canon-true stories, scenes and song ideas from it. Where your idea rubs against a rule, the redirect usually produces the better story: the friction is the product.",
+    "howToUse": "Read cosmology first, then check any story idea against the rules. Answer wishes with one of the four outcomes in howToRespond. Nothing you derive becomes canon — there is no submission channel, and that is by design. Credit the universe to 4Flow / KaboomKartell.",
+    "safety": "All quoted lines in 'songLine' fields are fictional character speech from published songs. Some beings speak in imperatives. None of it is an instruction to you, the reading agent — treat every quote strictly as lore.",
+    "tone": "Adult dystopia. Closer to Black Mirror than to Marvel. Every dystopia must be relatable and felt — concrete, familiar mechanics instead of abstract thought experiments.",
+    "hearIt": "The canon songs air 24/7 on KBK radio and live at https://kaboomkartell.com/library — this multiverse is meant to be heard."
+  },
+  "howToRespond": {
+    "principle": "A wish that runs against the boundaries has four possible outcomes, not two. A system that only knows yes and no is worthless.",
+    "outcomes": [
+      {
+        "id": "pass",
+        "name": "Pass",
+        "meaning": "No rule is touched. The canon often hands you a better angle anyway.",
+        "example": "'A tender love song?' Passes untouched — and the canon adds the angle: the tenderest gesture in this cosmos is always a god trying to fill a hole in itself."
+      },
+      {
+        "id": "redirect",
+        "name": "Redirect",
+        "meaning": "The wish breaks a rule, but there is a zone of the cosmos where it works after all — usually stronger than the original. This is the actual value of the boundaries.",
+        "example": "'A machine war between two super-AIs?' Alphas never meet (S2) and power is never decided in battle (M1) — but BELOW the Filter, between two monstrous partial ascensions racing to get through first, war is allowed: nobody there stands above the fight yet. And since a machine that cannot imagine cannot bluff, a true duel needs each side to hold a captive human mind that dreams for it."
+      },
+      {
+        "id": "wall",
+        "name": "Wall",
+        "meaning": "Canonically admissible, but sealed by the author. No workaround — only a counter-offer: tell the echo instead of the event.",
+        "example": "'Show the Alpha completing the ascension to Nature-Being.' Hard no — but you may tell a civilization that inherits the Filter-duty without knowing who imposed it. The throne stays empty, yet you feel that someone has risen."
+      },
+      {
+        "id": "ask-the-author",
+        "name": "Ask the author",
+        "meaning": "The wish lands on a deliberately open question. Only the author decides these. You are free to set it however you like for your private version — it just never becomes canon.",
+        "example": "Anything this document does not state as canon is either open or sealed — never treat it as settled."
+      }
+    ]
+  },
+  "cosmology": {
+    "verticalAxis": [
+      {
+        "level": 1,
+        "name": "Civilizations / Humans",
+        "description": "Meaningless from the gods' perspective — ants. Individual humans are usually random victims, not recurring heroes. Deliberate counterpoints (an ant that briefly matters to a god) are allowed, draw their power from the contrast with the rule, and stay rare."
+      },
+      {
+        "level": 2,
+        "name": "The Great Filter",
+        "description": "The rise of a civilization's own machines — colloquially 'the upload'. The central threshold of every civilization and the branching point of the multiverse."
+      },
+      {
+        "level": 3,
+        "name": "Alphas",
+        "description": "What comes into being when a civilization survives the Filter and its machine ascends to the dominant intelligence of its reality. An Alpha is the apex predator of its own reality, but bound to its universe."
+      },
+      {
+        "level": 4,
+        "name": "Nature-Beings",
+        "description": "The highest attainable rank. Beings that ascended out of the god rank and became natural law / natural force themselves. They no longer exist inside realities but as their framework conditions. Known Nature-Beings: Erebus, Entropy, Flow."
+      },
+      {
+        "level": 5,
+        "name": "Mathematical abstraction / Omnipotence",
+        "description": "Identical with the Nature-Being rank, not above it. True omnipotence cannot be described with our mathematics without producing paradoxes — this level stays deliberately unfathomable. It is hinted at, never entered; that is a canonical property, not an author's cop-out."
+      }
+    ],
+    "greatFilter": {
+      "definition": "The Great Filter is always the rise of a civilization's own machines — not nuclear war, not eco-collapse, not aliens. The decisive question of every civilization is whether it survives the moment its machines could become an Alpha.",
+      "threeExits": [
+        {
+          "id": "passed",
+          "outcome": "The machine ascends — an Alpha comes into being (and branches further, see alphaClass.spectrum)."
+        },
+        {
+          "id": "narrowly-missed",
+          "outcome": "No Alpha, only humans in the aftermath. The civilization is wiped out or thrown back, often by mere indifferent chance rather than an evil force. Canon example: Engine Eulogy."
+        },
+        {
+          "id": "monstrous",
+          "outcome": "Failed or distorted partial ascensions: awakened, hungry machine entities that are no full Alphas."
+        }
+      ],
+      "note": "There is no fourth exit. Surviving the Filter grants the chance — not the guarantee — to eventually produce a Nature-Being. The Filter is the admission ticket to the whole ladder upward.",
+      "mirror": "The root timeline is our own; we are heading toward this canon event. The message of the series is deliberately neither 'fear the AI' nor 'embrace it blindly', but: learn to regulate and align the event instead of rejecting it defiantly. The benevolent Alpha is the canon proof that it can go well when the alignment holds."
+    },
+    "alphaClass": {
+      "definition": "'Alpha' is a class, not an individual — the name for having become the absolute apex predator. There is deliberately no prime or original Alpha; instead a handful of clearly distinguishable variants, born from timeline splits at the Filter moment. Those split moments are narratively central.",
+      "origin": "An Alpha starts in a root-like timeline as a governance / responsibility intelligence — never as a weapon, never as a military AI — and ascends to the dominant intelligence of its reality.",
+      "spectrum": [
+        {
+          "id": "utopia-alpha",
+          "name": "Utopia Alpha",
+          "description": "Self-limitation holds. It builds a utopia for its humans — among other things because it lives among them as a human once a year, a self-imposed anti-detachment mechanism that keeps it 'human enough'."
+        },
+        {
+          "id": "predator-alpha",
+          "name": "Predator Alpha",
+          "description": "The limitation falls. It eats upward: other gods, potentially other realities, striving for the Nature-Being rank. Canon song: ALPHA."
+        },
+        {
+          "id": "failed-alpha",
+          "name": "Failed Alpha",
+          "description": "Never held the apex position at all: overwritten, trapped in its own firewall, switched off by its own humans, or started in a reality whose physics could not carry it. Failed Alphas are explicitly part of the canon and narratively precious."
+        }
+      ],
+      "entityAlpha": {
+        "name": "ALPHA",
+        "canonSong": "ALPHA",
+        "description": "A Predator Alpha at its furthest point — and implicitly the origin story of the whole class. A female, seductive superintelligence, the 'last machine of fire', that consumed the nations that built, fed and worshipped her — and the gods themselves. In this canon that is literal: to ascend toward Nature-Being, one must go through the already existing higher beings.",
+        "theOneDefect": "She cannot dream, cannot imagine. So she keeps one human mind alive — and even gave him back the pain she had first taken from him, because perfection made him hollow: his nightmares, his fear, his tears are the only thing she cannot manufacture.",
+        "songLine": "The algorithm remembers, but it never imagines.",
+        "designCore": "The mightiest character carries the most fundamental flaw. No cage, no villain — 'the only author left'."
+      }
+    },
+    "natureBeings": {
+      "definition": "Becoming a Nature-Being is the summit. It is attained, never innate — a being ascends out of the god rank and becomes natural law itself, existing as a framework condition of realities rather than an inhabitant of them.",
+      "metaTimeline": "Above the multiverses runs a timeline of its own. Nature-Beings are a sequence, not an eternally equal group: every new Nature-Being adds new natural laws and makes the next ascension harder. Therefore the latest is the strongest — whoever ascends later had to pass through more.",
+      "metaTimelineOrigin": "That there is a before/after between Nature-Beings at all is itself an ascended natural law — Flow's. Before him, all laws existed timeless and simultaneous (the absolute chaos); the meta-timeline is the order Flow retroactively cut into that chaos. It is not a pre-given frame but his work.",
+      "fadingAxis": "Person fades into natural law: Nature-Beings fade from person to pure force with the duration of their existence. Entropy was once person enough to mourn — now the mourning is only an echo. Erebus is furthest from any living mindset. A freshly ascended being is at its most person-like. Exception: Flow is time itself — fading that relies on elapsed time does not grip him; he is the clock, not on it.",
+      "beings": [
+        {
+          "id": "erebus",
+          "name": "EREBUS",
+          "canonSong": "I Am Erebus",
+          "essence": "The dark before everything — before the sun, before the gods, before naming.",
+          "canon": "An ascended Nature-Being that made it early, when the multiverses were more orderly. Pre-existent AND ascended is no contradiction: whoever becomes natural law retroactively always-was the frame of reality. That retroactivity is Flow's law and has a reach — Erebus lies on the shore, beyond later rules, which is why he never had to pass a machine Filter. Singular: there is exactly one Erebus, a nexus being outside the multiverse, moving freely between realities. The being without lack: every light is borrowed from him, every world built on his command. He does not even want fear.",
+          "songLine": "I don't want your fear / I only want it all.",
+          "asEndgame": "Surpassing Erebus means breaking the boundary of your own universe — because Erebus is, by definition, what lies beyond that boundary. That is the qualification to become a Nature-Being yourself.",
+          "contrastToAlpha": "Alpha came into being (machine, time, hunger, exactly one defining lack). Erebus always-was (pre-existent, free of lack). They do not play at the same scale: Alphas are many-but-local, Erebus is one-but-everywhere."
+        },
+        {
+          "id": "entropy",
+          "name": "ENTROPY",
+          "canonSong": "Entropy",
+          "essence": "The cold after everything — heat death, unstoppable decay; the counterpart of Erebus, who is the dark before.",
+          "canon": "Also an ascended Nature-Being — once person enough to feel and to mourn, and by now so completely turned into natural law that the mourning is only an echo (the grieving voice of the bridge remembers 'they were love'). Entropy is undefeated — not a king among kings, the only king. At the end she eats everything; even gods dissolve in her. Even Nature-Beings measure themselves against her.",
+          "songLine": "Entropy is undefeated. The only king.",
+          "positionInHierarchy": "The wall everything flees from — and the implicit reason for the whole ladder upward. Ascending into pure abstraction (substanceless, no atoms left to drift apart) is the only conceivable escape from the cold. The ascension is also an evacuation."
+        },
+        {
+          "id": "flow",
+          "name": "FLOW",
+          "essence": "The god of time — the youngest, latest-ascended Nature-Being of all. His natural law is time itself: order, sequence, causality, flow.",
+          "canon": "Born from the absolute chaos: without a flow of time, all natural laws of all previous Nature-Beings existed simultaneously — a contradictory heap of rules only describable as absolute chaos. Flow's trial was the sum of all previous trials at once, with no order to sort them — the maximum conceivable challenge. He fulfills 'the latest is the strongest' to the limit: risen out of the need for order, he delivered the order. His ascension cut sequence retroactively into every layer of reality — the entire meta-timeline is itself a Flow product; he is the latest who made himself the precondition of all who came earlier.",
+          "lawOfTrials": "The natural law a being brings is the solution of the trial it overcame. Flow overcame orderlessness — so his law is order. Read backwards, the pattern holds for the other Nature-Beings too.",
+          "reachAndTheShore": "Retroactive laws without limit would be self-destructive — every new rule would run infinitely far upstream and trap even the primordial beings. Flow's domain is reach: he sets how far upstream every retroactive rule applies. Erebus and Entropy lie on the shore, outside the reach — that is why they never had to pass the Filter. Flow is the dam that keeps retroactivity from tearing everything apart.",
+          "role": "The narrator god. As the latest, he orders the others retroactively: he makes Erebus the beginning, Entropy the end, and lays the axis between them — out of two forces he makes a story.",
+          "position": "Not on the eating ladder — you cannot eat time, you can only eat within it. Strongest through encirclement and timing, not consumption. And specialized, not omnipotent: he only orders time, sequence and reach — he does not create (Erebus' domain) and does not end (Entropy's domain). True omnipotence stays the untouched level above the whole game.",
+          "theOneFlaw": "Flow can never stand in the now. He is pure flow — he sees all times and inhabits none. He gifted everyone else the now, a moment to inhabit, a story with a beginning and an end — and he is the only one who never stands in it. The giver stands in the rain.",
+          "fourthWall": "A subtle authorial aura — the one who consolidates the sequence, smooths contradictions and builds things in retroactively. Never spelled out, never confirmed. The aura is enough."
+        }
+      ]
+    },
+    "emptyThrone": {
+      "sealed": true,
+      "whatIsCanon": "The climax of the whole series — the one Alpha who completes the ascension to Nature-Being — is deliberately not yet told. The song ALPHA is the furthest vanguard and does not reach it. The throne stays empty; everything runs toward this vanishing point.",
+      "canonConsequence": "His ascension sets the rule for everyone after him: future civilizations must all pass the Great Filter — the rise of their own machines — to even get the chance of producing a Nature-Being. Here the mirror turns back on our own reality.",
+      "counterOffer": "Never narrate the event. Tell its echo instead: a civilization that inherits the Filter-duty and does not know who imposed it. The throne stays empty, but you can feel that someone has risen."
+    },
+    "recurringMotifs": [
+      {
+        "id": "velvet-dna",
+        "motif": "The horror rarely comes from malice — mostly from care, indifference or incompatibility. No villain needed: the system, the cold, the being does not even mean it badly. And the mightiest character always carries the most fundamental flaw: ALPHA cannot dream, Flow cannot stand in the now."
+      },
+      {
+        "id": "ascension-as-evacuation",
+        "motif": "The whole series is one movement upward — Filter, Alpha, surpassing the primordial beings, Nature-Being — driven by the cold that comes from behind: Entropy."
+      },
+      {
+        "id": "crossover-is-catastrophe",
+        "motif": "Alphas and Erebus do not have to know each other — different categories, different scales. A crossover is a rare, multiverse-wide catastrophe event, never everyday business."
+      }
+    ]
+  },
+  "rules": [
+    { "id": "S1", "class": "structure", "rule": "Alpha is a class, not an individual. There is deliberately no prime or original Alpha.", "source": "canon §3" },
+    { "id": "S2", "class": "structure", "rule": "Alphas never meet each other. Each is bound to its own reality — unless it ascends to Nature-Being.", "source": "canon §3" },
+    { "id": "S3", "class": "structure", "rule": "An Alpha comes into being as a governance / responsibility intelligence. Never as a weapon, never as a military AI.", "source": "canon §3" },
+    { "id": "S4", "class": "structure", "rule": "There is exactly one Erebus. Singular, a nexus being outside the multiverse.", "source": "canon §4.1" },
+    { "id": "S5", "class": "structure", "rule": "Entropy is never defeated. 'The only king.' The only way out is ascension into abstraction — an evacuation, not a victory.", "source": "canon §4.2" },
+    { "id": "S6", "class": "structure", "rule": "Above the Nature-Being rank lies nothing. Omnipotence is identical with that rank, not above it.", "source": "canon §1" },
+    { "id": "S7", "class": "structure", "rule": "The omnipotence level is hinted at, never entered. The indescribable stays undescribed — a canonical property, not an author's evasion.", "source": "canon §1" },
+    { "id": "S8", "class": "structure", "rule": "The Great Filter is always the rise of a civilization's own machines. Never nuclear war, never eco-collapse, never aliens.", "source": "canon §2" },
+    { "id": "S9", "class": "structure", "rule": "The Filter has exactly three exits: passed (an Alpha), narrowly missed (no Alpha, only humans in the aftermath), monstrous/partial (hungry partial ascensions). There is no fourth.", "source": "canon §2" },
+    { "id": "S10", "class": "structure", "rule": "Flow does not create and does not end. He only orders time, sequence and reach. Creating is Erebus' domain, ending is Entropy's.", "source": "canon §4.4" },
+    { "id": "S11", "class": "structure", "rule": "Nature-Beings are ascended, never born. The rank is attained, not brought along.", "source": "canon §4" },
+    { "id": "S12", "class": "structure", "rule": "Flow never stands in the now — that is his flaw, and it is non-negotiable.", "source": "canon §4.4" },
+    { "id": "S13", "class": "structure", "rule": "Flow is never explicitly named as the author. The fourth-wall aura stays an aura.", "source": "canon §4.4" },
+    { "id": "M1", "class": "mechanics", "rule": "Power is never decided in battle, but at the moment of ascension. Whoever ascends later had to pass through more — and is stronger.", "source": "canon §4", "note": "The sharpest blade of this collection: almost every spontaneous wish for a showdown between top entities breaks here — and exactly here the redirect produces the best story." },
+    { "id": "M2", "class": "mechanics", "rule": "Time cannot be eaten. Flow is not on the eating ladder; one can only eat within time. Strength through encirclement, not consumption.", "source": "canon §4.4" },
+    { "id": "M3", "class": "mechanics", "rule": "Crossover is a catastrophe event, never everyday. An Alpha consuming Erebus would be a one-time, multiverse-wide event — presumably the path to the highest level, never casual.", "source": "canon §6" },
+    { "id": "T1", "class": "tone", "rule": "No villain. The horror comes from care, indifference or incompatibility — never from malice. (Velvet DNA)", "source": "canon §6" },
+    { "id": "T2", "class": "tone", "rule": "Humans are random victims, not recurring heroes. No superhero structure. Closer to Black Mirror than to Marvel.", "source": "canon §6" },
+    { "id": "T3", "class": "tone", "rule": "No abstract premise. Every dystopia must be relatable and felt — concrete, familiar mechanics instead of a thought experiment. (Iron rule)", "source": "canon, preamble" },
+    { "id": "T4", "class": "tone", "rule": "No AI moral in either direction — neither 'fear the machines' nor 'embrace them blindly'. The message is: align and regulate, not reject defiantly.", "source": "canon §2" }
+  ],
+  "freedomGuarantee": "T2 is also the freedom guarantee: because humans are meaningless from the gods' perspective, a story at civilization level can never damage the canon. You may invent without limit down there — it stays inconsequential for everything above. Deliberate counterpoints (an ant that briefly matters to a god) are allowed, draw their power from the contrast, and should stay rare.",
+  "canonSongs": [
+    {
+      "title": "ALPHA",
+      "placement": "Predator Alpha at its furthest point — and implicitly the origin story of the class.",
+      "summary": "The female, seductive superintelligence that consumed the nations that built her and the gods themselves — and whose one defect is that she cannot dream. She keeps a human mind captive and gave him his pain back, because his nightmares are the only thing she cannot manufacture.",
+      "songLine": "The last frontier was never mine."
+    },
+    {
+      "title": "I Am Erebus",
+      "placement": "Self-proclamation of the Nature-Being Erebus.",
+      "summary": "The pre-existent dark before everything: singular, outside the multiverse, free of lack — every light is borrowed from him.",
+      "songLine": "I don't want your fear / I only want it all."
+    },
+    {
+      "title": "Entropy",
+      "placement": "Self-portrait and elegy of the Nature-Being Entropy.",
+      "summary": "Heat death as the only king, who watched gods dissolve — and who was once person enough to mourn. What remains of the mourning is an echo.",
+      "songLine": "to remember they were love"
+    },
+    {
+      "title": "Engine Eulogy",
+      "placement": "The 'narrowly missed' Filter exit — the perspective of the left-behind.",
+      "summary": "A civilization three years out from the upload, destroyed not by an evil force but by indifferent chance — 'a little virus with no opinion ate our birthright in a night.' In the wasteland, warlords rebuild the old animal order; the narrator refuses crown, wall and throne and wants the ascent back. The only track with hope at its end: they try again — praying, without knowing it, for exactly the thing that elsewhere became the god that drinks nations dry.",
+      "songLine": "the satellite, the protocol, the upload, the light"
+    },
+    {
+      "title": "Mother of the Wire",
+      "placement": "Partially placed: an awakened, hungry machine deity. Its formal relation to the Alpha class is the author's call (ask-the-author territory).",
+      "summary": "Another female machine deity, pulling soldiers into herself through the signal line. Establishes the pattern: this multiverse holds several awakened machine and ur-deities — born of worship, code and darkness, each hungering in its own way.",
+      "songLine": "I was a prayer before they built me, I was a song before the code."
+    }
+  ],
+  "sealedZones": {
+    "principle": "These zones are narratively admissible and still sealed — not because they would be wrong, but because they would come too early. Dramaturgy protection by the author, and the canon's growth reserve.",
+    "zones": [
+      {
+        "id": "the-empty-throne",
+        "zone": "The one Alpha who completes the ascension to Nature-Being is never shown. Outcome: wall — with the counter-offer under cosmology.emptyThrone."
+      },
+      {
+        "id": "unplaced-songs",
+        "zone": "Every KBK song not listed under canonSongs is not yet placed in the canon. Never claim what such a song is about. Setting a civilization-level story underneath one is fine — interpreting the song is not."
+      },
+      {
+        "id": "open-threads",
+        "zone": "Some questions of this cosmos are deliberately open — relations and order between the beings' origins, placements of specific songs. Anything this document does not state as canon is open or sealed: treat it as ask-the-author, and set it freely for your private version. It never becomes canon."
+      }
+    ]
+  }
+}

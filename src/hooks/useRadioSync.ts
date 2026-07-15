@@ -1,0 +1,464 @@
+/**
+ * useRadioSync — „The Conductor" (Radio Sync v2)
+ *
+ * Der Server ist der Dirigent: er liefert pro Poll die autoritative Zeitlinie
+ * (laufender Track + absolute `startedAt`/`endsAt` in Server-Zeit + gelockter
+ * nächster Track). Der Client koppelt sein lokales `<audio>` per Phase-Locked-Loop
+ * an den Taktstock — ein 1s-Regelkreis ruft das reine Regelgesetz
+ * `computeSyncAction` (siehe `@/lib/radio-sync-control`) und gleicht Drift per
+ * minimalem Tempo-Nudge (Tempo-only, unhörbar) aus; großer Versatz → harter
+ * Re-Seek; Track-Ende → schedule-getriebener Wechsel.
+ *
+ * Damit entfällt der frühere Sonderfall-Wust (300s-Schwelle, „<3s"-Mid-Cut,
+ * „Client voraus"): EIN Regelgesetz hält die Wiedergabe stabil und skalierbar,
+ * unabhängig von Browser-Uhr-Offset und DB-/MP3-Dauer-Drift.
+ *
+ * Channel-Modell: Phonk / Hardtek (+ LIVE nur während Stream-Events). Der
+ * `channel`-Param geht mit jedem Request mit; bei Wechsel synchronisiert der Hook
+ * auf den neuen Channel. Off-Air (`data: null`) → Audio pausiert, Schedule leer.
+ */
+
+import { useState, useRef, useCallback, useEffect } from 'react'
+import { RADIO_CONFIG } from '@/lib/constants'
+import { computeSyncAction, statusForAction, type SyncStatus } from '@/lib/radio-sync-control'
+import type { PlayerTrack } from '@/types'
+
+interface RadioSlotInfo {
+  id: string
+  label: string
+  type: 'weekly' | 'event'
+}
+
+interface NowPlayingTrack {
+  id: string
+  title: string
+  artist: string
+  duration: number
+  streamUrl: string
+  coverUrl?: string | null
+}
+
+interface NowPlayingResponse {
+  track: NowPlayingTrack | null
+  positionSeconds: number
+  slot: RadioSlotInfo
+  nextTrack: NowPlayingTrack | null
+  /** Radio Sync v2: absolute Server-Zeitstempel der laufenden Track-Instanz. */
+  startedAt?: string
+  endsAt?: string
+  slotEndsAt: string
+  serverTime: string
+  eventType?: string
+  streamUrl?: string
+  /** Agency-Loop (18.06.2026, ADR-033): Herkunft des laufenden Tracks (VOTE|RANDOM|SEED). */
+  currentSource?: 'VOTE' | 'RANDOM' | 'SEED' | null
+  /** Agency-Loop: Crowd-Control-Fenster-ID des laufenden Tracks (N+2-Match client-seitig). */
+  currentDecisionSeq?: number | null
+}
+
+interface NowPlayingEnvelope {
+  success: boolean
+  data: NowPlayingResponse | null
+  activeChannels?: string[]
+  serverTime?: string
+  channel?: string | null
+  message?: string
+}
+
+interface UseRadioSyncReturn {
+  radioMode: boolean
+  radioSlot: RadioSlotInfo | null
+  radioNextTrack: PlayerTrack | null
+  radioLoading: boolean
+  isLiveEvent: boolean
+  liveStreamUrl: string | null
+  activeChannels: string[]
+  /** Agency-Loop (18.06.2026, ADR-033): Herkunft des laufenden Radio-Tracks. */
+  radioCurrentSource: 'VOTE' | 'RANDOM' | 'SEED' | null
+  /** Agency-Loop: Crowd-Control-Fenster-ID des laufenden Tracks (für N+2-Pick-Match). */
+  radioCurrentDecisionSeq: number | null
+  /** Beatmatch-Status für den Player-Indikator. */
+  syncStatus: SyncStatus
+  /** Geschätzte Server-Zeit JETZT (ms) — clock-offset-korrigiert. Für Countdown-UIs. */
+  getServerNow: () => number
+  enterRadioMode: () => Promise<void>
+  exitRadioMode: () => void
+  /** Vom PlayerProvider beim `ended`-Event gerufen — gapless auf den nächsten Track. */
+  handleTrackEnded: () => void
+}
+
+/** Gecachte Conductor-Zeitlinie eines Channels. */
+interface Schedule {
+  serverTrackId: string
+  startedAtMs: number
+  endsAtMs: number
+  currentTrack: PlayerTrack
+  nextTrack: PlayerTrack | null
+}
+
+function toPlayerTrack(data: NowPlayingTrack | null): PlayerTrack | null {
+  if (!data) return null
+  return {
+    id: data.id,
+    title: data.title,
+    artist: data.artist,
+    duration: data.duration,
+    url: data.streamUrl,
+    coverUrl: data.coverUrl ?? undefined,
+    isLocal: false,
+    isSoundcloud: false,
+    aiDisclosure: (data as { aiDisclosure?: PlayerTrack['aiDisclosure'] }).aiDisclosure ?? null,
+  }
+}
+
+/** Median einer kleinen Sample-Liste (robust gegen Jitter/GC-Ausreißer). */
+function median(xs: number[]): number {
+  if (xs.length === 0) return 0
+  const s = [...xs].sort((a, b) => a - b)
+  const mid = Math.floor(s.length / 2)
+  return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2
+}
+
+export function useRadioSync(
+  audioPlay: (track: PlayerTrack) => void,
+  audioSeek: (time: number) => void,
+  audioPause: () => void,
+  audioSetPlaybackRate: (rate: number) => void,
+  audioCurrentTime: number,
+  audioDuration: number,
+  audioIsPlaying: boolean,
+  audioVolume: number,
+  channel: string | null,
+): UseRadioSyncReturn {
+  const [radioMode, setRadioMode] = useState(false)
+  const [radioSlot, setRadioSlot] = useState<RadioSlotInfo | null>(null)
+  const [radioNextTrack, setRadioNextTrack] = useState<PlayerTrack | null>(null)
+  const [radioLoading, setRadioLoading] = useState(false)
+  const [isLiveEvent, setIsLiveEvent] = useState(false)
+  const [liveStreamUrl, setLiveStreamUrl] = useState<string | null>(null)
+  const [activeChannels, setActiveChannels] = useState<string[]>([])
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle')
+  // Agency-Loop (18.06.2026): Herkunft + Fenster-ID des laufenden Tracks, vom Server
+  // durchgereicht. Speist die client-seitige „mein Pick läuft"-Erkennung im MiniPlayer.
+  const [radioCurrentSource, setRadioCurrentSource] = useState<'VOTE' | 'RANDOM' | 'SEED' | null>(null)
+  const [radioCurrentDecisionSeq, setRadioCurrentDecisionSeq] = useState<number | null>(null)
+
+  // --- Refs ---
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const controlRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const clockOffsetRef = useRef(0)            // Server-Zeit minus Client-Zeit (ms), gemedianed
+  const offsetSamplesRef = useRef<number[]>([])
+  const scheduleRef = useRef<Schedule | null>(null)
+  const currentTrackIdRef = useRef<string | null>(null)  // was das Audio gerade spielt
+  // Nach Switch/Seek kurz nicht erneut korrigieren (Element muss laden/settlen).
+  const suppressUntilRef = useRef(0)
+
+  const channelRef = useRef<string | null>(channel)
+  useEffect(() => { channelRef.current = channel }, [channel])
+
+  const radioModeRef = useRef(false)
+  useEffect(() => { radioModeRef.current = radioMode }, [radioMode])
+
+  // Audio-Zustand als Refs (der Control-Tick liest aus setInterval → keine stale closures).
+  const audioCurrentTimeRef = useRef(audioCurrentTime)
+  const audioDurationRef = useRef(audioDuration)
+  const audioIsPlayingRef = useRef(audioIsPlaying)
+  const audioVolumeRef = useRef(audioVolume)
+  useEffect(() => { audioCurrentTimeRef.current = audioCurrentTime }, [audioCurrentTime])
+  useEffect(() => { audioDurationRef.current = audioDuration }, [audioDuration])
+  useEffect(() => { audioIsPlayingRef.current = audioIsPlaying }, [audioIsPlaying])
+  useEffect(() => { audioVolumeRef.current = audioVolume }, [audioVolume])
+
+  const getServerNow = useCallback(() => Date.now() + clockOffsetRef.current, [])
+
+  // P0.6-Verfeinerung (06.07.2026): „idle" = Tab verdeckt UND niemand hört zu.
+  // Nur dann setzen Poll- + Control-Tick aus. Hörbar spielend zählt NICHT als
+  // idle — Chrome/Windows meldet auch ein komplett verdecktes Fenster als
+  // hidden, und ohne Poll kennt der Client den Folge-Track nicht → Wiedergabe
+  // riss am Track-Ende ab, bis der Tab wieder sichtbar wurde.
+  const isHiddenIdle = useCallback(() =>
+    typeof document !== 'undefined' && document.hidden &&
+    !(audioIsPlayingRef.current && audioVolumeRef.current > 0), [])
+
+  // Preload des nächsten Tracks in den HTTP-Cache (gapless beim Wechsel).
+  const preloadedUrlRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (!radioNextTrack?.url || radioNextTrack.isSoundcloud) return
+    if (preloadedUrlRef.current === radioNextTrack.url) return
+    preloadedUrlRef.current = radioNextTrack.url
+    const preloader = new Audio()
+    preloader.preload = 'auto'
+    preloader.src = radioNextTrack.url
+    preloader.load()
+  }, [radioNextTrack?.url, radioNextTrack?.isSoundcloud])
+
+  // --- Off-Air: Channel sendet nicht ---
+  const handleOffAir = useCallback(() => {
+    setIsLiveEvent(false)
+    setLiveStreamUrl(null)
+    setRadioSlot(null)
+    setRadioNextTrack(null)
+    scheduleRef.current = null
+    currentTrackIdRef.current = null
+    setSyncStatus('idle')
+    setRadioCurrentSource(null)
+    setRadioCurrentDecisionSeq(null)
+    audioPause()
+  }, [audioPause])
+
+  // --- Gapless-Wechsel auf den (gelockten) nächsten Track + Schedule-Roll-Forward ---
+  // Wird vom Control-Tick (am endsAt) UND vom `ended`-Event (echtes Audio-Ende)
+  // gerufen — wer zuerst feuert, gewinnt; der andere sieht „schon erledigt".
+  const switchToNext = useCallback(() => {
+    const sched = scheduleRef.current
+    if (!sched?.nextTrack) return false
+    if (currentTrackIdRef.current === sched.nextTrack.id) return false
+    const next = sched.nextTrack
+    currentTrackIdRef.current = next.id
+    audioSetPlaybackRate(1)
+    audioPlay(next)
+    const seekTo = Math.max(0, (getServerNow() - sched.endsAtMs) / 1000)
+    setTimeout(() => audioSeek(seekTo), 300)
+    // Lokaler Roll-Forward: der nächste Track ist jetzt „current"; sein Start = altes
+    // endsAt, sein Ende = + echte Track-Dauer. Der nächste Poll überschreibt das mit
+    // den autoritativen Server-Werten.
+    scheduleRef.current = {
+      serverTrackId: next.id,
+      startedAtMs: sched.endsAtMs,
+      endsAtMs: sched.endsAtMs + next.duration * 1000,
+      currentTrack: next,
+      nextTrack: null,
+    }
+    setRadioNextTrack(null)
+    suppressUntilRef.current = Date.now() + 1000
+    return true
+  }, [audioPlay, audioSeek, audioSetPlaybackRate, getServerNow])
+
+  // --- Der Regelkreis: EINE Iteration ---
+  const runControlTick = useCallback(() => {
+    if (!radioModeRef.current) return
+    const sched = scheduleRef.current
+    if (!sched) { setSyncStatus('idle'); return }
+    if (Date.now() < suppressUntilRef.current) return
+
+    const action = computeSyncAction({
+      serverNowMs: getServerNow(),
+      startedAtMs: sched.startedAtMs,
+      endsAtMs: sched.endsAtMs,
+      serverTrackId: sched.serverTrackId,
+      audioTrackId: currentTrackIdRef.current,
+      audioTimeSec: audioCurrentTimeRef.current,
+      audioDurationSec: audioDurationRef.current,
+      nextTrackId: sched.nextTrack?.id ?? null,
+    })
+
+    switch (action.kind) {
+      case 'idle':
+        break
+      case 'hold':
+        audioSetPlaybackRate(1)
+        break
+      case 'slew':
+        audioSetPlaybackRate(action.playbackRate)
+        break
+      case 'seek':
+        audioSetPlaybackRate(1)
+        audioSeek(action.seekToSec)
+        suppressUntilRef.current = Date.now() + 800
+        break
+      case 'switch': {
+        if (sched.nextTrack && action.trackId === sched.nextTrack.id) {
+          switchToNext()
+        } else if (action.trackId === sched.currentTrack.id) {
+          // Track-Wechsel laut Poll (oder Initial-Einstieg) → current laden + seeken.
+          currentTrackIdRef.current = sched.currentTrack.id
+          audioSetPlaybackRate(1)
+          audioPlay(sched.currentTrack)
+          const seekTo = action.seekToSec
+          setTimeout(() => audioSeek(seekTo), 300)
+          suppressUntilRef.current = Date.now() + 1000
+        }
+        break
+      }
+    }
+    setSyncStatus(statusForAction(action))
+  }, [audioPlay, audioSeek, audioSetPlaybackRate, getServerNow, switchToNext])
+
+  // --- Now-Playing holen + Clock-Offset messen (NTP-Mittelpunkt + Median) ---
+  const fetchNowPlaying = useCallback(async (): Promise<NowPlayingEnvelope | null> => {
+    try {
+      const ch = channelRef.current
+      const url = ch
+        ? `/api/radio/now-playing?channel=${encodeURIComponent(ch)}`
+        : '/api/radio/now-playing'
+      const tSent = Date.now()
+      const res = await fetch(url, { cache: 'no-store' })
+      const json = (await res.json()) as NowPlayingEnvelope
+      const tRecv = Date.now()
+      if (!json.success) return null
+      setActiveChannels(json.activeChannels ?? [])
+      const serverIso = json.data?.serverTime ?? json.serverTime
+      if (serverIso) {
+        const sample = Date.parse(serverIso) - (tSent + tRecv) / 2
+        const samples = offsetSamplesRef.current
+        samples.push(sample)
+        if (samples.length > 5) samples.shift()
+        clockOffsetRef.current = median(samples)
+      }
+      return json
+    } catch (error) {
+      console.error('Radio now-playing Fehler:', error)
+      return null
+    }
+  }, [])
+
+  // --- Poll-Antwort übernehmen (Schedule setzen) — KEINE direkte Korrektur hier ---
+  const ingest = useCallback((envelope: NowPlayingEnvelope) => {
+    const data = envelope.data
+    if (!data) { handleOffAir(); return }
+
+    // Live-Stream-Event (YouTube/Twitch) → kein Pool-Track, kein PLL.
+    if (data.eventType && data.eventType !== 'POOL') {
+      setIsLiveEvent(true)
+      setLiveStreamUrl(data.streamUrl ?? null)
+      setRadioSlot(data.slot)
+      setRadioNextTrack(null)
+      scheduleRef.current = null
+      currentTrackIdRef.current = null
+      setSyncStatus('idle')
+      setRadioCurrentSource(null)
+      setRadioCurrentDecisionSeq(null)
+      audioPause()
+      return
+    }
+
+    setIsLiveEvent(false)
+    setLiveStreamUrl(null)
+    setRadioSlot(data.slot)
+    // Agency-Loop: Herkunft + Fenster-ID des laufenden Tracks übernehmen (vom Server
+    // durchgereicht; deterministischer Pfad liefert null). Der MiniPlayer-Effect liest
+    // diese beim Track-Wechsel für die Pick-Erkennung.
+    setRadioCurrentSource(data.currentSource ?? null)
+    setRadioCurrentDecisionSeq(data.currentDecisionSeq ?? null)
+
+    const currentTrack = toPlayerTrack(data.track)
+    const nextTrack = toPlayerTrack(data.nextTrack)
+    setRadioNextTrack(nextTrack)
+
+    if (!currentTrack || !data.startedAt || !data.endsAt) return
+
+    scheduleRef.current = {
+      serverTrackId: currentTrack.id,
+      startedAtMs: Date.parse(data.startedAt),
+      endsAtMs: Date.parse(data.endsAt),
+      currentTrack,
+      nextTrack,
+    }
+    // Sofort einmal regeln statt auf den nächsten 1s-Tick zu warten (snappy Einstieg).
+    runControlTick()
+  }, [handleOffAir, audioPause, runControlTick])
+
+  // --- Vom PlayerProvider beim `ended`-Event ---
+  const handleTrackEnded = useCallback(() => {
+    if (!radioModeRef.current) return
+    if (switchToNext()) return
+    // Sicherheitsnetz: kein gelockter Folge-Track im Cache (idle Tab hat seit dem
+    // letzten Wechsel nicht gepollt) → einmalig nachladen statt still verstummen.
+    // Ein Request pro Track-Ende, kein Dauer-Poll — P0.6-Ersparnis bleibt.
+    fetchNowPlaying().then((envelope) => { if (envelope) ingest(envelope) })
+  }, [switchToNext, fetchNowPlaying, ingest])
+
+  // --- Radio-Modus starten ---
+  const enterRadioMode = useCallback(async () => {
+    setRadioLoading(true)
+    try {
+      const envelope = await fetchNowPlaying()
+      setRadioMode(true)
+      radioModeRef.current = true
+      if (envelope) ingest(envelope)
+
+      if (pollRef.current) clearInterval(pollRef.current)
+      pollRef.current = setInterval(async () => {
+        // P0.6: idle Tab (verdeckt + nicht hörbar) pollt nicht (spart Server-Last) —
+        // der visibilitychange-Effekt synct beim Sichtbarwerden sofort neu.
+        if (isHiddenIdle()) return
+        const update = await fetchNowPlaying()
+        if (update) ingest(update)
+      }, RADIO_CONFIG.pollIntervalMs)
+
+      if (controlRef.current) clearInterval(controlRef.current)
+      controlRef.current = setInterval(() => {
+        // Der Control-Tick nudged die Wiedergabe gegen den zuletzt gepollten Stand; im
+        // idle Tab ist der stale (kein Poll) → aussetzen, beim Sichtbarwerden neu syncen.
+        if (isHiddenIdle()) return
+        runControlTick()
+      }, RADIO_CONFIG.controlTickMs)
+    } finally {
+      setRadioLoading(false)
+    }
+  }, [fetchNowPlaying, ingest, runControlTick, isHiddenIdle])
+
+  // --- Channel-Wechsel: sofort neu syncen ---
+  useEffect(() => {
+    if (!radioMode) return
+    currentTrackIdRef.current = null
+    scheduleRef.current = null
+    fetchNowPlaying().then((envelope) => { if (envelope) ingest(envelope) })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [channel, radioMode])
+
+  // --- P0.6: Tab-Sichtbarkeit. Im idle Tab (verdeckt + nicht hörbar) setzen Poll- +
+  //     Control-Tick aus (Guards in den Intervallen); wird der Tab wieder sichtbar,
+  //     sofort neu syncen statt aufs Intervall zu warten (analog Channel-Wechsel). ---
+  useEffect(() => {
+    if (!radioMode) return
+    const onVis = () => {
+      if (!document.hidden) fetchNowPlaying().then((envelope) => { if (envelope) ingest(envelope) })
+    }
+    document.addEventListener('visibilitychange', onVis)
+    return () => document.removeEventListener('visibilitychange', onVis)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [radioMode])
+
+  // --- Radio-Modus beenden ---
+  const exitRadioMode = useCallback(() => {
+    setRadioMode(false)
+    radioModeRef.current = false
+    setRadioSlot(null)
+    setRadioNextTrack(null)
+    setIsLiveEvent(false)
+    setLiveStreamUrl(null)
+    setSyncStatus('idle')
+    setRadioCurrentSource(null)
+    setRadioCurrentDecisionSeq(null)
+    scheduleRef.current = null
+    currentTrackIdRef.current = null
+    if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null }
+    if (controlRef.current) { clearInterval(controlRef.current); controlRef.current = null }
+  }, [])
+
+  // Aufräumen bei Unmount
+  useEffect(() => {
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current)
+      if (controlRef.current) clearInterval(controlRef.current)
+    }
+  }, [])
+
+  return {
+    radioMode,
+    radioSlot,
+    radioNextTrack,
+    radioLoading,
+    isLiveEvent,
+    liveStreamUrl,
+    activeChannels,
+    radioCurrentSource,
+    radioCurrentDecisionSeq,
+    syncStatus,
+    getServerNow,
+    enterRadioMode,
+    exitRadioMode,
+    handleTrackEnded,
+  }
+}

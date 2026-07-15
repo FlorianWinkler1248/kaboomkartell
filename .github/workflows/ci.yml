@@ -1,0 +1,69 @@
+# CI — Typecheck + Lint + Tests + echter Build auf jedem Push/PR.
+#
+# Native-Treiber (better-sqlite3, bcrypt) werden nach dem Install nachgezogen:
+# die Integration-Tests (radio-state) und `next build` brauchen den nativen
+# SQLite-Treiber + bcrypt. Install läuft mit --ignore-scripts (pnpm-v10-Gate),
+# der gezielte `pnpm rebuild` baut nur die zwei nativen Pakete.
+#
+# Die DATABASE_URL/Secret-Werte unten sind reine CI-Dummies (keine echten
+# Geheimnisse) — sie sorgen nur dafür, dass Module beim Build/Test laden.
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    env:
+      DATABASE_URL: file:./ci.db
+      AUTH_SECRET: ci-dummy-secret-not-used-in-prod
+      NEXTAUTH_SECRET: ci-dummy-secret-not-used-in-prod
+      AUTH_URL: http://localhost:3000
+      NEXTAUTH_URL: http://localhost:3000
+      AUTH_TRUST_HOST: 'true'
+      # 64 Hex-Zeichen = 32 Bytes (Format-Vorgabe von auth-security.ts).
+      ENCRYPTION_KEY: '0000000000000000000000000000000000000000000000000000000000000000'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install (ohne Native-Build-Scripts)
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Native-Treiber bauen (SQLite + bcrypt)
+        run: pnpm rebuild better-sqlite3 bcrypt
+
+      - name: i18n parity (Katalog-Sync EN/DE/FR/ES)
+        run: node scripts/validate-i18n.mjs
+
+      - name: Typecheck
+        run: pnpm exec tsc --noEmit
+
+      - name: Lint
+        run: pnpm exec eslint src --max-warnings 0
+
+      - name: Tests (vitest)
+        run: pnpm test
+
+      - name: DB-Schema für Build-Render anlegen
+        # db push statt `migrate deploy`: das Migrations-Replay ist nicht
+        # fresh-deploy-fest (v28 referenziert pool_tracks, das erst die
+        # spätere pool_restructure-Migration anlegt). db push baut das
+        # Schema direkt aus schema.prisma in einem Rutsch.
+        run: pnpm exec prisma db push
+
+      - name: Build (echter next build — fängt Client/Server-Boundary-Brüche)
+        run: pnpm build

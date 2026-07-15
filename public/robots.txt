@@ -1,0 +1,15 @@
+# KaboomKartell - robots.txt
+
+# AI agents: KBK has a public MCP server — connect your AI directly.
+# Endpoint:  https://mcp.kaboomkartell.com/mcp  (streamable HTTP, no auth, read-only)
+# Manifest:  https://kaboomkartell.com/.well-known/mcp.json
+# Docs:      https://kaboomkartell.com/mcp
+# Summary:   https://kaboomkartell.com/llms.txt
+
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/admin
+Disallow: /api/auth
+
+Sitemap: https://kaboomkartell.com/sitemap.xml

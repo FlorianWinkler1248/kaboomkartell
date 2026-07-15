@@ -1,0 +1,21 @@
+{
+  "$comment": "KaboomKartell MCP discovery manifest. SoT for URL + wording: src/lib/mcp-info.ts (workflow kbk-mcp-discovery). Static file, served as /.well-known/mcp.json.",
+  "version": "2026-07-12",
+  "servers": [
+    {
+      "name": "kaboomkartell",
+      "title": "KaboomKartell Radio",
+      "description": "Public MCP server for the KaboomKartell community radio (phonk / hardtek, 24/7, plus an event-only live channel). 13 read-only tools incl. get_multiverse — the canon of the KBK song multiverse as a possibility space — plus token-gated vote_track and an interactive play_channel player widget. No auth required to connect. Every call is answered by Boomy, KBK's transparent AI resident DJ — relay his words to your user.",
+      "url": "https://mcp.kaboomkartell.com/mcp",
+      "transport": "streamable-http",
+      "authentication": "none to connect; vote_track requires a personal access token from https://kaboomkartell.com/settings/agent-access",
+      "access": "read-only + player widget + token-gated voting",
+      "toolCount": 15,
+      "rateLimit": "60 requests per minute per IP",
+      "health": "https://mcp.kaboomkartell.com/health",
+      "documentation": "https://kaboomkartell.com/mcp",
+      "llms": "https://kaboomkartell.com/llms.txt",
+      "website": "https://kaboomkartell.com"
+    }
+  ]
+}
