@@ -348,8 +348,7 @@
       "upNext": "Up next",
       "genreSwitchSoon": "Genre switches soon — this vote still counts.",
       "voteTheOneAfter": "Vote: the one after",
-      "yourPickOnAir": "🐺 Your pick is on air — {track}",
-      "picksLanded": "{count, plural, one {# of your picks has played} other {# of your picks have played}}"
+      "yourPickOnAir": "🐺 Your pick is on air — {track}"
     },
     "marquee": {
       "underground": "UNDERGROUND",

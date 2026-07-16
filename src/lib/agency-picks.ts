@@ -25,8 +25,6 @@ export const PICK_OFFSET = 2
 /** Wie viele letzte Vote-Fenster pro Channel behalten werden (FIFO, gegen unbegrenztes Wachsen). */
 const MAX_PICKS_PER_CHANNEL = 10
 
-const PICKS_LANDED_KEY = 'kbk_picks_landed'
-
 /** Ein im Browser gemerkter eigener Vote. */
 interface MyPick {
   /** Crowd-Control-Fenster, für das gevotet wurde (= das übernächste Lied). */
@@ -132,17 +130,6 @@ export function consumePickIfMatches(
   return true
 }
 
-/** Liest den Picks-landed-Zähler (gesamt, channel-übergreifend). 0 bei leer/kaputt. */
-export function getPicksLanded(): number {
-  const raw = safeGet(PICKS_LANDED_KEY)
-  if (!raw) return 0
-  const n = parseInt(raw, 10)
-  return Number.isFinite(n) && n > 0 ? n : 0
-}
-
-/** Erhöht den Picks-landed-Zähler um 1 und gibt den neuen Wert zurück. */
-export function bumpPicksLanded(): number {
-  const next = getPicksLanded() + 1
-  safeSet(PICKS_LANDED_KEY, String(next))
-  return next
-}
+// Der frühere Picks-landed-Zähler (kbk_picks_landed, Agency-Loop Teil 3) wurde am
+// 16.07.2026 auf Flow-Entscheid entfernt — verunsicherte nur. Der „Your pick is on
+// air"-Toast (consumePickIfMatches) bleibt.

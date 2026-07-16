@@ -348,8 +348,7 @@
       "upNext": "À suivre",
       "genreSwitchSoon": "Changement de genre imminent — ce vote compte toujours.",
       "voteTheOneAfter": "Vote : celui d’après",
-      "yourPickOnAir": "🐺 Ton choix passe à l'antenne — {track}",
-      "picksLanded": "{count, plural, one {# de tes choix a été joué} other {# de tes choix ont été joués}}"
+      "yourPickOnAir": "🐺 Ton choix passe à l'antenne — {track}"
     },
     "marquee": {
       "underground": "UNDERGROUND",

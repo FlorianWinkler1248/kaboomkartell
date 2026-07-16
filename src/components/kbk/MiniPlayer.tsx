@@ -27,7 +27,7 @@ import { useTranslations } from 'next-intl';
 import { useSession } from 'next-auth/react';
 import { usePlayer } from '@/components/providers/PlayerProvider';
 import { useToast } from '@/components/providers/ToastProvider';
-import { consumePickIfMatches, bumpPicksLanded } from '@/lib/agency-picks';
+import { consumePickIfMatches } from '@/lib/agency-picks';
 import PlayerBackgroundEqualizer from '@/components/player/PlayerBackgroundEqualizer';
 import { useTrackAiTag } from '@/hooks/useTrackAiTag';
 import { useChannelAccent, CHANNEL_COLORS } from '@/hooks/useChannelAccent';
@@ -154,7 +154,7 @@ export default function MiniPlayer() {
   // Agency-Loop (18.06.2026, ADR-033): „dein Pick läuft". Bei jedem Track-Wechsel prüfen,
   // ob der jetzt laufende Track aus einem Community-Vote stammt (currentSource === 'VOTE')
   // UND ob ICH für genau dieses Fenster gevotet habe (consumePickIfMatches matcht den
-  // N+2-Versatz und schützt gegen Doppel-Toast). Treffer → useToast + Picks-Zähler hoch.
+  // N+2-Versatz und schützt gegen Doppel-Toast). Treffer → useToast.
   useEffect(() => {
     if (!current?.id) return;
     if (radioCurrentSource !== 'VOTE') return;
@@ -162,7 +162,6 @@ export default function MiniPlayer() {
       consumePickIfMatches(selectedChannel, radioCurrentDecisionSeq, current.id)
     ) {
       toast({ type: 'success', message: tCrowd('yourPickOnAir', { track: current.title }) });
-      bumpPicksLanded();
     }
     // current.title ist an current.id gekoppelt — id reicht als Wechsel-Signal.
     // eslint-disable-next-line react-hooks/exhaustive-deps

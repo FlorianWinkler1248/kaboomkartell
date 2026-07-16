@@ -660,3 +660,121 @@ describe('radio-state — Slot-Wechsel während laufendem Betrieb (weiche Übern
     expect(cc.transitioning).toBe(false)
   })
 })
+
+// Fix 16.07.2026: lockWindowIfDue filterte die eingefrorenen Kandidaten gegen den Pool des
+// LAUFENDEN Plays (current.poolId). Nach einer weichen Slot-Übernahme (ADR-034) trägt
+// current.poolId aber noch den ALTEN Pool, während die Kandidaten längst aus dem NEUEN
+// Slot-Pool stammen — der Filter leerte die Liste, der Fallback baute Alt-Genre-Ersatz und
+// verewigte so das alte Genre über die Slot-Grenze (phonk-Channel spielte >10 h keinen
+// Brazilian-Slot-Inhalt). Neu: Auflösbarkeits-Filter (Fenster-Pool ODER frischer Slot-Pool),
+// Degenerat-Fallback baut aus dem FRISCHEN Slot-Pool. Getestet über die öffentliche API
+// (readNowPlayingState lockt via lockWindowIfDue).
+describe('lockWindowIfDue — weiche Slot-Übernahme (Fix 16.07.2026)', () => {
+  it('Kern-Regression: Kandidaten aus dem neuen Slot-Pool überleben den Lock, obwohl current noch aus dem alten Pool spielt', async () => {
+    const pool1 = makePool(20)
+    const pool2 = makePool2(20)
+    const poolMap = new Map([['pool1', pool1], ['pool2', pool2]])
+    const t0 = 1_900_000_000_000
+
+    // Zustand nach weicher Übernahme nachstellen: current-Play läuft noch aus pool1,
+    // die N+2-Kandidaten wurden aber schon aus dem NEUEN Slot-Pool (pool2) gebaut.
+    await state.readNowPlayingState(makeCtx(t0), pool1, new Date(t0), CH, poolMap)
+    const play1 = await prisma.radioPlay.findUnique({ where: { channel_decisionSeq: { channel: CH, decisionSeq: 1 } } })
+    expect(play1.poolId).toBe('pool1')
+    const headBefore = await prisma.radioHead.findUnique({ where: { channel: CH } })
+    const committedBefore = headBefore.committedNextTrackId
+    const pool2Candidates = pool2.tracks.slice(0, 5).map((t) => t.id)
+    await prisma.radioHead.update({
+      where: { channel: CH },
+      data: { candidateIds: JSON.stringify(pool2Candidates), pendingNextTrackId: null, lockedAt: null },
+    })
+
+    // Lock-fälliger Poll (innerhalb VOTE_CLOSE_LEAD) mit ctx/pool = NEUER Slot (pool2).
+    const lockTime = new Date(play1.endsAt.getTime() - state.VOTE_CLOSE_LEAD_MS + 2_000)
+    await state.readNowPlayingState(makeCtx2(t0, 'pool2', 'slotB'), pool2, lockTime, CH, poolMap)
+
+    const head = await prisma.radioHead.findUnique({ where: { channel: CH } })
+    expect(head.lockedAt).not.toBeNull()
+    expect(head.pendingNextTrackId).toBeTruthy()
+    // DER Bug: vorher leerte der current.poolId-Filter die pool2-Kandidaten und der
+    // Fallback lockte einen pool1-Track. Jetzt: Gewinner ∈ eingefrorene pool2-Kandidaten.
+    expect(pool2Candidates).toContain(head.pendingNextTrackId)
+    expect(pool2.tracks.some((t) => t.id === head.pendingNextTrackId)).toBe(true)
+    expect(pool1.tracks.some((t) => t.id === head.pendingNextTrackId)).toBe(false)
+    // Der Lock fasst das committete N+1 nicht an.
+    expect(head.committedNextTrackId).toBe(committedBefore)
+  })
+
+  it('Degenerat-Fallback: nirgends auflösbare Kandidaten → Lock lockt trotzdem, Gewinner aus dem FRISCHEN Slot-Pool', async () => {
+    const pool1 = makePool(20)
+    const pool2 = makePool2(20)
+    const poolMap = new Map([['pool1', pool1], ['pool2', pool2]])
+    const t0 = 1_900_000_000_000
+
+    await state.readNowPlayingState(makeCtx(t0), pool1, new Date(t0), CH, poolMap)
+    const play1 = await prisma.radioPlay.findUnique({ where: { channel_decisionSeq: { channel: CH, decisionSeq: 1 } } })
+    // Kandidaten, die in KEINEM Pool existieren (alle de-publiziert).
+    await prisma.radioHead.update({
+      where: { channel: CH },
+      data: { candidateIds: JSON.stringify(['ghost-a', 'ghost-b', 'ghost-c', 'ghost-d', 'ghost-e']), pendingNextTrackId: null, lockedAt: null },
+    })
+
+    const lockTime = new Date(play1.endsAt.getTime() - state.VOTE_CLOSE_LEAD_MS + 2_000)
+    await state.readNowPlayingState(makeCtx2(t0, 'pool2', 'slotB'), pool2, lockTime, CH, poolMap)
+
+    const head = await prisma.radioHead.findUnique({ where: { channel: CH } })
+    expect(head.lockedAt).not.toBeNull()
+    expect(head.pendingNextTrackId).toBeTruthy()
+    // Fallback konvergiert zum Genre des AKTIVEN Slots (pool2) — nicht zum alten pool1.
+    expect(pool2.tracks.some((t) => t.id === head.pendingNextTrackId)).toBe(true)
+    expect(pool1.tracks.some((t) => t.id === head.pendingNextTrackId)).toBe(false)
+  })
+
+  it('Read-Pfad symmetrisch (Review-Finding 16.07.): getCrowdControl zeigt die pool2-Kandidaten im Takeover-Fenster — Widget bleibt sichtbar + votebar', async () => {
+    const pool1 = makePool(20)
+    const pool2 = makePool2(20)
+    const poolMap = new Map([['pool1', pool1], ['pool2', pool2]])
+    const t0 = 1_900_000_000_000
+
+    // Zustand nach weicher Übernahme: current-Play aus pool1, Kandidaten aus pool2.
+    await state.readNowPlayingState(makeCtx(t0), pool1, new Date(t0), CH, poolMap)
+    const play1 = await prisma.radioPlay.findUnique({ where: { channel_decisionSeq: { channel: CH, decisionSeq: 1 } } })
+    expect(play1.poolId).toBe('pool1')
+    const pool2Candidates = pool2.tracks.slice(0, 5).map((t) => t.id)
+    await prisma.radioHead.update({
+      where: { channel: CH },
+      data: { candidateIds: JSON.stringify(pool2Candidates), pendingNextTrackId: null, lockedAt: null },
+    })
+
+    // Read VOR dem Lock-Fenster (mitten im Takeover-Track), ctx/pool = NEUER Slot.
+    const cc = await state.getCrowdControl(
+      makeCtx2(t0, 'pool2', 'slotB'), pool2, new Date(t0 + 30_000), CH, null, poolMap,
+    )
+    // DER Read-Pfad-Bug: vorher leerte der current.poolId-Filter die Liste → active=false
+    // → Widget unsichtbar, während der Lock über genau diese Kandidaten entschied.
+    expect(cc.active).toBe(true)
+    expect(cc.candidates.map((c) => c.trackId).sort()).toEqual([...pool2Candidates].sort())
+    // Kandidaten sind voll aufgelöst (Titel aus pool2, kein 'Unknown'-Fallback).
+    for (const c of cc.candidates) expect(c.title).not.toBe('Unknown')
+    // Takeover-Signal fürs Widget gesetzt.
+    expect(cc.transitioning).toBe(true)
+  })
+
+  it('Normalbetrieb unverändert: gleicher Pool überall → Gewinner ∈ eingefrorene candidateIds', async () => {
+    const pool = makePool(20)
+    const t0 = 1_900_000_000_000
+    await state.readNowPlayingState(makeCtx(t0), pool, new Date(t0), CH)
+    const play1 = await prisma.radioPlay.findUnique({ where: { channel_decisionSeq: { channel: CH, decisionSeq: 1 } } })
+    const headBefore = await prisma.radioHead.findUnique({ where: { channel: CH } })
+    const frozen = JSON.parse(headBefore.candidateIds)
+    expect(frozen.length).toBe(5)
+
+    const lockTime = new Date(play1.endsAt.getTime() - state.VOTE_CLOSE_LEAD_MS + 2_000)
+    await state.readNowPlayingState(makeCtx(t0), pool, lockTime, CH)
+
+    const head = await prisma.radioHead.findUnique({ where: { channel: CH } })
+    expect(head.lockedAt).not.toBeNull()
+    // Kein Verhaltens-Drift: der Gewinner kommt aus dem eingefrorenen Fenster.
+    expect(frozen).toContain(head.pendingNextTrackId)
+  })
+})

@@ -113,19 +113,8 @@ describe('agency-picks — Source-Gate ist Aufrufer-Sache, aber consume bleibt r
   })
 })
 
-describe('agency-picks — Picks-landed-Zähler', () => {
-  it('startet bei 0, bump erhöht um 1', () => {
-    expect(picks.getPicksLanded()).toBe(0)
-    expect(picks.bumpPicksLanded()).toBe(1)
-    expect(picks.bumpPicksLanded()).toBe(2)
-    expect(picks.getPicksLanded()).toBe(2)
-  })
-
-  it('kaputter Zähler-Wert → 0 (robust)', () => {
-    mock.setItem('kbk_picks_landed', 'nicht-zahl')
-    expect(picks.getPicksLanded()).toBe(0)
-  })
-})
+// Der Picks-landed-Zähler wurde am 16.07.2026 entfernt (Flow-Entscheid) —
+// die zugehörigen Tests sind mit ihm gegangen; der Toast-Pfad bleibt getestet.
 
 describe('agency-picks — robust gegen fehlendes/kaputtes localStorage', () => {
   it('kaputtes JSON in den Picks → leeres Array, kein Crash', () => {
@@ -140,8 +129,6 @@ describe('agency-picks — robust gegen fehlendes/kaputtes localStorage', () => 
     delete (globalThis as { window?: unknown }).window
     expect(() => picks.recordMyVote(CH, 10, 'trackA')).not.toThrow()
     expect(picks.consumePickIfMatches(CH, 12, 'trackA')).toBe(false)
-    expect(picks.getPicksLanded()).toBe(0)
-    expect(() => picks.bumpPicksLanded()).not.toThrow()
   })
 
   it('localStorage wirft (Privacy-Modus) → still abgefangen', () => {
@@ -153,6 +140,5 @@ describe('agency-picks — robust gegen fehlendes/kaputtes localStorage', () => 
     }
     expect(() => picks.recordMyVote(CH, 10, 'trackA')).not.toThrow()
     expect(picks.consumePickIfMatches(CH, 12, 'trackA')).toBe(false)
-    expect(picks.getPicksLanded()).toBe(0)
   })
 })

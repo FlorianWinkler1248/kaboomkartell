@@ -27,7 +27,7 @@ import { obsidianFrameVars } from '@/lib/obsidian-frame';
 import { RADIO_CONFIG } from '@/lib/constants';
 import { showVanity } from '@/lib/vanity';
 import { TIER_ORDER, type TrustTier } from '@/lib/badges';
-import { recordMyVote, getPicksLanded } from '@/lib/agency-picks';
+import { recordMyVote } from '@/lib/agency-picks';
 import type { CrowdControlState } from '@/lib/radio-types';
 
 export default function CrowdControlSection() {
@@ -41,9 +41,6 @@ export default function CrowdControlSection() {
   const [state, setState] = useState<CrowdControlState | null>(null);
   const [nowTs, setNowTs] = useState<number>(0);
   const [busyId, setBusyId] = useState<string | null>(null);
-  // Agency-Loop (18.06.2026, Teil 3): „N of your picks have played" — localStorage-Zähler,
-  // wird vom MiniPlayer-Pick-Toast hochgezählt. Hier nur lesen + anzeigen (> 0, keine Fake-0).
-  const [picksLanded, setPicksLanded] = useState<number>(0);
   const channelRef = useRef(selectedChannel);
   channelRef.current = selectedChannel;
 
@@ -72,14 +69,10 @@ export default function CrowdControlSection() {
     return () => clearInterval(id);
   }, [fetchState, selectedChannel]);
 
-  // --- 1s-Ticker für den Countdown + Agency-Loop-Picks-Zähler ---
-  // Der Zähler wird vom MiniPlayer-Toast in localStorage hochgezählt; wir spiegeln ihn
-  // hier sekündlich in den State, damit der Footer ohne Reload mitwächst.
+  // --- 1s-Ticker für den Countdown ---
   useEffect(() => {
-    setPicksLanded(getPicksLanded());
     const id = setInterval(() => {
       setNowTs(Date.now());
-      setPicksLanded(getPicksLanded());
     }, 1000);
     return () => clearInterval(id);
   }, []);
@@ -446,21 +439,6 @@ export default function CrowdControlSection() {
             <span>{t('footerVerify', { count: totalVotes })}</span>
           ) : (
             <span>{t('footerOpen', { count: totalVotes })}</span>
-          )}
-          {/* Agency-Loop (Teil 3): „N of your picks have played" — nur wenn echt > 0
-              (keine Fake-0, analog showVanity-Disziplin). Eigene Zeile, dezent. */}
-          {picksLanded > 0 && (
-            <span
-              style={{
-                display: 'block',
-                marginTop: 6,
-                color: accentColor,
-                fontWeight: 700,
-                letterSpacing: '0.04em',
-              }}
-            >
-              🐺 {t('picksLanded', { count: picksLanded })}
-            </span>
           )}
         </div>
         </div>
