@@ -49,7 +49,8 @@
     "emptyBody": "Die Hilfe-Anleitungen sind gerade nicht verfügbar. Schau bald wieder vorbei.",
     "noMatches": "Keine Anleitung passt zu deiner Suche.",
     "close": "Schließen",
-    "deFallbackNote": "Englische Fassung noch nicht verfügbar — es wird das deutsche Original gezeigt."
+    "deFallbackNote": "Englische Fassung noch nicht verfügbar — es wird das deutsche Original gezeigt.",
+    "featuredBadge": "EMPFOHLEN"
   },
   "passwordField": {
     "generate": "GENERIEREN",
@@ -64,6 +65,7 @@
     "library": "BIBLIOTHEK",
     "schedule": "SENDEPLAN",
     "learn": "LERNEN",
+    "mission": "MISSION",
     "admin": "ADMIN",
     "settings": "EINSTELLUNGEN",
     "signIn": "ANMELDEN",
@@ -282,6 +284,11 @@
       "title": "Impressum — KaboomKartell",
       "description": "Impressum und Kontaktangaben zu KaboomKartell."
     },
+    "mission": {
+      "title": "Mission Board — KaboomKartell",
+      "description": "Community-Missionen des KaboomKartell-Rudels — Spendenziele, Artist-Recruiting, Partnerschaften und alle offiziellen Social-Kanäle.",
+      "notFound": "Mission nicht gefunden — KaboomKartell"
+    },
     "learn": {
       "title": "Learn — KaboomKartell",
       "description": "Praktische Labs, um zu lernen, wie der Sound auf KaboomKartell entsteht."
@@ -325,6 +332,91 @@
       "ogTitle": "KBK Synth Lab — Sound Design lernen",
       "ogDescription": "Interaktives Synthesizer-Tutorial. Lerne Wellenformen, Filter und wie du Bass-Sounds baust.",
       "keywords": "Synthesizer, Klangsynthese lernen, Wellenformen, Sound Design, Bass, Tutorial, Web Audio"
+    }
+  },
+  "mission": {
+    "kicker": "MISSION BOARD",
+    "title": "MISSIONEN",
+    "intro": "Das schwarze Brett des Rudels — Ziele, Aufrufe und Partnerschaften direkt von 4Flow und Boomy. Lesen kann jeder; voll verifizierte Wölfe können eine Mission annehmen.",
+    "empty": "Gerade keine Missionen am Brett. Schau bald wieder vorbei.",
+    "type": {
+      "donation": "SPENDE",
+      "recruiting": "REKRUTIERUNG",
+      "partnership": "PARTNERSCHAFT",
+      "goal": "ZIEL"
+    },
+    "statusPaused": "PAUSIERT",
+    "statusCompleted": "ABGESCHLOSSEN",
+    "calledByBoomy": "ausgerufen von Boomy",
+    "progressLabel": "FORTSCHRITT",
+    "linkComingSoon": "Spenden-Link folgt in Kürze",
+    "actionDefault": "LINK ÖFFNEN",
+    "acceptedCount": "{count} angenommen",
+    "viewMission": "MISSION ANSEHEN →",
+    "follow": {
+      "kicker": "FOLLOW THE PACK",
+      "title": "SOCIAL-KANÄLE",
+      "intro": "Offizielle Accounts von KBK, Boomy und den Artists — folg dem Lärm dorthin, wo er entsteht.",
+      "empty": "Noch keine Social-Accounts gelistet."
+    },
+    "detail": {
+      "back": "← ZURÜCK ZUM BOARD",
+      "briefing": "MISSIONS-BRIEFING"
+    },
+    "accept": {
+      "loginHint": "Melde dich an, um diese Mission anzunehmen.",
+      "loginCta": "ZUM LOGIN",
+      "tierHint": "Volle Verifizierung (2FA) nötig, um Missionen anzunehmen.",
+      "tierCta": "2FA in den Sicherheits-Einstellungen aktivieren",
+      "acceptCta": "MISSION ANNEHMEN",
+      "withdrawCta": "ZURÜCKZIEHEN",
+      "acceptedBadge": "ANGENOMMEN",
+      "acceptedNote": "Du bist auf dieser Mission — das Rudel zählt auf dich.",
+      "toastAccepted": "Mission angenommen. Hol sie dir!",
+      "toastWithdrawn": "Du hast dich von dieser Mission zurückgezogen.",
+      "toastGone": "Diese Mission ist nicht mehr verfügbar.",
+      "toastConflict": "Diese Mission kann gerade nicht angenommen werden.",
+      "toastError": "Etwas ist schiefgelaufen. Bitte versuch es erneut."
+    }
+  },
+  "humanArtists": {
+    "kicker": "HUMAN ARTISTS WANTED",
+    "title": "DEIN SOUND AUF DIE DECKS",
+    "message": "KBK ist kein AI-Showcase — wir wollen DEINEN Sound auf den Decks.",
+    "pitch": "Phonk, Hardtek, Raggatek, Brazilian Phonk oder etwas, das das Rudel noch nie gehört hat: Wenn du Lärm machst, wollen wir ihn hören. Kuratiert von 4Flow, gespielt auf einem Radio, das nie pausiert.",
+    "keepNote": "Behalt dein SoundCloud & Spotify — wir spielen dein Audio, die Klicks bleiben bei dir.",
+    "ctaHelp": "SO MACHST DU MIT",
+    "ctaMissions": "ZU DEN MISSIONEN",
+    "apply": {
+      "heading": "ALS ARTIST BEWERBEN",
+      "loginHint": "Du brauchst einen Account, um dich zu bewerben — komm erst ins Rudel.",
+      "loginCta": "ZUM LOGIN",
+      "tierHint": "Bewerbungen brauchen einen voll verifizierten Account (2FA). Das hält den Weg menschlich — aktivier sie in deinen Sicherheits-Einstellungen.",
+      "tierCta": "2FA AKTIVIEREN",
+      "checking": "Prüfe Bewerbungsstatus…",
+      "alreadyAppliedTitle": "BEWERBUNG EINGEGANGEN",
+      "alreadyAppliedBody": "Eine Bewerbung pro Account — deine ist drin. Wir lesen alles und melden uns, wenn es passt.",
+      "warningTitle": "NUR EIN SCHUSS",
+      "warningBody": "Du hast GENAU EINE Bewerbung pro Account. Mach sie stark. Keine zweite Chance, kein erneutes Bewerben — wir lesen alles und melden uns, wenn es passt.",
+      "messageLabel": "DEINE NACHRICHT",
+      "messagePlaceholder": "Wer bist du, was machst du, warum KBK? (20–2000 Zeichen)",
+      "linksLabel": "LINKS — OPTIONAL, MAX. 5",
+      "linksHint": "SoundCloud, Spotify, YouTube … nur http(s)-Links.",
+      "linkPlaceholder": "https://…",
+      "addLink": "+ LINK HINZUFÜGEN",
+      "removeLink": "ENTFERNEN",
+      "reviewCta": "PRÜFEN & SENDEN",
+      "confirmTitle": "LETZTER CHECK — EIN SCHUSS",
+      "confirmBody": "Das ist die eine Bewerbung für diesen Account. Einmal gesendet, bleibt die Tür zu.",
+      "confirmCheckbox": "Ich verstehe: eine Bewerbung pro Account, kein zweiter Versuch.",
+      "confirmSend": "BEWERBUNG SENDEN",
+      "confirmBack": "ZURÜCK",
+      "sending": "SENDET…",
+      "successTitle": "BEWERBUNG EINGEGANGEN",
+      "successBody": "Deine Bewerbung liegt beim Alpha Wolf. Wir lesen alles und melden uns, wenn es passt.",
+      "toastValidation": "Prüf deine Nachricht (20–2000 Zeichen) und nutz nur http(s)-Links.",
+      "toastRateLimit": "Zu viele Versuche — bitte später erneut.",
+      "toastError": "Etwas ist schiefgelaufen. Bitte versuch es erneut."
     }
   },
   "home": {

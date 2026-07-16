@@ -26,14 +26,17 @@ import { IcoZap, IcoMenu, IcoX } from './icons';
 import LocaleSwitcher from './LocaleSwitcher';
 
 // Nav-Items — Hausparty-Klickwege (siehe Auto-Memory project_kbk_hausparty_konzept.md):
-// HOME (Cockpit) / PACK (Pack-Page mit 4Flow-Bio + Crew) / LIBRARY / SCHEDULE / LEARN.
+// HOME (Cockpit) / PACK (Pack-Page mit 4Flow-Bio + Crew) / LIBRARY / SCHEDULE / MISSION / LEARN.
 // PACK linkt seit 26.04. auf /artists — die ehemalige /community-Wall wurde entfernt.
+// MISSION (ADR-039, 16.07.2026): Mission-Board — Desktop UND Mobile ziehen aus
+// derselben Konstante, ein Eintrag reicht fuer beide Breakpoints.
 // Labels kommen seit i18n (ADR-031) aus dem nav-Namespace der Message-Kataloge.
-const NAV_ITEMS: { key: 'home' | 'pack' | 'library' | 'schedule' | 'learn'; href: string }[] = [
+const NAV_ITEMS: { key: 'home' | 'pack' | 'library' | 'schedule' | 'mission' | 'learn'; href: string }[] = [
   { key: 'home', href: '/' },
   { key: 'pack', href: '/artists' },
   { key: 'library', href: '/library' },
   { key: 'schedule', href: '/schedule' },
+  { key: 'mission', href: '/mission' },
   { key: 'learn', href: '/learn/synthesizer' },
 ];
 

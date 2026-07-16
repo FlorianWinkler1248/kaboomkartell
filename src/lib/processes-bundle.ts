@@ -73,6 +73,9 @@ export interface ProcessListItem {
   lastReviewed: string | null;
   hasEn: boolean;
   hasMermaid: boolean;
+  /** Frontmatter-Flag `featured: true` (ADR-039) — featured Artikel sortieren
+   *  im Hilfe-Center VOR der alphabetischen Liste und tragen eine Markierung. */
+  featured: boolean;
 }
 
 export interface ProcessDetail {
@@ -120,6 +123,8 @@ export function toProcessListItem(entry: ProcessEntry, lang: 'en' | 'de'): Proce
     lastReviewed: (fm.last_reviewed as string) || null,
     hasEn: !!entry.bodyEn,
     hasMermaid: entry.bodyDe.includes('```mermaid'),
+    // Strikter Boolean-Check: nur echtes `featured: true` zaehlt (kein "true"-String).
+    featured: fm.featured === true,
   };
 }
 

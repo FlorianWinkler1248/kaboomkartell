@@ -1,6 +1,7 @@
 import Hero from '@/components/kbk/Hero';
 import Marquee from '@/components/kbk/Marquee';
 import WolfpackSection from '@/components/kbk/sections/WolfpackSection';
+import HumanArtistsSection from '@/components/kbk/sections/HumanArtistsSection';
 import DropsSection from '@/components/kbk/sections/DropsSection';
 import RecentReleasesSection from '@/components/kbk/sections/RecentReleasesSection';
 import SocialsSection from '@/components/kbk/sections/SocialsSection';
@@ -58,6 +59,11 @@ export default function Home() {
       </div>
 
       <WolfpackSection />
+
+      {/* HUMAN ARTISTS WANTED (ADR-039): Artist-Funnel-Ausschreibung zwischen
+          Wolfpack und Recent Releases — KBK ist kein AI-Showcase. */}
+      <HumanArtistsSection />
+
       <RecentReleasesSection />
       <DropsSection />
       <SocialsSection />

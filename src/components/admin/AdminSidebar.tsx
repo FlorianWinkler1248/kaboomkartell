@@ -30,6 +30,7 @@ import {
   Radio,
   Library,
   BookOpen,
+  Target,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -43,6 +44,8 @@ const ADMIN_LINKS = [
   { href: '/admin/covers', label: 'Covers', icon: ImageIcon },
   { href: '/admin/release-calendar', label: 'Release Calendar', icon: CalendarDays },
   { href: '/admin/votes', label: 'Votes', icon: Vote },
+  // Mission-Board + Artist-Funnel + Socials (ADR-039)
+  { href: '/admin/missions', label: 'Missions', icon: Target },
   { href: '/admin/users', label: 'Users', icon: Users },
   { href: '/admin/processes', label: 'Process Library', icon: BookOpen },
   { href: '/admin/settings', label: 'Settings', icon: Settings },

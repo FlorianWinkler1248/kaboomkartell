@@ -22,6 +22,9 @@ interface ListItem {
   summary: string;
   hasEn: boolean;
   hasMermaid: boolean;
+  // Featured-Artikel (ADR-039) — optional, damit gecachte API-Antworten ohne
+  // das Feld nicht brechen.
+  featured?: boolean;
 }
 
 interface DetailItem {
@@ -102,7 +105,12 @@ export default function HelpCenterView() {
             i.summary.toLowerCase().includes(q),
         )
       : items;
-    return [...list].sort((a, b) => a.title.localeCompare(b.title));
+    // Featured-Artikel (ADR-039) VOR die alphabetische Sortierung.
+    return [...list].sort(
+      (a, b) =>
+        Number(b.featured ?? false) - Number(a.featured ?? false) ||
+        a.title.localeCompare(b.title),
+    );
   }, [items, search]);
 
   const renderedBody = useMemo(() => {
@@ -251,6 +259,23 @@ export default function HelpCenterView() {
               color: 'inherit',
             }}
           >
+            {/* Dezente FEATURED-Markierung (ADR-039) */}
+            {item.featured && (
+              <span
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 9,
+                  fontWeight: 700,
+                  color: '#F5D02E',
+                  border: '1px solid rgba(245,208,46,0.5)',
+                  padding: '2px 6px',
+                  letterSpacing: '0.15em',
+                  alignSelf: 'flex-start',
+                }}
+              >
+                {t('featuredBadge')}
+              </span>
+            )}
             <span style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700, color: '#fff', letterSpacing: '0.04em' }}>
               {item.title}
             </span>

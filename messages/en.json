@@ -49,7 +49,8 @@
     "emptyBody": "The help guides aren't available right now. Check back soon.",
     "noMatches": "No guide matches your search.",
     "close": "Close",
-    "deFallbackNote": "English version not available yet — showing the German original."
+    "deFallbackNote": "English version not available yet — showing the German original.",
+    "featuredBadge": "FEATURED"
   },
   "passwordField": {
     "generate": "GENERATE",
@@ -64,6 +65,7 @@
     "library": "LIBRARY",
     "schedule": "SCHEDULE",
     "learn": "LEARN",
+    "mission": "MISSION",
     "admin": "ADMIN",
     "settings": "SETTINGS",
     "signIn": "SIGN IN",
@@ -282,6 +284,11 @@
       "title": "Imprint — KaboomKartell",
       "description": "Imprint and contact details for KaboomKartell."
     },
+    "mission": {
+      "title": "Mission Board — KaboomKartell",
+      "description": "Community missions from the KaboomKartell pack — donation goals, artist recruiting, partnerships and every official social channel.",
+      "notFound": "Mission not found — KaboomKartell"
+    },
     "learn": {
       "title": "Learn — KaboomKartell",
       "description": "Hands-on labs to learn how the sound is made on KaboomKartell."
@@ -325,6 +332,91 @@
       "ogTitle": "KBK Synth Lab — Learn Sound Design",
       "ogDescription": "Interactive synthesizer tutorial. Learn waveforms, filters, and how to build bass sounds.",
       "keywords": "synthesizer, learn synthesis, waveforms, sound design, bass, tutorial, web audio"
+    }
+  },
+  "mission": {
+    "kicker": "MISSION BOARD",
+    "title": "MISSIONS",
+    "intro": "The pack's blackboard — goals, calls and partnerships straight from 4Flow and Boomy. Everyone can read; fully verified wolves can take a mission.",
+    "empty": "No missions on the board right now. Check back soon.",
+    "type": {
+      "donation": "DONATION",
+      "recruiting": "RECRUITING",
+      "partnership": "PARTNERSHIP",
+      "goal": "GOAL"
+    },
+    "statusPaused": "PAUSED",
+    "statusCompleted": "COMPLETED",
+    "calledByBoomy": "called by Boomy",
+    "progressLabel": "PROGRESS",
+    "linkComingSoon": "Donation link coming soon",
+    "actionDefault": "OPEN LINK",
+    "acceptedCount": "{count} accepted",
+    "viewMission": "VIEW MISSION →",
+    "follow": {
+      "kicker": "FOLLOW THE PACK",
+      "title": "SOCIAL CHANNELS",
+      "intro": "Official accounts of KBK, Boomy and the artists — follow where the noise happens.",
+      "empty": "No social accounts listed yet."
+    },
+    "detail": {
+      "back": "← BACK TO BOARD",
+      "briefing": "MISSION BRIEFING"
+    },
+    "accept": {
+      "loginHint": "Log in to accept this mission.",
+      "loginCta": "LOG IN TO ACCEPT",
+      "tierHint": "Full verification (2FA) required to accept missions.",
+      "tierCta": "Enable 2FA in security settings",
+      "acceptCta": "ACCEPT MISSION",
+      "withdrawCta": "WITHDRAW",
+      "acceptedBadge": "ACCEPTED",
+      "acceptedNote": "You're on this mission — the pack counts on you.",
+      "toastAccepted": "Mission accepted. Go get it!",
+      "toastWithdrawn": "You withdrew from this mission.",
+      "toastGone": "Mission is no longer available.",
+      "toastConflict": "This mission can't be accepted right now.",
+      "toastError": "Something went wrong. Please try again."
+    }
+  },
+  "humanArtists": {
+    "kicker": "HUMAN ARTISTS WANTED",
+    "title": "YOUR SOUND ON THE DECKS",
+    "message": "KBK is not an AI showcase — we want YOUR sound on the decks.",
+    "pitch": "Phonk, Hardtek, Raggatek, Brazilian Phonk or something the pack has never heard: if you make noise, we want to hear it. Curated by 4Flow, played on a radio that never pauses.",
+    "keepNote": "Keep your SoundCloud & Spotify — we play your audio, you keep your clicks.",
+    "ctaHelp": "READ HOW TO JOIN",
+    "ctaMissions": "VIEW MISSIONS",
+    "apply": {
+      "heading": "APPLY AS AN ARTIST",
+      "loginHint": "You need an account to apply — join the pack first.",
+      "loginCta": "LOG IN",
+      "tierHint": "Applications need a fully verified account (2FA). That keeps the funnel human — enable it in your security settings.",
+      "tierCta": "ENABLE 2FA",
+      "checking": "Checking application status…",
+      "alreadyAppliedTitle": "APPLICATION RECEIVED",
+      "alreadyAppliedBody": "One application per account — and yours is in. We read everything and reply if it fits.",
+      "warningTitle": "ONE SHOT ONLY",
+      "warningBody": "You get ONE application per account. Make it count. No second chance, no re-apply — we read everything and reply if it fits.",
+      "messageLabel": "YOUR MESSAGE",
+      "messagePlaceholder": "Who are you, what do you make, why KBK? (20–2000 characters)",
+      "linksLabel": "LINKS — OPTIONAL, MAX 5",
+      "linksHint": "SoundCloud, Spotify, YouTube … http(s) links only.",
+      "linkPlaceholder": "https://…",
+      "addLink": "+ ADD LINK",
+      "removeLink": "REMOVE",
+      "reviewCta": "REVIEW & SEND",
+      "confirmTitle": "LAST CHECK — ONE SHOT",
+      "confirmBody": "This is the one application for this account. Once it's sent, the door closes behind it.",
+      "confirmCheckbox": "I understand: one application per account, no second try.",
+      "confirmSend": "SEND APPLICATION",
+      "confirmBack": "GO BACK",
+      "sending": "SENDING…",
+      "successTitle": "APPLICATION RECEIVED",
+      "successBody": "Your application is with the Alpha Wolf. We read everything and reply if it fits.",
+      "toastValidation": "Check your message (20–2000 characters) and use http(s) links only.",
+      "toastRateLimit": "Too many attempts — please try again later.",
+      "toastError": "Something went wrong. Please try again."
     }
   },
   "home": {

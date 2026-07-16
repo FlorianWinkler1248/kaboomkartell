@@ -49,7 +49,8 @@
     "emptyBody": "Les guides d'aide ne sont pas disponibles pour le moment. Reviens bientôt.",
     "noMatches": "Aucun guide ne correspond à ta recherche.",
     "close": "Fermer",
-    "deFallbackNote": "Version anglaise pas encore disponible — affichage de l'original allemand."
+    "deFallbackNote": "Version anglaise pas encore disponible — affichage de l'original allemand.",
+    "featuredBadge": "À LA UNE"
   },
   "passwordField": {
     "generate": "GÉNÉRER",
@@ -64,6 +65,7 @@
     "library": "BIBLIOTHÈQUE",
     "schedule": "PROGRAMME",
     "learn": "APPRENDRE",
+    "mission": "MISSION",
     "admin": "ADMIN",
     "settings": "RÉGLAGES",
     "signIn": "CONNEXION",
@@ -282,6 +284,11 @@
       "title": "Mentions légales — KaboomKartell",
       "description": "Mentions légales et coordonnées de KaboomKartell."
     },
+    "mission": {
+      "title": "Missions — KaboomKartell",
+      "description": "Les missions communautaires de la meute KaboomKartell — objectifs de dons, recrutement d'artistes, partenariats et tous les canaux sociaux officiels.",
+      "notFound": "Mission introuvable — KaboomKartell"
+    },
     "learn": {
       "title": "Apprendre — KaboomKartell",
       "description": "Des labs pratiques pour apprendre comment le son est fabriqué sur KaboomKartell."
@@ -325,6 +332,91 @@
       "ogTitle": "KBK Synth Lab — Apprends le sound design",
       "ogDescription": "Tutoriel de synthétiseur interactif. Apprends les formes d'onde, les filtres et comment construire des sons de basse.",
       "keywords": "synthétiseur, apprendre la synthèse, formes d'onde, sound design, basse, tutoriel, web audio"
+    }
+  },
+  "mission": {
+    "kicker": "MISSION BOARD",
+    "title": "MISSIONS",
+    "intro": "Le tableau noir de la meute — objectifs, appels et partenariats directement de 4Flow et Boomy. Tout le monde peut lire ; les loups entièrement vérifiés peuvent accepter une mission.",
+    "empty": "Aucune mission au tableau pour le moment. Reviens bientôt.",
+    "type": {
+      "donation": "DON",
+      "recruiting": "RECRUTEMENT",
+      "partnership": "PARTENARIAT",
+      "goal": "OBJECTIF"
+    },
+    "statusPaused": "EN PAUSE",
+    "statusCompleted": "TERMINÉE",
+    "calledByBoomy": "lancée par Boomy",
+    "progressLabel": "PROGRESSION",
+    "linkComingSoon": "Lien de don bientôt disponible",
+    "actionDefault": "OUVRIR LE LIEN",
+    "acceptedCount": "{count} acceptations",
+    "viewMission": "VOIR LA MISSION →",
+    "follow": {
+      "kicker": "FOLLOW THE PACK",
+      "title": "CANAUX SOCIAUX",
+      "intro": "Les comptes officiels de KBK, Boomy et des artistes — suis le bruit là où il se fait.",
+      "empty": "Aucun compte social listé pour le moment."
+    },
+    "detail": {
+      "back": "← RETOUR AU TABLEAU",
+      "briefing": "BRIEFING DE MISSION"
+    },
+    "accept": {
+      "loginHint": "Connecte-toi pour accepter cette mission.",
+      "loginCta": "SE CONNECTER",
+      "tierHint": "Vérification complète (2FA) requise pour accepter des missions.",
+      "tierCta": "Activer la 2FA dans les paramètres de sécurité",
+      "acceptCta": "ACCEPTER LA MISSION",
+      "withdrawCta": "SE RETIRER",
+      "acceptedBadge": "ACCEPTÉE",
+      "acceptedNote": "Tu es sur cette mission — la meute compte sur toi.",
+      "toastAccepted": "Mission acceptée. Fonce !",
+      "toastWithdrawn": "Tu t'es retiré de cette mission.",
+      "toastGone": "Cette mission n'est plus disponible.",
+      "toastConflict": "Cette mission ne peut pas être acceptée pour le moment.",
+      "toastError": "Une erreur est survenue. Réessaie."
+    }
+  },
+  "humanArtists": {
+    "kicker": "HUMAN ARTISTS WANTED",
+    "title": "TON SON SUR LES PLATINES",
+    "message": "KBK n'est pas une vitrine IA — on veut TON son sur les platines.",
+    "pitch": "Phonk, Hardtek, Raggatek, Brazilian Phonk ou un truc que la meute n'a jamais entendu : si tu fais du bruit, on veut l'entendre. Sélectionné par 4Flow, joué sur une radio qui ne s'arrête jamais.",
+    "keepNote": "Garde ton SoundCloud & Spotify — on joue ton audio, tu gardes tes clics.",
+    "ctaHelp": "COMMENT NOUS REJOINDRE",
+    "ctaMissions": "VOIR LES MISSIONS",
+    "apply": {
+      "heading": "POSTULER COMME ARTISTE",
+      "loginHint": "Il te faut un compte pour postuler — rejoins d'abord la meute.",
+      "loginCta": "SE CONNECTER",
+      "tierHint": "Les candidatures exigent un compte entièrement vérifié (2FA). Ça garde le circuit humain — active-la dans tes paramètres de sécurité.",
+      "tierCta": "ACTIVER LA 2FA",
+      "checking": "Vérification du statut de candidature…",
+      "alreadyAppliedTitle": "CANDIDATURE REÇUE",
+      "alreadyAppliedBody": "Une candidature par compte — la tienne est enregistrée. On lit tout et on répond si ça colle.",
+      "warningTitle": "UNE SEULE CHANCE",
+      "warningBody": "Tu as UNE SEULE candidature par compte. Fais-la compter. Pas de deuxième chance, pas de nouvelle tentative — on lit tout et on répond si ça colle.",
+      "messageLabel": "TON MESSAGE",
+      "messagePlaceholder": "Qui es-tu, que fais-tu, pourquoi KBK ? (20–2000 caractères)",
+      "linksLabel": "LIENS — OPTIONNEL, MAX 5",
+      "linksHint": "SoundCloud, Spotify, YouTube … liens http(s) uniquement.",
+      "linkPlaceholder": "https://…",
+      "addLink": "+ AJOUTER UN LIEN",
+      "removeLink": "RETIRER",
+      "reviewCta": "VÉRIFIER & ENVOYER",
+      "confirmTitle": "DERNIER CHECK — UNE SEULE CHANCE",
+      "confirmBody": "C'est la seule candidature pour ce compte. Une fois envoyée, la porte se referme.",
+      "confirmCheckbox": "Je comprends : une candidature par compte, pas de deuxième essai.",
+      "confirmSend": "ENVOYER LA CANDIDATURE",
+      "confirmBack": "RETOUR",
+      "sending": "ENVOI…",
+      "successTitle": "CANDIDATURE REÇUE",
+      "successBody": "Ta candidature est chez l'Alpha Wolf. On lit tout et on répond si ça colle.",
+      "toastValidation": "Vérifie ton message (20–2000 caractères) et utilise uniquement des liens http(s).",
+      "toastRateLimit": "Trop de tentatives — réessaie plus tard.",
+      "toastError": "Une erreur est survenue. Réessaie."
     }
   },
   "home": {

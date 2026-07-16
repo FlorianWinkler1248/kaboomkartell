@@ -26,6 +26,10 @@ export const VANITY_MIN = {
   trackVotes: 5,
   /** „N plays" pro Track. */
   playCount: 50,
+  /** „N wolves on it" pro Mission (Board + Detail). Schwelle 1 = ab der ersten
+   *  echten Annahme sichtbar — bewusst niedrig (Missionen leben von Beteiligung),
+   *  zentral hochdrehbar wenn das Board wächst. */
+  missionAcceptances: 1,
 } as const;
 
 export type VanityKey = keyof typeof VANITY_MIN;
