@@ -39,6 +39,16 @@ export interface SyncInput {
   audioDurationSec: number
   /** Gelockter nächster Track (Id); null solange das Vote-Fenster offen ist. */
   nextTrackId: string | null
+  // --- Radio Sync v3 (ADR-040) — alle OPTIONAL. Fehlen sie, verhält sich das
+  // --- Regelgesetz EXAKT wie v2 (Kill-Switch-Semantik, per Test belegt).
+  /** Audio-Element meldet Puffer-Stall (waiting/stalled/error). */
+  stalled?: boolean
+  /** Letzte Aktion war ein Slew → Hysterese: engere Austritts-Schwelle. */
+  isSlewing?: boolean
+  /** Quelle ist ein lokaler Blob (seek billig) statt Netz-Stream. */
+  srcIsLocal?: boolean
+  /** Anzahl aufeinanderfolgender gestallter Ticks (Stall-Escape ab MAX_STALLED_TICKS). */
+  stalledTicks?: number
 }
 
 export type SyncAction =
@@ -50,14 +60,28 @@ export type SyncAction =
 
 /** Tunables des Regelkreises — bewusst an EINER Stelle, dokumentiert, getestet. */
 export const SYNC = {
-  /** Unter diesem Phasenfehler kein Eingriff (imperceptibel). */
+  /** Unter diesem Phasenfehler kein Eingriff (imperceptibel). v2-Fallback, wenn
+   *  die v3-Hysterese-Inputs (isSlewing) fehlen. */
   DEADBAND_SEC: 0.75,
-  /** Ab diesem Fehler harter Re-Seek statt Tempo-Nudge (großer Versatz). */
+  /** Ab diesem Fehler harter Re-Seek statt Tempo-Nudge (großer Versatz).
+   *  v2-Fallback, wenn der v3-Input srcIsLocal fehlt. */
   SEEK_MAX_SEC: 6,
+  /** v3-Hysterese: Eingriff (Slew) erst ab diesem Fehler ... */
+  DEADBAND_ENTER_SEC: 1.0,
+  /** ... und zurück zu hold erst unter dieser engeren Schwelle (kein Rate-Flattern). */
+  DEADBAND_EXIT_SEC: 0.35,
+  /** v3: Seek-Schwelle bei lokaler Blob-Quelle (Seek billig, kein Netz-Stall). */
+  SEEK_MAX_LOCAL_SEC: 6,
+  /** v3: Seek-Schwelle bei Netz-Quelle (höher — Seek-in-den-Puffer war die Kaskade;
+   *  nicht 12, um die Hörer-Divergenz zu deckeln). */
+  SEEK_MAX_NETWORK_SEC: 10,
   /** Tempo-Korridor: ±4 % (Tempo-only, preservesPitch=true → praktisch unhörbar). */
   MAX_RATE_DELTA: 0.04,
   /** Proportional-Verstärkung: 1 s Fehler → 4 % Rate (erreicht den Korridor bei 1 s). */
   GAIN_PER_SEC: 0.04,
+  /** v3 Stall-Escape: nach so vielen gestallten Ticks hold verlassen und einmalig
+   *  normal korrigieren (nie ewig einfrieren). */
+  MAX_STALLED_TICKS: 10,
 } as const
 
 function clamp(x: number, lo: number, hi: number): number {
@@ -110,14 +134,35 @@ export function computeSyncAction(input: SyncInput): SyncAction {
   }
 
   // 4) Gleicher Track → Phasenfehler bestimmen und sanft/hart korrigieren.
-  const error = audioTimeSec - targetPosSec
-  const absErr = Math.abs(error)
-
-  if (absErr < SYNC.DEADBAND_SEC) {
+  //    v3 Stall-Guard (NUR hier, NACH den Switch-Checks 1–3 — ein Stall darf den
+  //    erlösenden Wechsel auf den fertigen Blob nie blockieren): gestalltes Element
+  //    nicht zusätzlich seeken/slewen (Seek-in-den-Stall war die Klick-Kaskade).
+  //    Escape: nach MAX_STALLED_TICKS trotzdem normal korrigieren.
+  const { stalled, isSlewing, srcIsLocal, stalledTicks } = input
+  if (stalled && (stalledTicks ?? 0) < SYNC.MAX_STALLED_TICKS) {
     return { kind: 'hold', playbackRate: 1 }
   }
 
-  if (absErr >= SYNC.SEEK_MAX_SEC) {
+  const error = audioTimeSec - targetPosSec
+  const absErr = Math.abs(error)
+
+  // v3 Deadband-Hysterese: im Slew engere Austritts-Schwelle (EXIT), sonst weitere
+  // Eintritts-Schwelle (ENTER) — kein 1.0↔1.03-Rate-Flattern im Sekundentakt mehr.
+  // Input fehlt → exakt v2 (DEADBAND_SEC).
+  const deadbandSec = isSlewing === undefined
+    ? SYNC.DEADBAND_SEC
+    : (isSlewing ? SYNC.DEADBAND_EXIT_SEC : SYNC.DEADBAND_ENTER_SEC)
+  if (absErr < deadbandSec) {
+    return { kind: 'hold', playbackRate: 1 }
+  }
+
+  // v3 quellenabhängige Seek-Schwelle: Blob lokal → billig (6 s), Netz → höher (10 s,
+  // Seek-in-den-Puffer vermeiden). Input fehlt → exakt v2 (SEEK_MAX_SEC).
+  const seekMaxSec = srcIsLocal === undefined
+    ? SYNC.SEEK_MAX_SEC
+    : (srcIsLocal ? SYNC.SEEK_MAX_LOCAL_SEC : SYNC.SEEK_MAX_NETWORK_SEC)
+
+  if (absErr >= seekMaxSec) {
     const clampedTarget = audioDurationSec > 0
       ? clamp(targetPosSec, 0, audioDurationSec)
       : Math.max(0, targetPosSec)

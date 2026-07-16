@@ -248,7 +248,12 @@ export const RADIO_CONFIG = {
   pollIntervalMs: 15_000,
   controlTickMs: 1_000,         // PLL-Regelkreis-Takt (Beatmatch), rein client-lokal
   crowdControlPollMs: 9_000,    // Live-Vote-Tally-Poll des Crowd-Control-Widgets
-  preloadSeconds: 10,           // Nächsten Track vorladen (Ghost-Audio in useRadioSync)
+  // Radio Sync v3 (ADR-040): Voll-Blob-Preload des gelockten nächsten Tracks.
+  // Kill-Switch Stufe 1: auf false setzen → Ghost-Preloader-Pfad (im Code erhalten).
+  blobPreloadEnabled: true,
+  // Preload-Start verzögern (Join-Bandbreiten-Kollision vermeiden: Stream des
+  // laufenden Tracks nicht mit dem N+1-Voll-Download überlappen lassen).
+  preloadDelayMs: 10_000,
   minPoolDurationMinutes: 30,   // Warnung wenn Pool kürzer als 30 Minuten
 } as const;
 

@@ -21,7 +21,19 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { RADIO_CONFIG } from '@/lib/constants'
 import { computeSyncAction, statusForAction, type SyncStatus } from '@/lib/radio-sync-control'
+import { radioPreloader, shouldPreload } from '@/lib/radio-preload'
 import type { PlayerTrack } from '@/types'
+
+/** Radio Sync v3 (ADR-040) — Kill-Switch Stufe 2: pro Gerät ohne Deploy.
+ *  `localStorage.kbk_radio_v3 = 'off'` → kein Blob-Preload UND keine v3-Inputs
+ *  ans Regelgesetz (exaktes v2-Verhalten, per Test belegt). */
+function isV3Off(): boolean {
+  try {
+    return typeof window !== 'undefined' && window.localStorage.getItem('kbk_radio_v3') === 'off'
+  } catch {
+    return false
+  }
+}
 
 interface RadioSlotInfo {
   id: string
@@ -120,7 +132,7 @@ function median(xs: number[]): number {
 }
 
 export function useRadioSync(
-  audioPlay: (track: PlayerTrack) => void,
+  audioPlay: (track: PlayerTrack, getStartSec?: () => number) => void,
   audioSeek: (time: number) => void,
   audioPause: () => void,
   audioSetPlaybackRate: (rate: number) => void,
@@ -129,6 +141,9 @@ export function useRadioSync(
   audioIsPlaying: boolean,
   audioVolume: number,
   channel: string | null,
+  // Radio Sync v3 (ADR-040): Stall-Signal des Elements + Blob-Error-Registrierung.
+  audioIsStalled: boolean,
+  audioSetOnBlobError: (cb: (() => void) | null) => void,
 ): UseRadioSyncReturn {
   const [radioMode, setRadioMode] = useState(false)
   const [radioSlot, setRadioSlot] = useState<RadioSlotInfo | null>(null)
@@ -152,6 +167,16 @@ export function useRadioSync(
   const currentTrackIdRef = useRef<string | null>(null)  // was das Audio gerade spielt
   // Nach Switch/Seek kurz nicht erneut korrigieren (Element muss laden/settlen).
   const suppressUntilRef = useRef(0)
+
+  // --- Radio Sync v3 (ADR-040): Regelkreis-Zustand für Stall-Guard + Hysterese ---
+  const isSlewingRef = useRef(false)          // letzte Aktion war slew (Hysterese)
+  const stalledTicksRef = useRef(0)           // aufeinanderfolgende gestallte Ticks
+  const srcIsLocalRef = useRef(false)         // aktuelles Audio spielt aus Blob
+  const activeBlobUrlRef = useRef<string | null>(null) // gerade gespielte Blob-URL (nie revoken!)
+  const blobRecoveryDoneRef = useRef(false)   // Netz-Replay nach Blob-Fehler nur einmal
+
+  const audioIsStalledRef = useRef(audioIsStalled)
+  useEffect(() => { audioIsStalledRef.current = audioIsStalled }, [audioIsStalled])
 
   const channelRef = useRef<string | null>(channel)
   useEffect(() => { channelRef.current = channel }, [channel])
@@ -180,17 +205,42 @@ export function useRadioSync(
     typeof document !== 'undefined' && document.hidden &&
     !(audioIsPlayingRef.current && audioVolumeRef.current > 0), [])
 
-  // Preload des nächsten Tracks in den HTTP-Cache (gapless beim Wechsel).
+  // Preload des nächsten Tracks. Radio Sync v3 (ADR-040): Voll-Blob-Download nach
+  // preloadDelayMs (Join-Bandbreiten-Kollision vermeiden) — der Track-Übergang wird
+  // damit eine lokale Operation. Kill-Switch-Kaskade: Config-Flag → localStorage →
+  // Runtime-Auto-Kill → Netz-Check; greift einer, läuft der v2-Ghost-Preloader
+  // (HTTP-Cache-Warm-up) als erhaltener Fallback-Pfad.
   const preloadedUrlRef = useRef<string | null>(null)
   useEffect(() => {
     if (!radioNextTrack?.url || radioNextTrack.isSoundcloud) return
+    const blobPreloadActive =
+      RADIO_CONFIG.blobPreloadEnabled &&
+      !isV3Off() &&
+      !radioPreloader.isSessionDisabled() &&
+      shouldPreload(typeof navigator !== 'undefined' ? (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }) : undefined)
+    if (blobPreloadActive) {
+      const nextId = radioNextTrack.id
+      const nextUrl = radioNextTrack.url
+      const timer = setTimeout(() => {
+        void radioPreloader.ensure(nextId, nextUrl)
+      }, RADIO_CONFIG.preloadDelayMs)
+      return () => clearTimeout(timer)
+    }
+    // v2-Fallback: Ghost-Audio-Preload in den HTTP-Cache (gapless beim Wechsel).
     if (preloadedUrlRef.current === radioNextTrack.url) return
     preloadedUrlRef.current = radioNextTrack.url
     const preloader = new Audio()
     preloader.preload = 'auto'
     preloader.src = radioNextTrack.url
     preloader.load()
-  }, [radioNextTrack?.url, radioNextTrack?.isSoundcloud])
+  }, [radioNextTrack?.id, radioNextTrack?.url, radioNextTrack?.isSoundcloud])
+
+  // --- Radio Sync v3: Preload-Aufräumen (In-Flight abbrechen + Blobs revoken).
+  //     Die gerade aktiv gespielte Blob-URL wird verschont (Element hält sie noch). ---
+  const cleanupPreload = useCallback(() => {
+    radioPreloader.cancel()
+    radioPreloader.releaseAll(activeBlobUrlRef.current ?? undefined)
+  }, [])
 
   // --- Off-Air: Channel sendet nicht ---
   const handleOffAir = useCallback(() => {
@@ -203,8 +253,28 @@ export function useRadioSync(
     setSyncStatus('idle')
     setRadioCurrentSource(null)
     setRadioCurrentDecisionSeq(null)
+    cleanupPreload()
     audioPause()
-  }, [audioPause])
+  }, [audioPause, cleanupPreload])
+
+  // --- Radio Sync v3: synchroner Track-Resolver — Blob-URL statt Netz-URL, wenn der
+  //     Preload fertig ist. KEIN async (Switch-Hot-Path bleibt synchron, ADR-040). ---
+  const resolveTrack = useCallback((track: PlayerTrack): PlayerTrack => {
+    if (isV3Off()) {
+      srcIsLocalRef.current = false
+      activeBlobUrlRef.current = null
+      return track
+    }
+    const blobUrl = radioPreloader.resolve(track.id)
+    if (!blobUrl) {
+      srcIsLocalRef.current = false
+      activeBlobUrlRef.current = null
+      return track
+    }
+    srcIsLocalRef.current = true
+    activeBlobUrlRef.current = blobUrl
+    return { ...track, url: blobUrl }
+  }, [])
 
   // --- Gapless-Wechsel auf den (gelockten) nächsten Track + Schedule-Roll-Forward ---
   // Wird vom Control-Tick (am endsAt) UND vom `ended`-Event (echtes Audio-Ende)
@@ -216,9 +286,10 @@ export function useRadioSync(
     const next = sched.nextTrack
     currentTrackIdRef.current = next.id
     audioSetPlaybackRate(1)
-    audioPlay(next)
-    const seekTo = Math.max(0, (getServerNow() - sched.endsAtMs) / 1000)
-    setTimeout(() => audioSeek(seekTo), 300)
+    // v3: Start-Position wird im `loadedmetadata`-Moment FRISCH berechnet (Closure) —
+    // ersetzt den alten 300ms-Blind-Seek. Referenz = altes endsAt (= Start des Nächsten).
+    const refMs = sched.endsAtMs
+    audioPlay(resolveTrack(next), () => Math.max(0, (getServerNow() - refMs) / 1000))
     // Lokaler Roll-Forward: der nächste Track ist jetzt „current"; sein Start = altes
     // endsAt, sein Ende = + echte Track-Dauer. Der nächste Poll überschreibt das mit
     // den autoritativen Server-Werten.
@@ -232,7 +303,7 @@ export function useRadioSync(
     setRadioNextTrack(null)
     suppressUntilRef.current = Date.now() + 1000
     return true
-  }, [audioPlay, audioSeek, audioSetPlaybackRate, getServerNow])
+  }, [audioPlay, audioSetPlaybackRate, getServerNow, resolveTrack])
 
   // --- Der Regelkreis: EINE Iteration ---
   const runControlTick = useCallback(() => {
@@ -240,6 +311,12 @@ export function useRadioSync(
     const sched = scheduleRef.current
     if (!sched) { setSyncStatus('idle'); return }
     if (Date.now() < suppressUntilRef.current) return
+
+    // v3-Inputs (ADR-040): Stall-Guard + Hysterese + quellenabhängige Seek-Schwelle.
+    // Kill-Switch (localStorage kbk_radio_v3='off') → Felder weglassen = exaktes v2.
+    const v3Active = !isV3Off()
+    const stalled = v3Active && audioIsStalledRef.current
+    stalledTicksRef.current = stalled ? stalledTicksRef.current + 1 : 0
 
     const action = computeSyncAction({
       serverNowMs: getServerNow(),
@@ -250,7 +327,15 @@ export function useRadioSync(
       audioTimeSec: audioCurrentTimeRef.current,
       audioDurationSec: audioDurationRef.current,
       nextTrackId: sched.nextTrack?.id ?? null,
+      ...(v3Active ? {
+        stalled,
+        isSlewing: isSlewingRef.current,
+        srcIsLocal: srcIsLocalRef.current,
+        stalledTicks: stalledTicksRef.current,
+      } : {}),
     })
+    // Hysterese-Zustand fortschreiben: nur ein Slew hält die enge EXIT-Schwelle aktiv.
+    isSlewingRef.current = action.kind === 'slew'
 
     switch (action.kind) {
       case 'idle':
@@ -270,19 +355,19 @@ export function useRadioSync(
         if (sched.nextTrack && action.trackId === sched.nextTrack.id) {
           switchToNext()
         } else if (action.trackId === sched.currentTrack.id) {
-          // Track-Wechsel laut Poll (oder Initial-Einstieg) → current laden + seeken.
+          // Track-Wechsel laut Poll (oder Initial-Einstieg) → current laden; Start-
+          // Position im `loadedmetadata`-Moment FRISCH berechnen (v3, statt Blind-Seek).
           currentTrackIdRef.current = sched.currentTrack.id
           audioSetPlaybackRate(1)
-          audioPlay(sched.currentTrack)
-          const seekTo = action.seekToSec
-          setTimeout(() => audioSeek(seekTo), 300)
+          const refMs = sched.startedAtMs
+          audioPlay(resolveTrack(sched.currentTrack), () => Math.max(0, (getServerNow() - refMs) / 1000))
           suppressUntilRef.current = Date.now() + 1000
         }
         break
       }
     }
     setSyncStatus(statusForAction(action))
-  }, [audioPlay, audioSeek, audioSetPlaybackRate, getServerNow, switchToNext])
+  }, [audioPlay, audioSeek, audioSetPlaybackRate, getServerNow, switchToNext, resolveTrack])
 
   // --- Now-Playing holen + Clock-Offset messen (NTP-Mittelpunkt + Median) ---
   const fetchNowPlaying = useCallback(async (): Promise<NowPlayingEnvelope | null> => {
@@ -299,11 +384,17 @@ export function useRadioSync(
       setActiveChannels(json.activeChannels ?? [])
       const serverIso = json.data?.serverTime ?? json.serverTime
       if (serverIso) {
-        const sample = Date.parse(serverIso) - (tSent + tRecv) / 2
         const samples = offsetSamplesRef.current
-        samples.push(sample)
-        if (samples.length > 5) samples.shift()
-        clockOffsetRef.current = median(samples)
+        // v3 RTT-Filter (ADR-040): Ausreißer-Roundtrips (>2s, z.B. mobiler Funk-Hänger)
+        // verfälschen den NTP-Mittelpunkt → verwerfen. Bootstrap-Regel: die ersten
+        // 3 Samples immer akzeptieren, sonst verhungert der Offset auf echtem 2G.
+        const rttMs = tRecv - tSent
+        if (!(rttMs > 2000 && samples.length >= 3)) {
+          const sample = Date.parse(serverIso) - (tSent + tRecv) / 2
+          samples.push(sample)
+          if (samples.length > 5) samples.shift()
+          clockOffsetRef.current = median(samples)
+        }
       }
       return json
     } catch (error) {
@@ -403,6 +494,8 @@ export function useRadioSync(
     if (!radioMode) return
     currentTrackIdRef.current = null
     scheduleRef.current = null
+    // v3: In-Flight-Fetch + Blobs des alten Channels aufräumen (3. Cleanup-Anker).
+    cleanupPreload()
     fetchNowPlaying().then((envelope) => { if (envelope) ingest(envelope) })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [channel, radioMode])
@@ -433,15 +526,42 @@ export function useRadioSync(
     setRadioCurrentDecisionSeq(null)
     scheduleRef.current = null
     currentTrackIdRef.current = null
+    cleanupPreload()
     if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null }
     if (controlRef.current) { clearInterval(controlRef.current); controlRef.current = null }
-  }, [])
+  }, [cleanupPreload])
 
-  // Aufräumen bei Unmount
+  // --- Radio Sync v3: Blob-Playback-Fehler-Recovery. Ein kaputter Blob (z.B. von
+  //     Safari beim Memory-Druck evicted) → EINMAL Netz-URL-Replay mit frischem
+  //     Offset; der Preload wird per Session-Flag deaktiviert (Runtime-Auto-Kill). ---
+  useEffect(() => {
+    audioSetOnBlobError(() => {
+      // Nur reagieren, wenn WIR gerade einen Preload-Blob spielen: Drag&Drop-Local-
+      // Files (Playlist.tsx) sind ebenfalls blob:-Quellen am selben Element — ein
+      // kaputtes lokales File darf den Auto-Kill/Recovery nicht fälschlich auslösen.
+      if (!radioModeRef.current || !srcIsLocalRef.current) return
+      radioPreloader.disableSession('Blob-Playback-error — Fallback auf Netz-URLs.')
+      if (blobRecoveryDoneRef.current) return
+      blobRecoveryDoneRef.current = true
+      const sched = scheduleRef.current
+      if (!sched) return
+      if (currentTrackIdRef.current !== sched.currentTrack.id) return
+      srcIsLocalRef.current = false
+      activeBlobUrlRef.current = null
+      const refMs = sched.startedAtMs
+      audioPlay(sched.currentTrack, () => Math.max(0, (getServerNow() - refMs) / 1000))
+      suppressUntilRef.current = Date.now() + 1000
+    })
+    return () => audioSetOnBlobError(null)
+  }, [audioSetOnBlobError, audioPlay, getServerNow])
+
+  // Aufräumen bei Unmount (4. Cleanup-Anker: In-Flight-Fetch + alle Blobs freigeben)
   useEffect(() => {
     return () => {
       if (pollRef.current) clearInterval(pollRef.current)
       if (controlRef.current) clearInterval(controlRef.current)
+      radioPreloader.cancel()
+      radioPreloader.releaseAll()
     }
   }, [])
 
