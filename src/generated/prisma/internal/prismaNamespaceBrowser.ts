@@ -431,6 +431,7 @@ export const MissionScalarFieldEnum = {
   progressUnit: 'progressUnit',
   actionUrl: 'actionUrl',
   actionLabel: 'actionLabel',
+  translations: 'translations',
   acceptable: 'acceptable',
   sortOrder: 'sortOrder',
   createdBy: 'createdBy',

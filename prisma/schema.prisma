@@ -635,6 +635,13 @@ model Mission {
   actionUrl   String?
   actionLabel String?
 
+  // JSON-String (Konvention wie ArtistApplication.links): Uebersetzungen der
+  // Inhalts-Felder, Shape { "de"?: {title?,summary?,body?,actionLabel?}, "es"?,
+  // "fr"? }. Alle Felder optional (Teil-Uebersetzung erlaubt), EN lebt in den
+  // Basisfeldern. Parser/Resolver: src/lib/mission-config.ts, zod-Grenzen in
+  // validations.ts (missionTranslationsSchema).
+  translations String?
+
   // Duerfen T2-User die Mission annehmen? (Donation: false — nur Link.)
   acceptable Boolean @default(true)
   sortOrder  Int     @default(0)

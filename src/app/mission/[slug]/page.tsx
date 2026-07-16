@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import prisma from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { renderMarkdown } from '@/lib/process-markdown';
 import { obsidianFrameVars } from '@/lib/obsidian-frame';
-import { isSafeExternalUrl } from '@/lib/mission-config';
+import { isSafeExternalUrl, resolveMissionText } from '@/lib/mission-config';
 import MissionAcceptButton, {
   type MissionAcceptanceStatus,
 } from '@/components/kbk/MissionAcceptButton';
@@ -62,11 +62,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { slug } = await params;
   const tMeta = await getTranslations('meta.mission');
 
-  let mission: { title: string; summary: string; status: string } | null = null;
+  let mission: {
+    title: string;
+    summary: string;
+    status: string;
+    actionLabel: string | null;
+    translations: string | null;
+  } | null = null;
   try {
     mission = await prisma.mission.findUnique({
       where: { slug },
-      select: { title: true, summary: true, status: true },
+      select: { title: true, summary: true, status: true, actionLabel: true, translations: true },
     });
   } catch {
     mission = null;
@@ -76,15 +82,22 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!mission || mission.status === 'ARCHIVED') {
     return { title: tMeta('notFound') };
   }
+  // Metadaten im aktiven Locale — gleicher Resolver wie die Seite selbst
+  // (body wird fuer Metadaten nicht gebraucht → neutraler Platzhalter).
+  const locale = await getLocale();
+  const text = resolveMissionText({ ...mission, body: '' }, locale);
   return {
-    title: `${mission.title} — KaboomKartell`,
-    description: mission.summary,
+    title: `${text.title} — KaboomKartell`,
+    description: text.summary,
   };
 }
 
 export default async function MissionDetailPage({ params }: PageProps) {
   const { slug } = await params;
   const t = await getTranslations('mission');
+  // Aktives Locale aus dem kbk-locale-Cookie (ADR-031) — Missions-Inhalte
+  // loest resolveMissionText feld-weise auf (Fallback EN-Basisfelder).
+  const locale = await getLocale();
 
   // DB-Fehler → 404 statt Error-Boundary: die Detail-Seite eines temporär
   // nicht erreichbaren Systems soll sich wie ein unbekannter Slug verhalten
@@ -121,6 +134,9 @@ export default async function MissionDetailPage({ params }: PageProps) {
     }
   }
 
+  // Anzeige-Texte im aktiven Locale (Teil-Uebersetzung mischt mit EN).
+  const text = resolveMissionText(mission, locale);
+
   const color = TYPE_COLOR[mission.type] ?? GREEN;
   const hasProgress = mission.progressTarget != null && mission.progressTarget > 0;
   // Fortschritt ohne Ziel (Target null/0, aber Current > 0): absoluter Zähler
@@ -133,9 +149,10 @@ export default async function MissionDetailPage({ params }: PageProps) {
       )
     : null;
 
-  // Markdown → HTML über den geteilten escapeHtml-Renderer (XSS-Anker der Spec).
+  // Markdown → HTML über den geteilten escapeHtml-Renderer (XSS-Anker der
+  // Spec) — auch der uebersetzte Body laeuft IMMER durch renderMarkdown.
   const mermaidBlocks: string[] = [];
-  const bodyHtml = renderMarkdown(mission.body, mermaidBlocks);
+  const bodyHtml = renderMarkdown(text.body, mermaidBlocks);
 
   return (
     <section
@@ -229,7 +246,7 @@ export default async function MissionDetailPage({ params }: PageProps) {
           margin: '0 0 14px',
         }}
       >
-        {mission.title}
+        {text.title}
       </h1>
 
       <p
@@ -244,7 +261,7 @@ export default async function MissionDetailPage({ params }: PageProps) {
           margin: '0 0 22px',
         }}
       >
-        {mission.summary}
+        {text.summary}
       </p>
 
       {/* Fortschritt — manuell gepflegt; Balken capped, Zahlen echt. */}
@@ -335,7 +352,7 @@ export default async function MissionDetailPage({ params }: PageProps) {
             marginBottom: 22,
           }}
         >
-          {mission.actionLabel || t('actionDefault')}
+          {text.actionLabel || t('actionDefault')}
         </a>
       ) : (
         mission.type === 'DONATION' && (

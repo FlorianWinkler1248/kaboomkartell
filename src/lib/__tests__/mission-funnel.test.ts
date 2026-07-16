@@ -13,10 +13,19 @@ import Database from 'better-sqlite3'
 import fs from 'node:fs'
 import path from 'node:path'
 import { createRequire } from 'node:module'
-import { createMissionSchema, artistApplicationSchema } from '../validations'
+import {
+  createMissionSchema,
+  updateMissionSchema,
+  artistApplicationSchema,
+} from '../validations'
 import { showVanity } from '../vanity'
 import { buildArtistApplicationEmail } from '../mailer'
-import { isSafeExternalUrl } from '../mission-config'
+import {
+  isSafeExternalUrl,
+  parseMissionTranslations,
+  resolveMissionText,
+  serializeMissionTranslations,
+} from '../mission-config'
 import { toProcessListItem, type ProcessEntry } from '../processes-bundle'
 
 const nodeRequire = createRequire(import.meta.url)
@@ -63,6 +72,7 @@ beforeAll(async () => {
       "status" TEXT NOT NULL DEFAULT 'OPEN',
       "progressCurrent" REAL, "progressTarget" REAL, "progressUnit" TEXT,
       "actionUrl" TEXT, "actionLabel" TEXT,
+      "translations" TEXT,
       "acceptable" BOOLEAN NOT NULL DEFAULT true,
       "sortOrder" INTEGER NOT NULL DEFAULT 0,
       "createdBy" TEXT NOT NULL DEFAULT 'flow',
@@ -346,6 +356,118 @@ describe('mission-funnel — featured-Frontmatter-Koerzierung', () => {
     // darf beim strikten Konsumenten NICHT als featured durchgehen.
     expect(toProcessListItem(entry('true'), 'en').featured).toBe(false)
     expect(toProcessListItem(entry(undefined), 'en').featured).toBe(false)
+  })
+})
+
+// === (7) Mission-i18n: Resolver + Parser + Serializer + zod =================
+
+describe('mission-funnel — resolveMissionText (Mission-i18n)', () => {
+  const baseMission = {
+    title: 'Recruit Wolves',
+    summary: 'Bring humans to the decks.',
+    body: '## Do it\n\nSpread the word.',
+    actionLabel: 'Join now',
+  }
+  const deEntry = {
+    title: 'Woelfe rekrutieren',
+    summary: 'Bring Menschen an die Decks.',
+    body: '## Mach es\n\nSag es weiter.',
+    actionLabel: 'Jetzt mitmachen',
+  }
+
+  it('de vorhanden → deutsche Texte', () => {
+    const mission = { ...baseMission, translations: JSON.stringify({ de: deEntry }) }
+    expect(resolveMissionText(mission, 'de')).toEqual(deEntry)
+  })
+
+  it('de fehlt → EN-Basisfelder (Fallback)', () => {
+    const mission = { ...baseMission, translations: JSON.stringify({ es: { title: 'Hola' } }) }
+    expect(resolveMissionText(mission, 'de')).toEqual(baseMission)
+  })
+
+  it('Teil-Uebersetzung mischt feld-weise mit EN', () => {
+    const mission = {
+      ...baseMission,
+      translations: JSON.stringify({ de: { title: 'Woelfe rekrutieren' } }),
+    }
+    const resolved = resolveMissionText(mission, 'de')
+    expect(resolved.title).toBe('Woelfe rekrutieren')
+    expect(resolved.summary).toBe(baseMission.summary)
+    expect(resolved.body).toBe(baseMission.body)
+    expect(resolved.actionLabel).toBe(baseMission.actionLabel)
+  })
+
+  it('kaputtes JSON → EN-Basisfelder, kein Crash', () => {
+    const mission = { ...baseMission, translations: '{not json!!' }
+    expect(resolveMissionText(mission, 'de')).toEqual(baseMission)
+  })
+
+  it('Nicht-String-Werte werden ignoriert (Typ-Guard vor dem Renderer)', () => {
+    const mission = {
+      ...baseMission,
+      translations: JSON.stringify({
+        de: { title: 42, summary: { evil: true }, body: ['nope'], actionLabel: null },
+      }),
+    }
+    expect(resolveMissionText(mission, 'de')).toEqual(baseMission)
+  })
+
+  it('unbekanntes Locale (en/xx) → EN-Basisfelder', () => {
+    const mission = { ...baseMission, translations: JSON.stringify({ de: deEntry }) }
+    expect(resolveMissionText(mission, 'en')).toEqual(baseMission)
+    expect(resolveMissionText(mission, 'xx')).toEqual(baseMission)
+  })
+
+  it('translations null/fehlend → EN-Basisfelder', () => {
+    expect(resolveMissionText({ ...baseMission, translations: null }, 'de')).toEqual(baseMission)
+    expect(resolveMissionText(baseMission, 'fr')).toEqual(baseMission)
+  })
+
+  it('parseMissionTranslations: unbekannte Locale-Keys + leere Strings fliegen raus', () => {
+    const parsed = parseMissionTranslations(
+      JSON.stringify({
+        de: { title: 'Da', summary: '   ' },
+        tlh: { title: 'Klingon bleibt draussen' },
+        es: 'kein Objekt',
+      })
+    )
+    expect(parsed).toEqual({ de: { title: 'Da' } })
+  })
+
+  it('serializeMissionTranslations: leer/null → null, gefuellt → JSON-String', () => {
+    expect(serializeMissionTranslations(null)).toBeNull()
+    expect(serializeMissionTranslations(undefined)).toBeNull()
+    expect(serializeMissionTranslations({})).toBeNull()
+    expect(serializeMissionTranslations({ de: {} })).toBeNull()
+    const s = serializeMissionTranslations({ de: { title: 'Woelfe' } })
+    expect(s).toBe(JSON.stringify({ de: { title: 'Woelfe' } }))
+  })
+})
+
+describe('mission-funnel — zod missionTranslations (Laengen-Limits wie EN)', () => {
+  const validMission = {
+    title: 'Recruit Wolves',
+    type: 'RECRUITING',
+    summary: 'Bring humans to the decks.',
+    body: '## Do it',
+  }
+
+  it('gueltige Teil-Uebersetzung passiert create + update', () => {
+    const translations = { de: { title: 'Woelfe rekrutieren' }, fr: { summary: 'Court.' } }
+    expect(createMissionSchema.safeParse({ ...validMission, translations }).success).toBe(true)
+    expect(updateMissionSchema.safeParse({ translations }).success).toBe(true)
+  })
+
+  it('zu langer de-title (> 120) → reject', () => {
+    const translations = { de: { title: 'x'.repeat(121) } }
+    expect(createMissionSchema.safeParse({ ...validMission, translations }).success).toBe(false)
+    expect(updateMissionSchema.safeParse({ translations }).success).toBe(false)
+  })
+
+  it('zu langes de-actionLabel (> 40) → reject; null raeumt (update)', () => {
+    const translations = { de: { actionLabel: 'x'.repeat(41) } }
+    expect(createMissionSchema.safeParse({ ...validMission, translations }).success).toBe(false)
+    expect(updateMissionSchema.safeParse({ translations: null }).success).toBe(true)
   })
 })
 

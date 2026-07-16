@@ -51,6 +51,7 @@ export type MissionMinAggregateOutputType = {
   progressUnit: string | null
   actionUrl: string | null
   actionLabel: string | null
+  translations: string | null
   acceptable: boolean | null
   sortOrder: number | null
   createdBy: string | null
@@ -71,6 +72,7 @@ export type MissionMaxAggregateOutputType = {
   progressUnit: string | null
   actionUrl: string | null
   actionLabel: string | null
+  translations: string | null
   acceptable: boolean | null
   sortOrder: number | null
   createdBy: string | null
@@ -91,6 +93,7 @@ export type MissionCountAggregateOutputType = {
   progressUnit: number
   actionUrl: number
   actionLabel: number
+  translations: number
   acceptable: number
   sortOrder: number
   createdBy: number
@@ -125,6 +128,7 @@ export type MissionMinAggregateInputType = {
   progressUnit?: true
   actionUrl?: true
   actionLabel?: true
+  translations?: true
   acceptable?: true
   sortOrder?: true
   createdBy?: true
@@ -145,6 +149,7 @@ export type MissionMaxAggregateInputType = {
   progressUnit?: true
   actionUrl?: true
   actionLabel?: true
+  translations?: true
   acceptable?: true
   sortOrder?: true
   createdBy?: true
@@ -165,6 +170,7 @@ export type MissionCountAggregateInputType = {
   progressUnit?: true
   actionUrl?: true
   actionLabel?: true
+  translations?: true
   acceptable?: true
   sortOrder?: true
   createdBy?: true
@@ -272,6 +278,7 @@ export type MissionGroupByOutputType = {
   progressUnit: string | null
   actionUrl: string | null
   actionLabel: string | null
+  translations: string | null
   acceptable: boolean
   sortOrder: number
   createdBy: string
@@ -315,6 +322,7 @@ export type MissionWhereInput = {
   progressUnit?: Prisma.StringNullableFilter<"Mission"> | string | null
   actionUrl?: Prisma.StringNullableFilter<"Mission"> | string | null
   actionLabel?: Prisma.StringNullableFilter<"Mission"> | string | null
+  translations?: Prisma.StringNullableFilter<"Mission"> | string | null
   acceptable?: Prisma.BoolFilter<"Mission"> | boolean
   sortOrder?: Prisma.IntFilter<"Mission"> | number
   createdBy?: Prisma.StringFilter<"Mission"> | string
@@ -336,6 +344,7 @@ export type MissionOrderByWithRelationInput = {
   progressUnit?: Prisma.SortOrderInput | Prisma.SortOrder
   actionUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   actionLabel?: Prisma.SortOrderInput | Prisma.SortOrder
+  translations?: Prisma.SortOrderInput | Prisma.SortOrder
   acceptable?: Prisma.SortOrder
   sortOrder?: Prisma.SortOrder
   createdBy?: Prisma.SortOrder
@@ -360,6 +369,7 @@ export type MissionWhereUniqueInput = Prisma.AtLeast<{
   progressUnit?: Prisma.StringNullableFilter<"Mission"> | string | null
   actionUrl?: Prisma.StringNullableFilter<"Mission"> | string | null
   actionLabel?: Prisma.StringNullableFilter<"Mission"> | string | null
+  translations?: Prisma.StringNullableFilter<"Mission"> | string | null
   acceptable?: Prisma.BoolFilter<"Mission"> | boolean
   sortOrder?: Prisma.IntFilter<"Mission"> | number
   createdBy?: Prisma.StringFilter<"Mission"> | string
@@ -381,6 +391,7 @@ export type MissionOrderByWithAggregationInput = {
   progressUnit?: Prisma.SortOrderInput | Prisma.SortOrder
   actionUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   actionLabel?: Prisma.SortOrderInput | Prisma.SortOrder
+  translations?: Prisma.SortOrderInput | Prisma.SortOrder
   acceptable?: Prisma.SortOrder
   sortOrder?: Prisma.SortOrder
   createdBy?: Prisma.SortOrder
@@ -409,6 +420,7 @@ export type MissionScalarWhereWithAggregatesInput = {
   progressUnit?: Prisma.StringNullableWithAggregatesFilter<"Mission"> | string | null
   actionUrl?: Prisma.StringNullableWithAggregatesFilter<"Mission"> | string | null
   actionLabel?: Prisma.StringNullableWithAggregatesFilter<"Mission"> | string | null
+  translations?: Prisma.StringNullableWithAggregatesFilter<"Mission"> | string | null
   acceptable?: Prisma.BoolWithAggregatesFilter<"Mission"> | boolean
   sortOrder?: Prisma.IntWithAggregatesFilter<"Mission"> | number
   createdBy?: Prisma.StringWithAggregatesFilter<"Mission"> | string
@@ -429,6 +441,7 @@ export type MissionCreateInput = {
   progressUnit?: string | null
   actionUrl?: string | null
   actionLabel?: string | null
+  translations?: string | null
   acceptable?: boolean
   sortOrder?: number
   createdBy?: string
@@ -450,6 +463,7 @@ export type MissionUncheckedCreateInput = {
   progressUnit?: string | null
   actionUrl?: string | null
   actionLabel?: string | null
+  translations?: string | null
   acceptable?: boolean
   sortOrder?: number
   createdBy?: string
@@ -471,6 +485,7 @@ export type MissionUpdateInput = {
   progressUnit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   actionUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   actionLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  translations?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   acceptable?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
   createdBy?: Prisma.StringFieldUpdateOperationsInput | string
@@ -492,6 +507,7 @@ export type MissionUncheckedUpdateInput = {
   progressUnit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   actionUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   actionLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  translations?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   acceptable?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
   createdBy?: Prisma.StringFieldUpdateOperationsInput | string
@@ -513,6 +529,7 @@ export type MissionCreateManyInput = {
   progressUnit?: string | null
   actionUrl?: string | null
   actionLabel?: string | null
+  translations?: string | null
   acceptable?: boolean
   sortOrder?: number
   createdBy?: string
@@ -533,6 +550,7 @@ export type MissionUpdateManyMutationInput = {
   progressUnit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   actionUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   actionLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  translations?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   acceptable?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
   createdBy?: Prisma.StringFieldUpdateOperationsInput | string
@@ -553,6 +571,7 @@ export type MissionUncheckedUpdateManyInput = {
   progressUnit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   actionUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   actionLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  translations?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   acceptable?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
   createdBy?: Prisma.StringFieldUpdateOperationsInput | string
@@ -573,6 +592,7 @@ export type MissionCountOrderByAggregateInput = {
   progressUnit?: Prisma.SortOrder
   actionUrl?: Prisma.SortOrder
   actionLabel?: Prisma.SortOrder
+  translations?: Prisma.SortOrder
   acceptable?: Prisma.SortOrder
   sortOrder?: Prisma.SortOrder
   createdBy?: Prisma.SortOrder
@@ -599,6 +619,7 @@ export type MissionMaxOrderByAggregateInput = {
   progressUnit?: Prisma.SortOrder
   actionUrl?: Prisma.SortOrder
   actionLabel?: Prisma.SortOrder
+  translations?: Prisma.SortOrder
   acceptable?: Prisma.SortOrder
   sortOrder?: Prisma.SortOrder
   createdBy?: Prisma.SortOrder
@@ -619,6 +640,7 @@ export type MissionMinOrderByAggregateInput = {
   progressUnit?: Prisma.SortOrder
   actionUrl?: Prisma.SortOrder
   actionLabel?: Prisma.SortOrder
+  translations?: Prisma.SortOrder
   acceptable?: Prisma.SortOrder
   sortOrder?: Prisma.SortOrder
   createdBy?: Prisma.SortOrder
@@ -672,6 +694,7 @@ export type MissionCreateWithoutAcceptancesInput = {
   progressUnit?: string | null
   actionUrl?: string | null
   actionLabel?: string | null
+  translations?: string | null
   acceptable?: boolean
   sortOrder?: number
   createdBy?: string
@@ -692,6 +715,7 @@ export type MissionUncheckedCreateWithoutAcceptancesInput = {
   progressUnit?: string | null
   actionUrl?: string | null
   actionLabel?: string | null
+  translations?: string | null
   acceptable?: boolean
   sortOrder?: number
   createdBy?: string
@@ -728,6 +752,7 @@ export type MissionUpdateWithoutAcceptancesInput = {
   progressUnit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   actionUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   actionLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  translations?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   acceptable?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
   createdBy?: Prisma.StringFieldUpdateOperationsInput | string
@@ -748,6 +773,7 @@ export type MissionUncheckedUpdateWithoutAcceptancesInput = {
   progressUnit?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   actionUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   actionLabel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  translations?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   acceptable?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
   createdBy?: Prisma.StringFieldUpdateOperationsInput | string
@@ -799,6 +825,7 @@ export type MissionSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   progressUnit?: boolean
   actionUrl?: boolean
   actionLabel?: boolean
+  translations?: boolean
   acceptable?: boolean
   sortOrder?: boolean
   createdBy?: boolean
@@ -821,6 +848,7 @@ export type MissionSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   progressUnit?: boolean
   actionUrl?: boolean
   actionLabel?: boolean
+  translations?: boolean
   acceptable?: boolean
   sortOrder?: boolean
   createdBy?: boolean
@@ -841,6 +869,7 @@ export type MissionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   progressUnit?: boolean
   actionUrl?: boolean
   actionLabel?: boolean
+  translations?: boolean
   acceptable?: boolean
   sortOrder?: boolean
   createdBy?: boolean
@@ -861,6 +890,7 @@ export type MissionSelectScalar = {
   progressUnit?: boolean
   actionUrl?: boolean
   actionLabel?: boolean
+  translations?: boolean
   acceptable?: boolean
   sortOrder?: boolean
   createdBy?: boolean
@@ -868,7 +898,7 @@ export type MissionSelectScalar = {
   updatedAt?: boolean
 }
 
-export type MissionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "slug" | "title" | "type" | "summary" | "body" | "status" | "progressCurrent" | "progressTarget" | "progressUnit" | "actionUrl" | "actionLabel" | "acceptable" | "sortOrder" | "createdBy" | "createdAt" | "updatedAt", ExtArgs["result"]["mission"]>
+export type MissionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "slug" | "title" | "type" | "summary" | "body" | "status" | "progressCurrent" | "progressTarget" | "progressUnit" | "actionUrl" | "actionLabel" | "translations" | "acceptable" | "sortOrder" | "createdBy" | "createdAt" | "updatedAt", ExtArgs["result"]["mission"]>
 export type MissionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   acceptances?: boolean | Prisma.Mission$acceptancesArgs<ExtArgs>
   _count?: boolean | Prisma.MissionCountOutputTypeDefaultArgs<ExtArgs>
@@ -894,6 +924,7 @@ export type $MissionPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     progressUnit: string | null
     actionUrl: string | null
     actionLabel: string | null
+    translations: string | null
     acceptable: boolean
     sortOrder: number
     createdBy: string
@@ -1335,6 +1366,7 @@ export interface MissionFieldRefs {
   readonly progressUnit: Prisma.FieldRef<"Mission", 'String'>
   readonly actionUrl: Prisma.FieldRef<"Mission", 'String'>
   readonly actionLabel: Prisma.FieldRef<"Mission", 'String'>
+  readonly translations: Prisma.FieldRef<"Mission", 'String'>
   readonly acceptable: Prisma.FieldRef<"Mission", 'Boolean'>
   readonly sortOrder: Prisma.FieldRef<"Mission", 'Int'>
   readonly createdBy: Prisma.FieldRef<"Mission", 'String'>

@@ -25,6 +25,7 @@ import { Prisma } from '@/generated/prisma/client'
 import { validateBoomySecret } from '@/lib/constants'
 import { applyRateLimit, boomyLimit } from '@/lib/rate-limit'
 import { createMissionSchema } from '@/lib/validations'
+import { serializeMissionTranslations } from '@/lib/mission-config'
 import { slugify } from '@/lib/utils'
 
 export async function POST(request: NextRequest) {
@@ -103,6 +104,9 @@ export async function POST(request: NextRequest) {
           progressCurrent: data.progressCurrent ?? null,
           progressTarget: data.progressTarget ?? null,
           progressUnit: data.progressUnit ?? null,
+          // Mission-i18n: optionales Uebersetzungs-OBJEKT im Payload → hier
+          // zum JSON-String fuer die DB (leer/fehlend → null, Fallback EN).
+          translations: serializeMissionTranslations(data.translations),
           acceptable: data.acceptable,
           sortOrder: data.sortOrder,
           // Fest verdrahtet — nie aus dem Payload (Attribution "called by Boomy").
