@@ -13,6 +13,7 @@ import prisma from '@/lib/db'
 import { requireAdmin, adminErrorResponse } from '@/lib/admin-api'
 import { slugify } from '@/lib/utils'
 import { createMissionSchema } from '@/lib/validations'
+import { serializeMissionTranslations } from '@/lib/mission-config'
 
 // GET /api/admin/missions — Liste inkl. ARCHIVED + Acceptance-Zahlen.
 // Anders als die Public-Route filtert der Admin NICHT nach Status:
@@ -94,9 +95,15 @@ export async function POST(request: Request) {
       )
     }
 
+    // Mission-i18n: der Client sendet translations als OBJEKT, die DB haelt
+    // einen JSON-String — Stringify passiert genau hier (Konvention siehe
+    // missionTranslationsSchema); leere Objekte normalisiert der Serializer
+    // zu null.
+    const { translations, ...rest } = parsed.data
     const mission = await prisma.mission.create({
       data: {
-        ...parsed.data,
+        ...rest,
+        translations: serializeMissionTranslations(translations),
         slug,
         createdBy: 'flow',
       },

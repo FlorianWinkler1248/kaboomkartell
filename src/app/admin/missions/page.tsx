@@ -26,6 +26,13 @@ import {
   ExternalLink,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import {
+  parseMissionTranslations,
+  MISSION_TRANSLATION_LOCALES,
+  type MissionTranslationLocale,
+  type MissionTranslationEntry,
+  type MissionTranslations,
+} from '@/lib/mission-config'
 import { useToast } from '@/components/providers/ToastProvider'
 import {
   AdminPageHeader,
@@ -78,6 +85,8 @@ interface AdminMission {
   progressUnit: string | null
   actionUrl: string | null
   actionLabel: string | null
+  // JSON-String der Uebersetzungen (de/es/fr) — Parser: parseMissionTranslations
+  translations: string | null
   acceptable: boolean
   sortOrder: number
   createdBy: string
@@ -114,6 +123,38 @@ interface AdminSocial {
 
 // === Formular-Shapes (Strings für number-Inputs, Konvertierung beim Submit) ===
 
+// Mission-i18n: pro Zusatz-Sprache (de/es/fr) die 4 uebersetzbaren Felder als
+// Form-Strings; leere Felder = kein Eintrag im JSON (EN-Fallback). Die
+// Admin-UI selbst bleibt EN-only — nur die INHALTE sind mehrsprachig.
+interface TranslationFormEntry {
+  title: string
+  summary: string
+  body: string
+  actionLabel: string
+}
+
+type TranslationsFormState = Record<MissionTranslationLocale, TranslationFormEntry>
+
+const EMPTY_TRANSLATION_ENTRY: TranslationFormEntry = {
+  title: '',
+  summary: '',
+  body: '',
+  actionLabel: '',
+}
+
+const EMPTY_TRANSLATIONS_FORM: TranslationsFormState = {
+  de: EMPTY_TRANSLATION_ENTRY,
+  es: EMPTY_TRANSLATION_ENTRY,
+  fr: EMPTY_TRANSLATION_ENTRY,
+}
+
+// Anzeige-Label je Sprach-Collapsible (Admin ist EN-only)
+const TRANSLATION_LOCALE_LABELS: Record<MissionTranslationLocale, string> = {
+  de: 'German (DE)',
+  es: 'Spanish (ES)',
+  fr: 'French (FR)',
+}
+
 interface MissionFormState {
   title: string
   type: string
@@ -125,6 +166,7 @@ interface MissionFormState {
   progressCurrent: string
   progressTarget: string
   progressUnit: string
+  translations: TranslationsFormState
   acceptable: boolean
   sortOrder: string
 }
@@ -140,6 +182,7 @@ const EMPTY_MISSION_FORM: MissionFormState = {
   progressCurrent: '',
   progressTarget: '',
   progressUnit: '',
+  translations: EMPTY_TRANSLATIONS_FORM,
   acceptable: true,
   sortOrder: '0',
 }
@@ -177,6 +220,29 @@ function parseApplicationLinks(raw: string | null): string[] {
   }
 }
 
+// Form-Uebersetzungen → Payload-OBJEKT (die Route stringifiziert vor prisma,
+// Konvention missionTranslationsSchema): leere Felder/Sprachen fliegen raus,
+// komplett leer → null (Edit: raeumt den Bestand; Create laesst das Feld weg).
+function buildTranslationsPayload(form: TranslationsFormState): MissionTranslations | null {
+  const result: MissionTranslations = {}
+  for (const locale of MISSION_TRANSLATION_LOCALES) {
+    const entry = form[locale]
+    const clean: MissionTranslationEntry = {}
+    if (entry.title.trim()) clean.title = entry.title.trim()
+    if (entry.summary.trim()) clean.summary = entry.summary.trim()
+    if (entry.body.trim()) clean.body = entry.body
+    if (entry.actionLabel.trim()) clean.actionLabel = entry.actionLabel.trim()
+    if (Object.keys(clean).length > 0) result[locale] = clean
+  }
+  return Object.keys(result).length > 0 ? result : null
+}
+
+// Anzahl gefuellter Felder einer Sprache — Badge am Collapsible-Kopf
+function countFilledTranslationFields(entry: TranslationFormEntry): number {
+  return [entry.title, entry.summary, entry.body, entry.actionLabel].filter((v) => v.trim() !== '')
+    .length
+}
+
 // Zahl-Feld → number | null (leeres Feld = null, kaputte Eingabe = null).
 // KEINE Rundung: Dezimal-Beträge (z.B. 1250.50 EUR) sind erlaubt, die
 // progress*-Prisma-Felder sind Float. sortOrder validiert das zod-Schema
@@ -212,6 +278,9 @@ export default function AdminMissionsPage() {
   const [editingMissionId, setEditingMissionId] = useState<string | null>(null)
   const [missionForm, setMissionForm] = useState<MissionFormState>(EMPTY_MISSION_FORM)
   const [savingMission, setSavingMission] = useState(false)
+  // Mission-i18n: welches Sprach-Collapsible ist offen (null = alle zu)
+  const [openTranslationLocale, setOpenTranslationLocale] =
+    useState<MissionTranslationLocale | null>(null)
   // Acceptances-Aufklapper
   const [expandedMissionId, setExpandedMissionId] = useState<string | null>(null)
   const [acceptances, setAcceptances] = useState<AdminAcceptance[]>([])
@@ -297,10 +366,13 @@ export default function AdminMissionsPage() {
   const openCreateMission = () => {
     setEditingMissionId(null)
     setMissionForm(EMPTY_MISSION_FORM)
+    setOpenTranslationLocale(null)
     setShowMissionForm(true)
   }
 
   const openEditMission = (m: AdminMission) => {
+    // Defensiv geparster JSON-Bestand → Form-Strings (fehlende Felder leer)
+    const stored = parseMissionTranslations(m.translations)
     setEditingMissionId(m.id)
     setMissionForm({
       title: m.title,
@@ -313,10 +385,31 @@ export default function AdminMissionsPage() {
       progressCurrent: m.progressCurrent !== null ? String(m.progressCurrent) : '',
       progressTarget: m.progressTarget !== null ? String(m.progressTarget) : '',
       progressUnit: m.progressUnit ?? '',
+      translations: {
+        de: { ...EMPTY_TRANSLATION_ENTRY, ...stored.de },
+        es: { ...EMPTY_TRANSLATION_ENTRY, ...stored.es },
+        fr: { ...EMPTY_TRANSLATION_ENTRY, ...stored.fr },
+      },
       acceptable: m.acceptable,
       sortOrder: String(m.sortOrder),
     })
+    setOpenTranslationLocale(null)
     setShowMissionForm(true)
+  }
+
+  // Ein Uebersetzungs-Feld einer Sprache setzen (immutable Update)
+  const setTranslationField = (
+    locale: MissionTranslationLocale,
+    field: keyof TranslationFormEntry,
+    value: string
+  ) => {
+    setMissionForm((prev) => ({
+      ...prev,
+      translations: {
+        ...prev.translations,
+        [locale]: { ...prev.translations[locale], [field]: value },
+      },
+    }))
   }
 
   const handleSaveMission = async () => {
@@ -342,6 +435,9 @@ export default function AdminMissionsPage() {
         progressCurrent: optional(toNullableNumber(missionForm.progressCurrent)),
         progressTarget: optional(toNullableNumber(missionForm.progressTarget)),
         progressUnit: optional(missionForm.progressUnit.trim() || null),
+        // Mission-i18n: als OBJEKT senden (Route stringifiziert). Edit mit
+        // komplett leeren Feldern sendet null = Uebersetzungen raeumen.
+        translations: optional(buildTranslationsPayload(missionForm.translations)),
         acceptable: missionForm.acceptable,
         sortOrder: toNullableNumber(missionForm.sortOrder) ?? 0,
         // Status nur beim Edit — beim Create setzt der Server OPEN
@@ -711,6 +807,81 @@ export default function AdminMissionsPage() {
                     className={cn(adminInputClass, 'w-full min-h-[160px] font-mono text-xs')}
                     placeholder={'## The mission\n\nWhat to do, step by step...'}
                   />
+                </div>
+                {/* Mission-i18n: Collapsible je Zusatz-Sprache (de/es/fr).
+                    Alle Felder optional — leer = EN-Fallback auf der Seite. */}
+                <div className="md:col-span-2 space-y-2">
+                  <label className="block text-sm text-muted">
+                    Translations{' '}
+                    <span className="opacity-60">
+                      (optional — empty fields fall back to the English content above)
+                    </span>
+                  </label>
+                  {MISSION_TRANSLATION_LOCALES.map((locale) => {
+                    const entry = missionForm.translations[locale]
+                    const filled = countFilledTranslationFields(entry)
+                    const isOpen = openTranslationLocale === locale
+                    return (
+                      <div key={locale} className="border border-border rounded-lg">
+                        <button
+                          type="button"
+                          onClick={() => setOpenTranslationLocale(isOpen ? null : locale)}
+                          className="w-full flex items-center justify-between px-3 py-2 text-sm text-secondary hover:text-foreground cursor-pointer"
+                        >
+                          <span className="flex items-center gap-2">
+                            {TRANSLATION_LOCALE_LABELS[locale]}
+                            {filled > 0 && (
+                              <span className="px-1.5 py-0.5 rounded bg-rasta-green/15 text-rasta-green font-mono text-[10px]">
+                                {filled}/4
+                              </span>
+                            )}
+                          </span>
+                          {isOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                        </button>
+                        {isOpen && (
+                          <div className="px-3 pb-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-xs text-muted mb-1">Title</label>
+                              <input
+                                type="text"
+                                value={entry.title}
+                                onChange={(e) => setTranslationField(locale, 'title', e.target.value)}
+                                className={cn(adminInputClass, 'w-full')}
+                                maxLength={120}
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs text-muted mb-1">Action Label</label>
+                              <input
+                                type="text"
+                                value={entry.actionLabel}
+                                onChange={(e) => setTranslationField(locale, 'actionLabel', e.target.value)}
+                                className={cn(adminInputClass, 'w-full')}
+                                maxLength={40}
+                              />
+                            </div>
+                            <div className="md:col-span-2">
+                              <label className="block text-xs text-muted mb-1">Summary</label>
+                              <textarea
+                                value={entry.summary}
+                                onChange={(e) => setTranslationField(locale, 'summary', e.target.value)}
+                                className={cn(adminInputClass, 'w-full min-h-[50px]')}
+                                maxLength={300}
+                              />
+                            </div>
+                            <div className="md:col-span-2">
+                              <label className="block text-xs text-muted mb-1">Body (Markdown)</label>
+                              <textarea
+                                value={entry.body}
+                                onChange={(e) => setTranslationField(locale, 'body', e.target.value)}
+                                className={cn(adminInputClass, 'w-full min-h-[120px] font-mono text-xs')}
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
                 <div>
                   <label className="block text-sm text-muted mb-1">Action URL <span className="opacity-60">(e.g. donation link — public button)</span></label>

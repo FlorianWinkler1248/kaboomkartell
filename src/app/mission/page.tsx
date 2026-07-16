@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import prisma from '@/lib/db';
 import { SectionTitle } from '@/components/kbk/SectionTitle';
 import { obsidianFrameVars } from '@/lib/obsidian-frame';
-import { isSafeExternalUrl } from '@/lib/mission-config';
+import { isSafeExternalUrl, resolveMissionText } from '@/lib/mission-config';
 import { showVanity } from '@/lib/vanity';
 
 /**
@@ -155,6 +155,10 @@ interface SocialItem {
 
 export default async function MissionBoardPage() {
   const t = await getTranslations('mission');
+  // Aktives Locale aus dem kbk-locale-Cookie (ADR-031, i18n/request.ts) —
+  // die Missions-INHALTE loest resolveMissionText feld-weise dagegen auf
+  // (Fallback EN-Basisfelder bei fehlender/Teil-Uebersetzung).
+  const locale = await getLocale();
 
   // Board-Daten — Empty-Fallback statt Crash (Muster WolfpackSection).
   let missions: MissionCard[] = [];
@@ -173,26 +177,32 @@ export default async function MissionBoardPage() {
         progressUnit: true,
         actionUrl: true,
         actionLabel: true,
+        translations: true,
         createdBy: true,
         // Echte Mitwirkung zählen: ACCEPTED + COMPLETED (konsistent mit
         // /api/missions); WITHDRAWN bleibt als Audit-Zeile außen vor.
         _count: { select: { acceptances: { where: { status: { in: ['ACCEPTED', 'COMPLETED'] } } } } },
       },
     });
-    missions = rows.map((m) => ({
-      slug: m.slug,
-      title: m.title,
-      type: m.type,
-      summary: m.summary,
-      status: m.status,
-      progressCurrent: m.progressCurrent,
-      progressTarget: m.progressTarget,
-      progressUnit: m.progressUnit,
-      actionUrl: m.actionUrl,
-      actionLabel: m.actionLabel,
-      createdBy: m.createdBy,
-      acceptedCount: m._count.acceptances,
-    }));
+    missions = rows.map((m) => {
+      // body wird auf dem Board nicht gerendert — der Resolver braucht ihn
+      // aber als Pflichtfeld; leerer String ist hier ein neutraler Platzhalter.
+      const text = resolveMissionText({ ...m, body: '' }, locale);
+      return {
+        slug: m.slug,
+        title: text.title,
+        type: m.type,
+        summary: text.summary,
+        status: m.status,
+        progressCurrent: m.progressCurrent,
+        progressTarget: m.progressTarget,
+        progressUnit: m.progressUnit,
+        actionUrl: m.actionUrl,
+        actionLabel: text.actionLabel,
+        createdBy: m.createdBy,
+        acceptedCount: m._count.acceptances,
+      };
+    });
   } catch (err) {
     console.error('MissionBoard missions-query failed:', err);
     missions = [];

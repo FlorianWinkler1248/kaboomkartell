@@ -230,6 +230,27 @@ const httpUrlSchema = z
   .regex(/^https?:\/\//, 'Only http:// and https:// URLs are allowed')
   .max(500);
 
+// Mission-i18n: Uebersetzungs-Eintrag EINER Sprache — alle Felder optional
+// (Teil-Uebersetzung erlaubt, feld-weiser EN-Fallback im Resolver), Laengen-
+// Limits identisch zu den EN-Basisfeldern. Konvention: der Client sendet das
+// OBJEKT, die Route stringifiziert VOR prisma via serializeMissionTranslations
+// (mission-config.ts) — eine Richtung, ein Format, kein doppeltes Parsen.
+const missionTranslationEntrySchema = z.object({
+  title: z.string().min(1).max(120).optional(),
+  summary: z.string().min(1).max(300).optional(),
+  body: z.string().min(1).max(20_000).optional(),
+  actionLabel: z.string().min(1).max(40).optional(),
+});
+
+// Nur die drei Zusatz-Sprachen (ADR-031: en/de/es/fr) — EN lebt in den
+// Basisfeldern. Unbekannte Keys strippt zod (Default-Objekt-Verhalten),
+// sie erreichen die DB nie.
+export const missionTranslationsSchema = z.object({
+  de: missionTranslationEntrySchema.optional(),
+  es: missionTranslationEntrySchema.optional(),
+  fr: missionTranslationEntrySchema.optional(),
+});
+
 export const createMissionSchema = z.object({
   title: z.string().min(1, 'Title is required').max(120),
   type: z.enum(MISSION_TYPES),
@@ -242,6 +263,8 @@ export const createMissionSchema = z.object({
   progressCurrent: z.number().min(0).optional().nullable(),
   progressTarget: z.number().min(0).optional().nullable(),
   progressUnit: z.string().max(20).optional().nullable(),
+  // Mission-i18n: optionale Uebersetzungen (de/es/fr) als Objekt.
+  translations: missionTranslationsSchema.optional().nullable(),
   acceptable: z.boolean().default(true),
   sortOrder: z.number().int().default(0),
 });
@@ -258,6 +281,9 @@ export const updateMissionSchema = z.object({
   progressCurrent: z.number().min(0).optional().nullable(),
   progressTarget: z.number().min(0).optional().nullable(),
   progressUnit: z.string().max(20).optional().nullable(),
+  // Mission-i18n: null raeumt alle Uebersetzungen (Nullable-Konvention wie
+  // actionUrl), undefined laesst den Bestand unangetastet.
+  translations: missionTranslationsSchema.optional().nullable(),
   acceptable: z.boolean().optional(),
   sortOrder: z.number().int().optional(),
 });

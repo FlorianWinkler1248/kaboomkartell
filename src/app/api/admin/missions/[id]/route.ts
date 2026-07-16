@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/db'
 import { requireAdmin, adminErrorResponse } from '@/lib/admin-api'
 import { updateMissionSchema } from '@/lib/validations'
+import { serializeMissionTranslations } from '@/lib/mission-config'
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -67,9 +68,18 @@ export async function PUT(request: NextRequest, { params }: Params) {
       )
     }
 
+    // Mission-i18n: translations kommt als OBJEKT und wird hier fuer die DB
+    // stringifiziert. undefined = Bestand nicht anfassen; null/leeres Objekt
+    // normalisiert der Serializer zu null (= alle Uebersetzungen raeumen).
+    const { translations, ...rest } = parsed.data
     const mission = await prisma.mission.update({
       where: { id },
-      data: parsed.data,
+      data: {
+        ...rest,
+        ...(translations !== undefined
+          ? { translations: serializeMissionTranslations(translations) }
+          : {}),
+      },
     })
 
     return NextResponse.json({ success: true, data: mission })
