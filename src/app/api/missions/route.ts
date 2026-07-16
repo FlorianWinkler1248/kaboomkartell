@@ -12,15 +12,37 @@
  * Doku: prozesse/kbk-mission-board.md
  */
 
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/db'
+import { applyRateLimit, publicProcessesLimit } from '@/lib/rate-limit'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Flood-Hygiene wie beim Hilfe-Center (eigener Bucket, geteilter Limiter).
+  const limited = applyRateLimit(request, publicProcessesLimit, 'missions-read', 60)
+  if (limited) return limited
+
   try {
+    // select statt include: der 20-KB-Markdown-`body` gehoert NICHT in die
+    // Board-Liste (Detail-Seite laedt ihn selbst) — spart DB-I/O + Payload.
     const missions = await prisma.mission.findMany({
       where: { status: { not: 'ARCHIVED' } },
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
-      include: {
+      select: {
+        id: true,
+        slug: true,
+        title: true,
+        type: true,
+        summary: true,
+        status: true,
+        progressCurrent: true,
+        progressTarget: true,
+        progressUnit: true,
+        actionUrl: true,
+        actionLabel: true,
+        acceptable: true,
+        sortOrder: true,
+        createdBy: true,
+        createdAt: true,
         _count: {
           select: {
             // Nur echte Annahmen zaehlen — Widerrufe (WITHDRAWN) fallen raus.

@@ -351,7 +351,8 @@
     "progressLabel": "PROGRESO",
     "linkComingSoon": "Enlace de donación próximamente",
     "actionDefault": "ABRIR ENLACE",
-    "acceptedCount": "{count} aceptaciones",
+    "acceptedCount": "{count, plural, one {# aceptación} other {# aceptaciones}}",
+    "progressAbsolute": "{value} recaudado",
     "viewMission": "VER MISIÓN →",
     "follow": {
       "kicker": "FOLLOW THE PACK",
@@ -371,6 +372,7 @@
       "acceptCta": "ACEPTAR MISIÓN",
       "withdrawCta": "RETIRARSE",
       "acceptedBadge": "ACEPTADA",
+      "fulfilledBadge": "Misión cumplida 🐺",
       "acceptedNote": "Estás en esta misión — la manada cuenta contigo.",
       "toastAccepted": "Misión aceptada. ¡A por ella!",
       "toastWithdrawn": "Te has retirado de esta misión.",

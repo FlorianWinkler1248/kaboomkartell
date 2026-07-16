@@ -352,6 +352,7 @@
     "linkComingSoon": "Spenden-Link folgt in Kürze",
     "actionDefault": "LINK ÖFFNEN",
     "acceptedCount": "{count} angenommen",
+    "progressAbsolute": "{value} gesammelt",
     "viewMission": "MISSION ANSEHEN →",
     "follow": {
       "kicker": "FOLLOW THE PACK",
@@ -371,6 +372,7 @@
       "acceptCta": "MISSION ANNEHMEN",
       "withdrawCta": "ZURÜCKZIEHEN",
       "acceptedBadge": "ANGENOMMEN",
+      "fulfilledBadge": "Mission erfüllt 🐺",
       "acceptedNote": "Du bist auf dieser Mission — das Rudel zählt auf dich.",
       "toastAccepted": "Mission angenommen. Hol sie dir!",
       "toastWithdrawn": "Du hast dich von dieser Mission zurückgezogen.",

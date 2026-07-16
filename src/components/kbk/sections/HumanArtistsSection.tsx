@@ -96,14 +96,14 @@ function ArtistApplyBlock() {
         if (cancelled) return;
         if (res.ok) {
           const payload = await res.json().catch(() => null);
-          // Route-Contract: { success: true, data: { applied: bool, ... } } —
-          // defensiv auch flache Varianten akzeptieren.
+          // Route-Contract: { success: true, data: { applied: bool } } — mehr
+          // gibt die Route bewusst nicht her (kein Status-Einblick in v1).
+          // Defensiv auch flache Varianten akzeptieren.
           const data = payload && typeof payload === 'object' ? (payload.data ?? payload) : null;
-          let applied = false;
-          if (data && typeof data === 'object') {
-            if (typeof data.applied === 'boolean') applied = data.applied;
-            else if (typeof data.status === 'string' && data.status.length > 0) applied = true;
-          }
+          const applied =
+            data && typeof data === 'object' && typeof data.applied === 'boolean'
+              ? data.applied
+              : false;
           setPhase(applied ? 'applied' : 'form');
         } else {
           // 404 = keine Bewerbung; alles andere: Formular trotzdem anbieten —

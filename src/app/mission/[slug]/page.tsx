@@ -6,7 +6,10 @@ import prisma from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { renderMarkdown } from '@/lib/process-markdown';
 import { obsidianFrameVars } from '@/lib/obsidian-frame';
-import MissionAcceptButton from '@/components/kbk/MissionAcceptButton';
+import { isSafeExternalUrl } from '@/lib/mission-config';
+import MissionAcceptButton, {
+  type MissionAcceptanceStatus,
+} from '@/components/kbk/MissionAcceptButton';
 
 /**
  * Mission-Detail (/mission/[slug]) — Markdown-Briefing + Accept-Insel (ADR-039).
@@ -21,9 +24,10 @@ import MissionAcceptButton from '@/components/kbk/MissionAcceptButton';
  * 404-Disziplin: ARCHIVED antwortet IDENTISCH zu unbekanntem Slug (kein
  * Existenz-Orakel, Muster kbk-help-center).
  *
- * Accept-Status: kein GET auf der Accept-Route — die eigene Annahme wird hier
- * server-seitig via auth() + prisma geholt und als Prop in die Client-Insel
- * gereicht (einfachster Weg, spart einen Client-Roundtrip).
+ * Accept-Status: kein GET auf der Accept-Route — der eigene Annahme-Status
+ * ('ACCEPTED' | 'COMPLETED' | null; WITHDRAWN → null) wird hier server-seitig
+ * via auth() + prisma geholt und als Prop in die Client-Insel gereicht
+ * (einfachster Weg, spart einen Client-Roundtrip).
  */
 
 // DB + Session pro Request — kein Build-Zeit-Prerender.
@@ -82,15 +86,24 @@ export default async function MissionDetailPage({ params }: PageProps) {
   const { slug } = await params;
   const t = await getTranslations('mission');
 
-  const mission = await prisma.mission.findUnique({ where: { slug } });
+  // DB-Fehler → 404 statt Error-Boundary: die Detail-Seite eines temporär
+  // nicht erreichbaren Systems soll sich wie ein unbekannter Slug verhalten
+  // (Muster WolfpackSection: degradieren statt crashen).
+  let mission = null;
+  try {
+    mission = await prisma.mission.findUnique({ where: { slug } });
+  } catch (err) {
+    console.error('MissionDetail mission-query failed:', err);
+  }
 
   // ARCHIVED und unbekannter Slug antworten IDENTISCH (404-Disziplin).
   if (!mission || mission.status === 'ARCHIVED') {
     notFound();
   }
 
-  // Eigener Accept-Status server-seitig (auth() + prisma) → Prop in die Insel.
-  let initiallyAccepted = false;
+  // Eigener Annahme-Status server-seitig (auth() + prisma) → Prop in die
+  // Insel. WITHDRAWN wird auf null gemappt (wie „nie angenommen").
+  let acceptanceStatus: MissionAcceptanceStatus = null;
   const session = await auth();
   if (session?.user?.id) {
     try {
@@ -100,7 +113,9 @@ export default async function MissionDetailPage({ params }: PageProps) {
         },
         select: { status: true },
       });
-      initiallyAccepted = acceptance?.status === 'ACCEPTED' || acceptance?.status === 'COMPLETED';
+      if (acceptance?.status === 'ACCEPTED' || acceptance?.status === 'COMPLETED') {
+        acceptanceStatus = acceptance.status;
+      }
     } catch (err) {
       console.error('MissionDetail acceptance-lookup failed:', err);
     }
@@ -108,6 +123,9 @@ export default async function MissionDetailPage({ params }: PageProps) {
 
   const color = TYPE_COLOR[mission.type] ?? GREEN;
   const hasProgress = mission.progressTarget != null && mission.progressTarget > 0;
+  // Fortschritt ohne Ziel (Target null/0, aber Current > 0): absoluter Zähler
+  // statt gar nichts — der BALKEN bleibt Target-pflichtig (kein Prozent ohne Ziel).
+  const hasAbsoluteProgress = !hasProgress && (mission.progressCurrent ?? 0) > 0;
   const pct = hasProgress
     ? Math.min(
         100,
@@ -265,9 +283,37 @@ export default async function MissionDetailPage({ params }: PageProps) {
         </div>
       )}
 
+      {/* Absoluter Fortschritt ohne Ziel — Zahl zeigen, Balken weglassen. */}
+      {hasAbsoluteProgress && (
+        <div
+          className="kbk-obsidian framed"
+          style={{ ...obsidianFrameVars(color), padding: 18, marginBottom: 18 }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              fontFamily: 'var(--font-mono)',
+              fontSize: 11,
+              letterSpacing: '0.12em',
+              color: 'rgba(255,255,255,0.6)',
+            }}
+          >
+            <span>{t('progressLabel')}</span>
+            <span style={{ color: '#fff', fontWeight: 700 }}>
+              {t('progressAbsolute', {
+                value: `${fmt(mission.progressCurrent as number)}${mission.progressUnit ? ` ${mission.progressUnit}` : ''}`,
+              })}
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Action-CTA — fuer ALLE Besucher klickbar; Donation ohne Link zeigt
-          den definierten Platzhalter-Zustand statt eines toten Buttons. */}
-      {mission.actionUrl ? (
+          den definierten Platzhalter-Zustand statt eines toten Buttons.
+          Render-Guard isSafeExternalUrl: zod sichert nur den Write-Pfad —
+          Seed-Skripte/Bestandsdaten umgehen ihn (kein javascript:-href). */}
+      {isSafeExternalUrl(mission.actionUrl) ? (
         <a
           href={mission.actionUrl}
           target="_blank"
@@ -337,7 +383,7 @@ export default async function MissionDetailPage({ params }: PageProps) {
         <MissionAcceptButton
           slug={mission.slug}
           missionStatus={mission.status}
-          initiallyAccepted={initiallyAccepted}
+          acceptanceStatus={acceptanceStatus}
         />
       )}
     </section>

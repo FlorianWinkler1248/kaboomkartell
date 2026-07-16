@@ -9,12 +9,17 @@
  *   - eingeloggt T0/T1    → disabled Button + Hinweis „Full verification (2FA)
  *                           required" + Link /settings/security
  *   - T2, nicht angenommen → ACCEPT (POST /api/missions/[slug]/accept)
- *   - T2, angenommen       → ACCEPTED-Badge + WITHDRAW (DELETE selbe Route)
+ *   - T2, ACCEPTED         → ACCEPTED-Badge + WITHDRAW (DELETE selbe Route)
+ *   - T2, COMPLETED        → „Mission fulfilled"-Badge OHNE Withdraw-Button
+ *                            (der Server lehnt Withdraw auf COMPLETED eh mit
+ *                            409 completed_locked ab — kein toter Button)
  *
- * Der Server bleibt die Wahrheit: 409 „already accepted" wird als
- * Angenommen-Zustand gewertet (kein Fehler-Toast), 404 (archiviert/weg) zeigt
- * Toast + refresht die Seite. Tier-Check client-seitig NUR über TIER_ORDER aus
- * @/lib/badges (permissions.ts importiert prisma → bricht das Client-Bundle).
+ * Der Server bleibt die Wahrheit: 409-Antworten werden über das
+ * maschinenlesbare `code`-Feld unterschieden (already_accepted /
+ * mission_not_open / not_acceptable / completed_locked) — NIE über
+ * englischen Fehlertext. 404 (archiviert/weg) zeigt Toast + refresht die
+ * Seite. Tier-Check client-seitig NUR über TIER_ORDER aus @/lib/badges
+ * (permissions.ts importiert prisma → bricht das Client-Bundle).
  */
 
 import { useState } from 'react';
@@ -29,12 +34,16 @@ import { obsidianFrameVars } from '@/lib/obsidian-frame';
 const GREEN = '#3FCF4A';
 const YELLOW = '#F5D02E';
 
+/** Eigener Annahme-Status — WITHDRAWN wird server-seitig auf null gemappt
+ *  (zurückgezogen verhält sich wie „nie angenommen"). */
+export type MissionAcceptanceStatus = 'ACCEPTED' | 'COMPLETED' | null;
+
 interface Props {
   slug: string;
   /** OPEN | PAUSED | COMPLETED — Server-Stand beim Rendern der Seite. */
   missionStatus: string;
   /** Eigene Annahme, server-seitig via auth() + prisma ermittelt (Prop statt GET). */
-  initiallyAccepted: boolean;
+  acceptanceStatus: MissionAcceptanceStatus;
 }
 
 const buttonBase: React.CSSProperties = {
@@ -50,14 +59,15 @@ const buttonBase: React.CSSProperties = {
   clipPath: 'polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)',
 };
 
-export default function MissionAcceptButton({ slug, missionStatus, initiallyAccepted }: Props) {
+export default function MissionAcceptButton({ slug, missionStatus, acceptanceStatus }: Props) {
   const { data: session, status: sessionStatus } = useSession();
   const t = useTranslations('mission.accept');
   const { toast } = useToast();
   const router = useRouter();
 
-  const [accepted, setAccepted] = useState(initiallyAccepted);
+  const [status, setStatus] = useState<MissionAcceptanceStatus>(acceptanceStatus);
   const [busy, setBusy] = useState(false);
+  const accepted = status !== null;
 
   // Session lädt noch → nichts flackern lassen.
   if (sessionStatus === 'loading') return null;
@@ -77,17 +87,18 @@ export default function MissionAcceptButton({ slug, missionStatus, initiallyAcce
     try {
       const res = await fetch(`/api/missions/${slug}/accept`, { method: 'POST' });
       if (res.ok) {
-        setAccepted(true);
+        setStatus('ACCEPTED');
         toast({ type: 'success', message: t('toastAccepted') });
         router.refresh();
       } else if (res.status === 409) {
-        // Doppel-Accept (P2002) → als „schon angenommen" werten, kein Fehler-
-        // Toast; Status-Konflikt (PAUSED/COMPLETED/acceptable=false) →
-        // Konflikt-Toast + Refresh. Route antwortet mit 'Already accepted.'
+        // Konflikt-Unterscheidung NUR über das maschinenlesbare code-Feld —
+        // kein Fehlertext-Matching (Copy-Änderungen dürfen keine Logik brechen).
+        // already_accepted → als „schon angenommen" werten (kein Fehler-Toast);
+        // mission_not_open / not_acceptable → Konflikt-Toast + Refresh.
         const data = await res.json().catch(() => null);
-        const errText = typeof data?.error === 'string' ? data.error : '';
-        if (data?.code === 'ALREADY_ACCEPTED' || /already accepted/i.test(errText)) {
-          setAccepted(true);
+        if (data?.code === 'already_accepted') {
+          setStatus('ACCEPTED');
+          router.refresh();
         } else {
           toast({ type: 'error', message: t('toastConflict') });
           router.refresh();
@@ -117,12 +128,20 @@ export default function MissionAcceptButton({ slug, missionStatus, initiallyAcce
     try {
       const res = await fetch(`/api/missions/${slug}/accept`, { method: 'DELETE' });
       if (res.ok) {
-        setAccepted(false);
+        setStatus(null);
         toast({ type: 'info', message: t('toastWithdrawn') });
         router.refresh();
       } else if (res.status === 404) {
         // Keine (eigene) Acceptance mehr — lokalen Zustand angleichen.
-        setAccepted(false);
+        setStatus(null);
+        router.refresh();
+      } else if (res.status === 409) {
+        // completed_locked: Flow hat die Annahme inzwischen als erfüllt
+        // anerkannt — Server ist die Wahrheit, lokal auf COMPLETED angleichen.
+        const data = await res.json().catch(() => null);
+        if (data?.code === 'completed_locked') {
+          setStatus('COMPLETED');
+        }
         router.refresh();
       } else {
         toast({ type: 'error', message: t('toastError') });
@@ -198,6 +217,24 @@ export default function MissionAcceptButton({ slug, missionStatus, initiallyAcce
               {t('tierCta')}
             </Link>
           </p>
+        </div>
+      ) : status === 'COMPLETED' ? (
+        /* T2 + erfüllt → Fulfilled-Badge OHNE Withdraw (Server lehnt Withdraw
+           auf COMPLETED eh mit 409 completed_locked ab — kein toter Button) */
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
+          <span
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: 11,
+              fontWeight: 700,
+              color: GREEN,
+              border: `1px solid ${GREEN}`,
+              padding: '6px 12px',
+              letterSpacing: '0.15em',
+            }}
+          >
+            ✓ {t('fulfilledBadge')}
+          </span>
         </div>
       ) : accepted ? (
         /* T2 + angenommen → Badge + Withdraw */

@@ -2,7 +2,7 @@
  * Artist-Application API — der Ein-Schuss-Bewerbungsweg (ADR-039)
  *
  * POST /api/artist-application — Bewerbung absenden (T2-Pflicht, 1 pro Account)
- * GET  /api/artist-application — eigener Bewerbungs-Status (fuer die
+ * GET  /api/artist-application — NUR { applied: boolean } (fuer die
  *                                "already applied"-UI)
  *
  * Reihenfolge POST: Rate-Limit (artistApplyLimit, 3/h) → auth() → requireTier T2
@@ -143,9 +143,10 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET — eigener Bewerbungs-Status (nur der eingeloggte User, nur sein Record).
-// mailSent bleibt bewusst draussen: der Fehlerkanal ist das Cockpit, nicht
-// der Bewerber (kein Support-Laerm).
+// GET — hat der eingeloggte User schon eine Bewerbung? NUR { applied: bool }.
+// status/createdAt bleiben bewusst draussen (kbk-artist-onboarding: „kein
+// Status-Einblick in v1"), mailSent ebenso: der Fehlerkanal ist das Cockpit,
+// nicht der Bewerber (kein Support-Laerm).
 export async function GET() {
   try {
     const session = await auth()
@@ -158,14 +159,12 @@ export async function GET() {
 
     const application = await prisma.artistApplication.findUnique({
       where: { userId: session.user.id },
-      select: { status: true, createdAt: true },
+      select: { id: true },
     })
 
     return NextResponse.json({
       success: true,
-      data: application
-        ? { applied: true, status: application.status, createdAt: application.createdAt.toISOString() }
-        : { applied: false },
+      data: { applied: application !== null },
     })
   } catch (error) {
     console.error('Artist application status error:', error)

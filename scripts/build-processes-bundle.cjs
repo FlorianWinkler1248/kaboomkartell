@@ -71,6 +71,13 @@ function parseFrontmatter(raw) {
     const key = line.slice(0, colonAt).trim();
     let value = line.slice(colonAt + 1).trim();
 
+    // Inline-Kommentare strippen (`featured: true  # Erklaerung`) — aber NUR
+    // bei unquoted Werten, sonst schneidet der Regex in String-Inhalte hinein.
+    // `\s+#` verlangt Whitespace vor dem # → URLs mit #anchor bleiben intakt.
+    if (!value.startsWith('"') && !value.startsWith("'")) {
+      value = value.replace(/\s+#.*$/, "").trim();
+    }
+
     // Quoted strings
     if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
       value = value.slice(1, -1);
@@ -81,6 +88,12 @@ function parseFrontmatter(raw) {
         .split(",")
         .map((v) => v.trim().replace(/^["']|["']$/g, ""))
         .filter(Boolean);
+    } else if (value === "true") {
+      // Boolean-Koerzierung — Konsumenten (toProcessListItem) machen strikte
+      // ===-true-Checks; ein "true"-String wuerde featured stillschweigend verlieren.
+      value = true;
+    } else if (value === "false") {
+      value = false;
     }
     fm[key] = value;
   }
@@ -187,4 +200,10 @@ function build() {
   );
 }
 
-build();
+// Direktaufruf (`node scripts/build-processes-bundle.cjs` / prebuild) baut das
+// Bundle; als Modul geladen exportiert die Datei nur den Parser (Unit-Tests).
+if (require.main === module) {
+  build();
+}
+
+module.exports = { parseFrontmatter };

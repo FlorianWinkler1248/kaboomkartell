@@ -178,8 +178,9 @@ function parseApplicationLinks(raw: string | null): string[] {
 }
 
 // Zahl-Feld → number | null (leeres Feld = null, kaputte Eingabe = null).
-// Rundet auf Integer — alle numerischen Schema-Felder (progress*, sortOrder)
-// Dezimal-Betraege (z.B. 1250.50 EUR) sind erlaubt — Prisma-Feld ist Float.
+// KEINE Rundung: Dezimal-Beträge (z.B. 1250.50 EUR) sind erlaubt, die
+// progress*-Prisma-Felder sind Float. sortOrder validiert das zod-Schema
+// server-seitig als Integer.
 function toNullableNumber(value: string): number | null {
   if (value.trim() === '') return null
   const n = Number(value)

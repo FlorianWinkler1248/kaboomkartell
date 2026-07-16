@@ -36,3 +36,15 @@ export type ApplicationStatus = (typeof APPLICATION_STATUS)[number];
  * (Harvester-Schutz, Adress-Leak-Check gegen .next/ ist ein Release-Blocker).
  */
 export const ARTIST_APPLICATION_TO_ENV = 'ARTIST_APPLICATION_TO';
+
+/**
+ * Render-Guard fuer gespeicherte externe URLs (actionUrl, SocialAccount.url).
+ *
+ * zod (httpUrlSchema) sichert nur den Write-Pfad der API-Routen — Seed-Skripte
+ * und Bestandsdaten umgehen ihn. Vor JEDEM Rendern als href gilt deshalb:
+ * nur http:// und https:// werden zum Link, alles andere (javascript:, data:,
+ * vbscript:, relative Pfade) faellt raus. Type-Guard: narrowt auf string.
+ */
+export function isSafeExternalUrl(url: string | null | undefined): url is string {
+  return typeof url === 'string' && /^https?:\/\//i.test(url);
+}

@@ -352,6 +352,7 @@
     "linkComingSoon": "Donation link coming soon",
     "actionDefault": "OPEN LINK",
     "acceptedCount": "{count} accepted",
+    "progressAbsolute": "{value} raised",
     "viewMission": "VIEW MISSION →",
     "follow": {
       "kicker": "FOLLOW THE PACK",
@@ -371,6 +372,7 @@
       "acceptCta": "ACCEPT MISSION",
       "withdrawCta": "WITHDRAW",
       "acceptedBadge": "ACCEPTED",
+      "fulfilledBadge": "Mission fulfilled 🐺",
       "acceptedNote": "You're on this mission — the pack counts on you.",
       "toastAccepted": "Mission accepted. Go get it!",
       "toastWithdrawn": "You withdrew from this mission.",

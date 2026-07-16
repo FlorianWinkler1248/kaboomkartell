@@ -80,15 +80,17 @@ export async function POST(request: NextRequest, { params }: Params) {
     if (!mission || mission.status === 'ARCHIVED') {
       return missionNotFound()
     }
+    // Alle 409s tragen maschinenlesbare `code`s — der Client matcht auf code,
+    // nie auf englischen Fehlertext (i18n-/Copy-Änderungen brechen sonst Logik).
     if (mission.status !== 'OPEN') {
       return NextResponse.json(
-        { success: false, error: 'Mission is not open right now.' },
+        { success: false, error: 'Mission is not open right now.', code: 'mission_not_open' },
         { status: 409 }
       )
     }
     if (!mission.acceptable) {
       return NextResponse.json(
-        { success: false, error: 'This mission cannot be accepted.' },
+        { success: false, error: 'This mission cannot be accepted.', code: 'not_acceptable' },
         { status: 409 }
       )
     }
@@ -109,7 +111,7 @@ export async function POST(request: NextRequest, { params }: Params) {
       }
       // ACCEPTED oder COMPLETED — genau EIN Record pro User+Mission.
       return NextResponse.json(
-        { success: false, error: 'Already accepted.' },
+        { success: false, error: 'Already accepted.', code: 'already_accepted' },
         { status: 409 }
       )
     }
@@ -127,7 +129,7 @@ export async function POST(request: NextRequest, { params }: Params) {
       // Verlierer bekommt einen sauberen 409, kein generisches 500.
       if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
         return NextResponse.json(
-          { success: false, error: 'Already accepted.' },
+          { success: false, error: 'Already accepted.', code: 'already_accepted' },
           { status: 409 }
         )
       }
@@ -188,7 +190,11 @@ export async function DELETE(request: NextRequest, { params }: Params) {
     if (acceptance.status === 'COMPLETED') {
       // COMPLETED setzt nur Flow (Erfuellungs-Anerkennung) — kein Selbst-Widerruf.
       return NextResponse.json(
-        { success: false, error: 'Completed acceptances cannot be withdrawn.' },
+        {
+          success: false,
+          error: 'Completed acceptances cannot be withdrawn.',
+          code: 'completed_locked',
+        },
         { status: 409 }
       )
     }

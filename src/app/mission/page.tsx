@@ -4,6 +4,7 @@ import { getTranslations } from 'next-intl/server';
 import prisma from '@/lib/db';
 import { SectionTitle } from '@/components/kbk/SectionTitle';
 import { obsidianFrameVars } from '@/lib/obsidian-frame';
+import { isSafeExternalUrl } from '@/lib/mission-config';
 import { showVanity } from '@/lib/vanity';
 
 /**
@@ -210,6 +211,10 @@ export default async function MissionBoardPage() {
     socials = [];
   }
 
+  // Render-Guard (zod sichert nur den Write-Pfad): Accounts ohne http(s)-URL
+  // werden gar nicht erst gelistet — kein javascript:-href aus Bestandsdaten.
+  socials = socials.filter((s) => isSafeExternalUrl(s.url));
+
   const socialGroups = new Map<string, SocialItem[]>();
   for (const s of socials) {
     const group = socialGroups.get(s.ownerLabel) ?? [];
@@ -267,6 +272,9 @@ export default async function MissionBoardPage() {
           {missions.map((m) => {
             const color = TYPE_COLOR[m.type] ?? GREEN;
             const hasProgress = m.progressTarget != null && m.progressTarget > 0;
+            // Fortschritt ohne Ziel → absoluter Zähler statt gar nichts;
+            // der BALKEN bleibt Target-pflichtig (kein Prozent ohne Ziel).
+            const hasAbsoluteProgress = !hasProgress && (m.progressCurrent ?? 0) > 0;
             return (
               <div
                 key={m.slug}
@@ -373,6 +381,28 @@ export default async function MissionBoardPage() {
                   />
                 )}
 
+                {/* Absoluter Fortschritt ohne Ziel — nur die echte Zahl. */}
+                {hasAbsoluteProgress && (
+                  <div
+                    style={{
+                      marginTop: 10,
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 10,
+                      letterSpacing: '0.1em',
+                      color: 'rgba(255,255,255,0.6)',
+                    }}
+                  >
+                    <span>{t('progressLabel')}</span>
+                    <span style={{ color: '#fff' }}>
+                      {t('progressAbsolute', {
+                        value: `${fmt(m.progressCurrent as number)}${m.progressUnit ? ` ${m.progressUnit}` : ''}`,
+                      })}
+                    </span>
+                  </div>
+                )}
+
                 {/* Fuß-Zeile: Detail-Link + Action-Button/Platzhalter + Zähler */}
                 <div
                   style={{
@@ -398,7 +428,9 @@ export default async function MissionBoardPage() {
                     {t('viewMission')}
                   </Link>
                   <div style={{ flex: 1 }} />
-                  {m.actionUrl ? (
+                  {/* Render-Guard: nur http(s)-URLs werden zum href (zod
+                      sichert nur den Write-Pfad, Seeds/Bestandsdaten nicht). */}
+                  {isSafeExternalUrl(m.actionUrl) ? (
                     <a
                       href={m.actionUrl}
                       target="_blank"

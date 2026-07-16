@@ -72,6 +72,18 @@ export async function POST(request: Request) {
     }
 
     const slug = slugify(parsed.data.title)
+    // Titel ohne slugbare Zeichen (nur Emoji/CJK/Sonderzeichen) → 400 mit
+    // maschinenlesbarem Code, statt eine Mission mit leerem Slug anzulegen.
+    if (!slug) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Title must contain latin characters or digits.',
+          code: 'unslugable_title',
+        },
+        { status: 400 }
+      )
+    }
 
     // Slug-Duplikat prüfen (Race-Rest fängt das @unique via P2002 → 409)
     const existing = await prisma.mission.findUnique({ where: { slug } })
