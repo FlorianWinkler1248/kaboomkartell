@@ -138,6 +138,9 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
     audio.isPlaying,
     audio.volume,
     selectedChannel,
+    // Radio Sync v3 (ADR-040): Stall-Signal + Blob-Error-Registrierung.
+    audio.isStalled,
+    audio.setOnBlobError,
   );
 
   // Radio-Refs synchronisieren (werden im onTrackEnd-Callback gelesen)

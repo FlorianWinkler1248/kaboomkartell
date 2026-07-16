@@ -125,6 +125,63 @@ describe('computeSyncAction', () => {
   })
 })
 
+// --- Radio Sync v3 (ADR-040): Stall-Guard + Deadband-Hysterese + quellenabhängige
+// --- Seek-Schwelle. Alle Inputs OPTIONAL — die 13 v2-Tests oben bleiben unangetastet
+// --- und beweisen den exakten v2-Fallback (Kill-Switch-Semantik).
+describe('computeSyncAction — v3 (ADR-040)', () => {
+  it('hold bei 0.8s-Fehler, wenn nicht slewing (Hysterese-Eintritt erst ab 1.0s)', () => {
+    const a = computeSyncAction(base({ audioTimeSec: 100.8, isSlewing: false }))
+    expect(a.kind).toBe('hold')
+  })
+
+  it('slew bei 0.8s-Fehler, wenn bereits slewing (Hysterese-Verbleib bis 0.35s)', () => {
+    const a = computeSyncAction(base({ audioTimeSec: 100.8, isSlewing: true }))
+    expect(a.kind).toBe('slew')
+  })
+
+  it('hold bei 0.3s-Fehler trotz slewing (Hysterese-Austritt unter 0.35s)', () => {
+    const a = computeSyncAction(base({ audioTimeSec: 100.3, isSlewing: true }))
+    expect(a.kind).toBe('hold')
+  })
+
+  it('v2-Fallback: 0.8s-Fehler OHNE v3-Felder → slew (belegt Kill-Switch-Semantik)', () => {
+    // Exakt v2: Deadband 0.75 → 0.8s liegt darüber → Eingriff. Dieser Test hält die
+    // Rückbaubarkeit dauerhaft fest: Feld-Übergabe weglassen = altes Regelgesetz.
+    const a = computeSyncAction(base({ audioTimeSec: 100.8 }))
+    expect(a.kind).toBe('slew')
+  })
+
+  it('Stall-Guard: stalled + 20s-Fehler → hold, KEIN Seek (Kaskaden-Verbot)', () => {
+    const a = computeSyncAction(base({ audioTimeSec: 80, stalled: true, stalledTicks: 3 }))
+    expect(a.kind).toBe('hold')
+  })
+
+  it('Stall-Escape: stalled + stalledTicks >= 10 → normale Korrektur (nie ewig einfrieren)', () => {
+    const a = computeSyncAction(base({ audioTimeSec: 80, stalled: true, stalledTicks: 10 }))
+    expect(a.kind).toBe('seek')
+  })
+
+  it('Stall-Guard blockiert Switches NICHT: stalled + Track-Ende + gelockter nextTrack → switch', () => {
+    const b = base()
+    const a = computeSyncAction({
+      ...b,
+      serverNowMs: b.endsAtMs + 1_000,
+      nextTrackId: 'track-B',
+      stalled: true,
+      stalledTicks: 2,
+    })
+    expect(a.kind).toBe('switch')
+    if (a.kind === 'switch') expect(a.trackId).toBe('track-B')
+  })
+
+  it('quellenabhängige Seek-Schwelle: 8s-Fehler → seek bei Blob (6s), slew bei Netz (10s)', () => {
+    const local = computeSyncAction(base({ audioTimeSec: 92, srcIsLocal: true }))
+    expect(local.kind).toBe('seek')
+    const network = computeSyncAction(base({ audioTimeSec: 92, srcIsLocal: false }))
+    expect(network.kind).toBe('slew')
+  })
+})
+
 describe('statusForAction', () => {
   it('mappt Aktionen auf UI-Status', () => {
     expect(statusForAction({ kind: 'idle' })).toBe('idle')
