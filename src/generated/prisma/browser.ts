@@ -112,3 +112,23 @@ export type SiteSettings = Prisma.SiteSettingsModel
  * 
  */
 export type ApiToken = Prisma.ApiTokenModel
+/**
+ * Model Mission
+ * 
+ */
+export type Mission = Prisma.MissionModel
+/**
+ * Model MissionAcceptance
+ * 
+ */
+export type MissionAcceptance = Prisma.MissionAcceptanceModel
+/**
+ * Model SocialAccount
+ * 
+ */
+export type SocialAccount = Prisma.SocialAccountModel
+/**
+ * Model ArtistApplication
+ * 
+ */
+export type ArtistApplication = Prisma.ArtistApplicationModel
