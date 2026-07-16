@@ -348,8 +348,7 @@
       "upNext": "Als Nächstes",
       "genreSwitchSoon": "Genre-Wechsel steht bevor — dieser Vote zählt noch.",
       "voteTheOneAfter": "Vote: das übernächste",
-      "yourPickOnAir": "🐺 Dein Pick läuft — {track}",
-      "picksLanded": "{count, plural, one {# deiner Picks lief schon} other {# deiner Picks liefen schon}}"
+      "yourPickOnAir": "🐺 Dein Pick läuft — {track}"
     },
     "marquee": {
       "underground": "UNDERGROUND",

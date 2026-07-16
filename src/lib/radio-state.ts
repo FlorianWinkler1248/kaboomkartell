@@ -530,10 +530,16 @@ function safeParseIds(json: string | null | undefined): string[] {
  *  zum laufenden N+1, nicht zum pending N+2. Die Source des N+2-Gewinners leitet `advanceFrom`
  *  robust aus demselben Tally ab (Single Source of Truth), sodass kein Wert verloren geht.
  *
- *  Pool + Slot-Key kommen bewusst aus `current` (dem gerade noch laufenden Play), NICHT aus
- *  einem frisch beim Poll aufgelösten ctx/pool — der Sendeplan kann inzwischen auf einen neuen
- *  Slot gewechselt haben, während dieser Track (und damit sein Vote-Fenster) noch läuft; das
- *  Fenster muss gegen SEINEN eigenen Pool ausgewertet werden, nicht gegen den neuen. */
+ *  Slot-Key kommt aus `current` (dem gerade noch laufenden Play). Die KANDIDATEN des
+ *  Fensters kommen dagegen aus `head.candidateIds` — advanceFrom/initSlot haben sie aus dem
+ *  zum Advance-Zeitpunkt aktiven Slot-Pool gebaut, die UI zeigt genau diese Liste und die
+ *  Votes beziehen sich auf sie. Sie werden hier deshalb NUR auf Auflösbarkeit gefiltert
+ *  (de-publizierte Tracks raus), NICHT gegen den Pool des laufenden Plays: nach einer
+ *  weichen Slot-Übernahme (ADR-034) trägt `current.poolId` noch den ALTEN Pool, während
+ *  die Kandidaten längst aus dem NEUEN stammen — der frühere Filter gegen current.poolId
+ *  leerte die Liste, der Fallback baute Alt-Genre-Ersatz und verewigte so das alte Genre
+ *  über die Slot-Grenze (Vorfall 16.07.2026: phonk-Channel spielte >10 h lang keinen
+ *  Brazilian-Slot-Inhalt, weil jeder Lock die Phonk-Kette verlängerte). */
 async function lockWindowIfDue(
   pool: RadioPool,
   channel: string,
@@ -555,11 +561,28 @@ async function lockWindowIfDue(
   const probBy: Record<string, number> = {}
   for (const w of weighted) probBy[w.trackId] = w.probability
 
-  const inPool = new Set(poolTrackIds(activePool))
+  // Kandidaten-Gewichte für den FRISCHEN Slot-Pool (nur nötig, wenn der laufende Play
+  // aus einem anderen Pool stammt — weiche Slot-Übernahme). Im Normalbetrieb identisch.
+  let freshProbBy: Record<string, number> = probBy
+  if (pool.id !== activePool.id) {
+    const freshRecent = await loadRecent(pool.id)
+    freshProbBy = {}
+    for (const w of computeWeights(poolTrackIds(pool), freshRecent)) {
+      freshProbBy[w.trackId] = w.probability
+    }
+  }
+  // Auflösbarkeits-Filter statt Einzel-Pool-Filter (siehe Funktions-Kommentar):
+  // gültig ist ein Kandidat, wenn er im Fenster-Pool ODER im frischen Slot-Pool sendbar ist.
+  const resolvable = (id: string) => findTrack(activePool, id) ?? findTrack(pool, id)
   let candidates = safeParseIds(head.candidateIds)
-    .filter((id) => inPool.has(id))
-    .map((id) => ({ trackId: id, probability: probBy[id] ?? 0 }))
-  if (candidates.length === 0) candidates = buildCandidates(activePool, recent, `${sk}_${seq}`)
+    .filter((id) => resolvable(id) !== null)
+    .map((id) => ({ trackId: id, probability: probBy[id] ?? freshProbBy[id] ?? 0 }))
+  // Fallback baut aus dem FRISCHEN Slot-Pool — damit konvergiert die Rotation auch im
+  // Degenerat-Fall (alle Kandidaten de-publiziert) zum Genre des aktiven Slots.
+  if (candidates.length === 0) {
+    const freshRecent = pool.id === activePool.id ? recent : await loadRecent(pool.id)
+    candidates = buildCandidates(pool, freshRecent, `${sk}_${seq}`)
+  }
 
   const voteCounts = await loadVoteCounts(channel, seq)
   const winnerId = resolveWinner(candidates, voteCounts, `${sk}_${seq}`)
@@ -751,22 +774,36 @@ export async function getCrowdControl(
   if (!current) return inactive
 
   const activePool = poolMap.get(current.poolId) ?? pool
-  const inPool = new Set(poolTrackIds(activePool))
   // ADR-033: candidateIds = N+2-Fenster (übernächstes Lied). UP NEXT (N+1) ist committed.
-  const frozen = safeParseIds(head.candidateIds).filter((id) => inPool.has(id))
+  // Auflösbarkeits-Filter SYMMETRISCH zu lockWindowIfDue (Fix 16.07.2026): nach einer
+  // weichen Slot-Übernahme stammen die Kandidaten aus dem NEUEN Pool, der laufende Play
+  // aus dem ALTEN — ein Filter nur gegen current.poolId leerte die Liste und das
+  // Voting-Widget verschwand für die Dauer des Takeover-Fensters, während der Lock
+  // über genau diese (unsichtbaren) Kandidaten entschied. Lock- und Read-Pfad müssen
+  // dieselbe Kandidatenmenge sehen.
+  const resolveCandidate = (id: string | null | undefined) =>
+    id ? (findTrack(activePool, id) ?? findTrack(pool, id)) : null
+  const frozen = safeParseIds(head.candidateIds).filter((id) => resolveCandidate(id) !== null)
   const voteCounts = await loadVoteCounts(channel, head.decisionSeq)
 
   // UP NEXT (N+1) — fixer nächster Track aus committedNextTrackId (Pool-Guard). Fällt bei
   // einer weichen Slot-Übernahme (advanceFrom) auf den ctx-Pool zurück, falls er nicht
   // (mehr) im Pool des laufenden Tracks steckt.
-  const upNextTrack = findTrack(activePool, head.committedNextTrackId) ?? findTrack(pool, head.committedNextTrackId)
+  const upNextTrack = resolveCandidate(head.committedNextTrackId)
 
   const recent = await loadRecent(current.poolId)
   const probBy: Record<string, number> = {}
   for (const w of computeWeights(poolTrackIds(activePool), recent)) probBy[w.trackId] = w.probability
+  // Gewichte für Kandidaten aus dem frischen Slot-Pool (Takeover-Fenster) — analog Lock-Pfad.
+  if (pool.id !== activePool.id) {
+    const freshRecent = await loadRecent(pool.id)
+    for (const w of computeWeights(poolTrackIds(pool), freshRecent)) {
+      if (!(w.trackId in probBy)) probBy[w.trackId] = w.probability
+    }
+  }
 
   const candidates: Candidate[] = frozen.map((id) => {
-    const t = findTrack(activePool, id)
+    const t = resolveCandidate(id)
     return {
       trackId: id,
       title: t?.title ?? 'Unknown',

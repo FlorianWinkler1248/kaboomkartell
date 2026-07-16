@@ -98,9 +98,21 @@ export function renderMarkdown(md: string, mermaidBlocks: string[]): string {
     escaped = escaped.replace(/`([^`]+)`/g, '<code class="px-1 py-0.5 rounded bg-elevated text-rasta-yellow text-xs">$1</code>');
     escaped = escaped.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
     escaped = escaped.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    // Schema-Whitelist gegen javascript:/data:-URLs (Defense-in-Depth, 16.07.2026):
+    // erlaubt sind http(s), mailto und relative Pfade (/... oder #...). Alles andere
+    // wird als reiner Text gerendert — kuenftige Renderer-Konsumenten (Mission-Board,
+    // Boomy-Quellen) erben die Absicherung automatisch.
     escaped = escaped.replace(
       /\[([^\]]+)\]\(([^)]+)\)/g,
-      '<a href="$2" class="text-rasta-green hover:underline" target="_blank" rel="noopener">$1</a>',
+      (_match, label: string, href: string) => {
+        const url = href.trim();
+        const isSafe =
+          /^(https?:\/\/|mailto:)/i.test(url) ||
+          url.startsWith('#') ||
+          (url.startsWith('/') && !url.startsWith('//')); // kein protocol-relative //evil.com
+        if (!isSafe) return label;
+        return `<a href="${url}" class="text-rasta-green hover:underline" target="_blank" rel="noopener">${label}</a>`;
+      },
     );
     return escaped;
   };

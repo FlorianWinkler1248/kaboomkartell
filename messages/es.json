@@ -348,8 +348,7 @@
       "upNext": "A continuación",
       "genreSwitchSoon": "Cambio de género en breve — este voto sigue contando.",
       "voteTheOneAfter": "Vota: el siguiente al próximo",
-      "yourPickOnAir": "🐺 Tu elección está al aire — {track}",
-      "picksLanded": "{count, plural, one {# de tus elecciones ha sonado} other {# de tus elecciones han sonado}}"
+      "yourPickOnAir": "🐺 Tu elección está al aire — {track}"
     },
     "marquee": {
       "underground": "UNDERGROUND",
