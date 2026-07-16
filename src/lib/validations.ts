@@ -5,6 +5,7 @@
 
 import { z } from 'zod';
 import { ROLES, GENRES } from './constants';
+import { MISSION_TYPES, MISSION_STATUS } from './mission-config';
 
 // === Auth-Schemas ===
 
@@ -217,6 +218,94 @@ export type CreatePoolInput = z.infer<typeof createPoolSchema>;
 export type UpdatePoolInput = z.infer<typeof updatePoolSchema>;
 export type CreateTimetableSlotInput = z.infer<typeof createTimetableSlotSchema>;
 export type CreateTimetableEventInput = z.infer<typeof createTimetableEventSchema>;
+
+// === Mission-Board Schemas (ADR-039) ===
+
+// Externe Aktions-/Profil-URLs: .url() allein laesst javascript:/data: durch —
+// deshalb zusaetzlich hartes http/https-Schema (gespeicherte XSS-Praevention,
+// siehe prozesse/kbk-mission-board.md Fehler-Szenarien).
+const httpUrlSchema = z
+  .string()
+  .url('Must be a valid URL')
+  .regex(/^https?:\/\//, 'Only http:// and https:// URLs are allowed')
+  .max(500);
+
+export const createMissionSchema = z.object({
+  title: z.string().min(1, 'Title is required').max(120),
+  type: z.enum(MISSION_TYPES),
+  summary: z.string().min(1, 'Summary is required').max(300),
+  // Markdown-Anleitung — Rendering NUR via renderMarkdown (Schema-Whitelist).
+  body: z.string().min(1, 'Body is required').max(20_000),
+  actionUrl: httpUrlSchema.optional().nullable(),
+  actionLabel: z.string().max(40).optional().nullable(),
+  // Fortschritt manuell gepflegt (Vanity-Disziplin, keine Fake-Automatik).
+  progressCurrent: z.number().min(0).optional().nullable(),
+  progressTarget: z.number().min(0).optional().nullable(),
+  progressUnit: z.string().max(20).optional().nullable(),
+  acceptable: z.boolean().default(true),
+  sortOrder: z.number().int().default(0),
+});
+
+export const updateMissionSchema = z.object({
+  title: z.string().min(1).max(120).optional(),
+  type: z.enum(MISSION_TYPES).optional(),
+  summary: z.string().min(1).max(300).optional(),
+  body: z.string().min(1).max(20_000).optional(),
+  // Status-Wechsel inkl. ARCHIVED (= Soft-Delete, es gibt kein DELETE).
+  status: z.enum(MISSION_STATUS).optional(),
+  actionUrl: httpUrlSchema.optional().nullable(),
+  actionLabel: z.string().max(40).optional().nullable(),
+  progressCurrent: z.number().min(0).optional().nullable(),
+  progressTarget: z.number().min(0).optional().nullable(),
+  progressUnit: z.string().max(20).optional().nullable(),
+  acceptable: z.boolean().optional(),
+  sortOrder: z.number().int().optional(),
+});
+
+// Accept-/Withdraw-Route: validiert den Slug-Pfad-Parameter (kein Body —
+// Annahme ist ein reiner Button-Klick, kein Freitext = kein Spam-Vektor).
+export const missionAcceptSchema = z.object({
+  slug: z.string().min(1).max(200),
+});
+
+// === Artist-Funnel Schemas (ADR-039) ===
+
+export const artistApplicationSchema = z.object({
+  message: z
+    .string()
+    .min(20, 'Message must be at least 20 characters')
+    .max(2000, 'Message must be at most 2000 characters'),
+  // Externe Profile (SoundCloud/Spotify/...) — max 5, nur http/https.
+  links: z.array(httpUrlSchema).max(5, 'At most 5 links allowed').optional(),
+});
+
+// === Social-Accounts Schemas (ADR-039, "Follow the pack") ===
+
+export const createSocialAccountSchema = z.object({
+  platform: z.string().min(1, 'Platform is required').max(30),
+  handle: z.string().min(1, 'Handle is required').max(60),
+  url: httpUrlSchema,
+  // 'kbk' | 'boomy' | Anzeige-Name eines Artists — bewusst freier String.
+  ownerLabel: z.string().min(1).max(60).default('kbk'),
+  isActive: z.boolean().default(true),
+  sortOrder: z.number().int().default(0),
+});
+
+export const updateSocialAccountSchema = z.object({
+  platform: z.string().min(1).max(30).optional(),
+  handle: z.string().min(1).max(60).optional(),
+  url: httpUrlSchema.optional(),
+  ownerLabel: z.string().min(1).max(60).optional(),
+  isActive: z.boolean().optional(),
+  sortOrder: z.number().int().optional(),
+});
+
+export type CreateMissionInput = z.infer<typeof createMissionSchema>;
+export type UpdateMissionInput = z.infer<typeof updateMissionSchema>;
+export type MissionAcceptInput = z.infer<typeof missionAcceptSchema>;
+export type ArtistApplicationInput = z.infer<typeof artistApplicationSchema>;
+export type CreateSocialAccountInput = z.infer<typeof createSocialAccountSchema>;
+export type UpdateSocialAccountInput = z.infer<typeof updateSocialAccountSchema>;
 
 // === Typen aus Schemas ===
 

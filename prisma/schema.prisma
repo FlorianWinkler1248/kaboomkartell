@@ -105,6 +105,8 @@ model User {
   linkedAccounts    LinkedAccount[]     // v2.27: Discord/Twitch via NextAuth-OAuth
   radioVotes        RadioVote[]         // Crowd Control: Live-Vote auf den nächsten Track (ADR-026)
   apiTokens         ApiToken[]          // Agenten-PATs (Phase 2, ADR-035) — an tokenVersion gekoppelt
+  missionAcceptances MissionAcceptance[] // Mission-Board: angenommene Missionen (ADR-039, T2)
+  artistApplication  ArtistApplication?  // Artist-Funnel: hart 1 Bewerbung pro Account (ADR-039)
 
   @@map("users")
 }
@@ -598,4 +600,115 @@ model ApiToken {
 
   @@index([userId])
   @@map("api_tokens")
+}
+
+// ============================================================================
+// Mission-Board + Artist-Funnel (ADR-039, 16.07.2026)
+// Blackboard fuer Community-Aufgaben: nur Flow (Admin-CRUD) und Boomy
+// (Server-zu-Server) stellen Missionen ein — kein User-Posting (Spam-Schutz,
+// Hausparty-Kuratierung). Annahme ist das erste produktive T2-Gate der
+// Plattform. Workflow: prozesse/kbk-mission-board.md
+// ============================================================================
+
+model Mission {
+  id      String @id @default(cuid())
+  slug    String @unique
+  title   String
+  // Typ: DONATION | RECRUITING | PARTNERSHIP | GOAL (String-Enum, SQLite)
+  type    String
+  // Kurzbeschreibung fuers Board-Grid
+  summary String
+  // Markdown-Anleitung der Detail-Seite (Schritte, Links, Meldeweg an den
+  // Alpha). Gerendert via renderMarkdown (Link-Schema-Whitelist!).
+  body    String
+  // OPEN | PAUSED | COMPLETED | ARCHIVED
+  status  String @default("OPEN")
+
+  // Fortschritt — MANUELL gepflegt (keine Fake-Automatik, vanity-Disziplin).
+  // Nur gerendert wenn Target gesetzt; Unit z.B. "EUR".
+  progressCurrent Float?
+  progressTarget  Float?
+  progressUnit    String?
+
+  // Externer Aktions-Link (z.B. Spenden-URL) — fuer ALLE Besucher klickbar.
+  // null = Platzhalter-Zustand ("link coming soon"), bis Flow ihn eintraegt.
+  actionUrl   String?
+  actionLabel String?
+
+  // Duerfen T2-User die Mission annehmen? (Donation: false — nur Link.)
+  acceptable Boolean @default(true)
+  sortOrder  Int     @default(0)
+  // Anzeige-Label des Erstellers: 'flow' | 'boomy'
+  createdBy  String  @default("flow")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  acceptances MissionAcceptance[]
+
+  @@index([status, sortOrder])
+  @@map("missions")
+}
+
+model MissionAcceptance {
+  id        String @id @default(cuid())
+  missionId String
+  userId    String
+  // ACCEPTED | WITHDRAWN | COMPLETED — COMPLETED setzt nur Flow (Admin).
+  // Wieder-Annahme nach Widerruf = Update derselben Zeile (Audit-Spur bleibt).
+  status    String   @default("ACCEPTED")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  mission Mission @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Hart: ein User nimmt eine Mission genau einmal an (P2002 = Doppel-Accept).
+  @@unique([missionId, userId])
+  @@index([userId])
+  @@map("mission_acceptances")
+}
+
+// Social-Media-Accounts "Follow the pack" — admin-gepflegt, erweiterbar um
+// Accounts kuenftiger Kuenstler (ownerLabel). ADR-039.
+model SocialAccount {
+  id         String  @id @default(cuid())
+  // 'instagram' | 'tiktok' | 'youtube' | 'x' | 'twitch' | 'discord' |
+  // 'soundcloud' | 'spotify' | ... (frei, Anzeige-Mapping im Client)
+  platform   String
+  handle     String
+  url        String
+  // Wem gehoert der Account: 'kbk' | 'boomy' | Anzeige-Name eines Artists
+  ownerLabel String  @default("kbk")
+  isActive   Boolean @default(true)
+  sortOrder  Int     @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+  @@map("social_accounts")
+}
+
+// Artist-Funnel: Bewerbung menschlicher Kuenstler (ADR-039). Die Ziel-Adresse
+// der Benachrichtigungs-Mail lebt serverseitig (ENV), NIE im Client.
+// Workflow: prozesse/kbk-artist-onboarding.md
+model ArtistApplication {
+  id     String @id @default(cuid())
+  // HART: genau EINE Bewerbung pro Account — DB-erzwungen, nicht nur Rate-Limit.
+  userId String @unique
+  // Bewerbungstext (zod: Laengen-Grenzen in validations.ts)
+  message String
+  // JSON-String: externe Profile (SoundCloud/Spotify/...), max. Anzahl via zod
+  links   String?
+  // PENDING | REVIEWED | ACCEPTED | DECLINED
+  status  String @default("PENDING")
+  // Mail an den Alpha erfolgreich versendet? false = im Admin-Cockpit trotzdem
+  // sichtbar (kein stiller Verlust bei SMTP-Ausfall).
+  mailSent  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@map("artist_applications")
 }

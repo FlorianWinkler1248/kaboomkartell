@@ -233,6 +233,75 @@ If you didn't request this, ignore this email — your password stays the same.
 }
 
 /**
+ * HTML-Escape für User-Content in Mail-Bodies. Bewerbungstexte sind
+ * unvertrauenswürdiger Input — ohne Escaping würde eingebettetes Markup im
+ * Mail-Client des Admins gerendert (XSS-Fehler-Szenario, kbk-artist-onboarding).
+ */
+function escapeMailHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/**
+ * Artist-Bewerbungs-Mail an den Alpha Wolf (ADR-039, kbk-artist-onboarding).
+ *
+ * Die Ziel-Adresse kommt vom Aufrufer (serverseitige ENV in der API-Route —
+ * nie im Client-Bundle). Subject bleibt STATISCH (kein User-Content im Header,
+ * Mail-Header-Injection-Schutz); message + links erscheinen nur im Body.
+ * Links werden bewusst NICHT als klickbare Anchors gerendert — nur als Text
+ * (zod hat http/https bereits erzwungen, aber Render-Disziplin obendrauf).
+ */
+export function buildArtistApplicationEmail(
+  username: string,
+  message: string,
+  links: string[],
+): { subject: string; text: string; html: string } {
+  const subject = 'KaboomKartell — New artist application';
+
+  const linksText = links.length > 0 ? links.map((l) => `• ${l}`).join('\n') : '(none)';
+  const text = `New artist application on KaboomKartell.
+
+From: ${username}
+
+Message:
+${message}
+
+Links:
+${linksText}
+
+Review it in the admin cockpit.
+
+— KaboomKartell`;
+
+  const linksHtml =
+    links.length > 0
+      ? links
+          .map(
+            (l) =>
+              `<li style="color:#3FCF4A; font-size:13px; line-height:1.6; word-break:break-all;">${escapeMailHtml(l)}</li>`,
+          )
+          .join('')
+      : '<li style="color:rgba(255,255,255,0.5); font-size:13px;">(none)</li>';
+
+  const inner = `
+    <p style="color:#fff; font-size:16px; line-height:1.5; margin:0 0 16px;">
+      New artist application from
+      <strong style="color:#3FCF4A;">${escapeMailHtml(username)}</strong>:
+    </p>
+    <p style="color:rgba(255,255,255,0.85); font-size:14px; line-height:1.6; margin:0 0 16px; white-space:pre-wrap; border-left:2px solid rgba(63,207,74,0.4); padding-left:12px;">${escapeMailHtml(message)}</p>
+    <p style="color:rgba(255,255,255,0.6); font-size:12px; margin:16px 0 4px; text-transform:uppercase; letter-spacing:0.1em;">Links</p>
+    <ul style="margin:0 0 16px; padding-left:18px;">${linksHtml}</ul>
+    <p style="color:rgba(255,255,255,0.5); font-size:11px; line-height:1.5; margin:24px 0 0;">
+      Review this application in the admin cockpit. One application per account — this is their shot.
+    </p>`;
+  return { subject, text, html: wrapEmailHtml(inner) };
+}
+
+/**
  * Daily-Drop-Digest (P1.2 / ADR-035) — EINE Mail über die neuen Tracks seit dem
  * letzten Lauf. Jeder Track-Link + der Tune-In-Link tragen `?ref=drop` (Messung, P0.8),
  * und der Footer MUSS den signierten Unsubscribe-Link tragen (DSGVO, P1.1).

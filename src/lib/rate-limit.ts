@@ -148,3 +148,16 @@ export const twoFactorLimit = rateLimit({ interval: 60_000, maxKeys: 500 });
 /** 60 Aufrufe/min pro IP für das öffentliche Hilfe-Center. Reine Flood-Hygiene —
  *  das Prozess-Bundle liegt In-Memory gecacht, teuer ist nichts. */
 export const publicProcessesLimit = rateLimit({ interval: 60_000, maxKeys: 500 });
+
+/** 10 Mission-Accept-/Withdraw-Versuche pro Minute pro IP (ADR-039). Eigener
+ *  Bucket — NICHT voteLimit mitverbrauchen, damit ein Accept-Bot nicht das
+ *  Voting-Budget legitimer User frisst. In-Memory-Reset bei Restart ist
+ *  akzeptiert (Single-Instance); die harte Garantie gegen Doppel-Accept ist
+ *  das @@unique in MissionAcceptance, nicht dieses Limit. */
+export const missionLimit = rateLimit({ interval: 60_000, maxKeys: 1000 });
+
+/** 3 Artist-Bewerbungs-Versuche pro Stunde pro IP (ADR-039). Defense-in-Depth —
+ *  die harte "1 Bewerbung pro Account"-Garantie ist das DB-unique auf
+ *  ArtistApplication.userId (P2002 → 409), nicht dieses Limit. Großzügig genug,
+ *  dass Validierungs-Korrekturen (400-Schleife) niemanden aussperren. */
+export const artistApplyLimit = rateLimit({ interval: 3_600_000, maxKeys: 500 });

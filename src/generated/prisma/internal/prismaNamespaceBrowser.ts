@@ -69,7 +69,11 @@ export const ModelName = {
   RadioHead: 'RadioHead',
   RadioVote: 'RadioVote',
   SiteSettings: 'SiteSettings',
-  ApiToken: 'ApiToken'
+  ApiToken: 'ApiToken',
+  Mission: 'Mission',
+  MissionAcceptance: 'MissionAcceptance',
+  SocialAccount: 'SocialAccount',
+  ArtistApplication: 'ArtistApplication'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -412,6 +416,70 @@ export const ApiTokenScalarFieldEnum = {
 } as const
 
 export type ApiTokenScalarFieldEnum = (typeof ApiTokenScalarFieldEnum)[keyof typeof ApiTokenScalarFieldEnum]
+
+
+export const MissionScalarFieldEnum = {
+  id: 'id',
+  slug: 'slug',
+  title: 'title',
+  type: 'type',
+  summary: 'summary',
+  body: 'body',
+  status: 'status',
+  progressCurrent: 'progressCurrent',
+  progressTarget: 'progressTarget',
+  progressUnit: 'progressUnit',
+  actionUrl: 'actionUrl',
+  actionLabel: 'actionLabel',
+  acceptable: 'acceptable',
+  sortOrder: 'sortOrder',
+  createdBy: 'createdBy',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type MissionScalarFieldEnum = (typeof MissionScalarFieldEnum)[keyof typeof MissionScalarFieldEnum]
+
+
+export const MissionAcceptanceScalarFieldEnum = {
+  id: 'id',
+  missionId: 'missionId',
+  userId: 'userId',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type MissionAcceptanceScalarFieldEnum = (typeof MissionAcceptanceScalarFieldEnum)[keyof typeof MissionAcceptanceScalarFieldEnum]
+
+
+export const SocialAccountScalarFieldEnum = {
+  id: 'id',
+  platform: 'platform',
+  handle: 'handle',
+  url: 'url',
+  ownerLabel: 'ownerLabel',
+  isActive: 'isActive',
+  sortOrder: 'sortOrder',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SocialAccountScalarFieldEnum = (typeof SocialAccountScalarFieldEnum)[keyof typeof SocialAccountScalarFieldEnum]
+
+
+export const ArtistApplicationScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  message: 'message',
+  links: 'links',
+  status: 'status',
+  mailSent: 'mailSent',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ArtistApplicationScalarFieldEnum = (typeof ArtistApplicationScalarFieldEnum)[keyof typeof ArtistApplicationScalarFieldEnum]
 
 
 export const SortOrder = {

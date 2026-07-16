@@ -464,6 +464,8 @@ export type UserWhereInput = {
   linkedAccounts?: Prisma.LinkedAccountListRelationFilter
   radioVotes?: Prisma.RadioVoteListRelationFilter
   apiTokens?: Prisma.ApiTokenListRelationFilter
+  missionAcceptances?: Prisma.MissionAcceptanceListRelationFilter
+  artistApplication?: Prisma.XOR<Prisma.ArtistApplicationNullableScalarRelationFilter, Prisma.ArtistApplicationWhereInput> | null
 }
 
 export type UserOrderByWithRelationInput = {
@@ -513,6 +515,8 @@ export type UserOrderByWithRelationInput = {
   linkedAccounts?: Prisma.LinkedAccountOrderByRelationAggregateInput
   radioVotes?: Prisma.RadioVoteOrderByRelationAggregateInput
   apiTokens?: Prisma.ApiTokenOrderByRelationAggregateInput
+  missionAcceptances?: Prisma.MissionAcceptanceOrderByRelationAggregateInput
+  artistApplication?: Prisma.ArtistApplicationOrderByWithRelationInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -565,6 +569,8 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   linkedAccounts?: Prisma.LinkedAccountListRelationFilter
   radioVotes?: Prisma.RadioVoteListRelationFilter
   apiTokens?: Prisma.ApiTokenListRelationFilter
+  missionAcceptances?: Prisma.MissionAcceptanceListRelationFilter
+  artistApplication?: Prisma.XOR<Prisma.ArtistApplicationNullableScalarRelationFilter, Prisma.ArtistApplicationWhereInput> | null
 }, "id" | "username" | "email" | "emailVerificationToken" | "resetToken">
 
 export type UserOrderByWithAggregationInput = {
@@ -696,6 +702,8 @@ export type UserCreateInput = {
   linkedAccounts?: Prisma.LinkedAccountCreateNestedManyWithoutUserInput
   radioVotes?: Prisma.RadioVoteCreateNestedManyWithoutUserInput
   apiTokens?: Prisma.ApiTokenCreateNestedManyWithoutUserInput
+  missionAcceptances?: Prisma.MissionAcceptanceCreateNestedManyWithoutUserInput
+  artistApplication?: Prisma.ArtistApplicationCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -745,6 +753,8 @@ export type UserUncheckedCreateInput = {
   linkedAccounts?: Prisma.LinkedAccountUncheckedCreateNestedManyWithoutUserInput
   radioVotes?: Prisma.RadioVoteUncheckedCreateNestedManyWithoutUserInput
   apiTokens?: Prisma.ApiTokenUncheckedCreateNestedManyWithoutUserInput
+  missionAcceptances?: Prisma.MissionAcceptanceUncheckedCreateNestedManyWithoutUserInput
+  artistApplication?: Prisma.ArtistApplicationUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -794,6 +804,8 @@ export type UserUpdateInput = {
   linkedAccounts?: Prisma.LinkedAccountUpdateManyWithoutUserNestedInput
   radioVotes?: Prisma.RadioVoteUpdateManyWithoutUserNestedInput
   apiTokens?: Prisma.ApiTokenUpdateManyWithoutUserNestedInput
+  missionAcceptances?: Prisma.MissionAcceptanceUpdateManyWithoutUserNestedInput
+  artistApplication?: Prisma.ArtistApplicationUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -843,6 +855,8 @@ export type UserUncheckedUpdateInput = {
   linkedAccounts?: Prisma.LinkedAccountUncheckedUpdateManyWithoutUserNestedInput
   radioVotes?: Prisma.RadioVoteUncheckedUpdateManyWithoutUserNestedInput
   apiTokens?: Prisma.ApiTokenUncheckedUpdateManyWithoutUserNestedInput
+  missionAcceptances?: Prisma.MissionAcceptanceUncheckedUpdateManyWithoutUserNestedInput
+  artistApplication?: Prisma.ArtistApplicationUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -1291,6 +1305,34 @@ export type UserUpdateOneRequiredWithoutApiTokensNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutApiTokensInput, Prisma.UserUpdateWithoutApiTokensInput>, Prisma.UserUncheckedUpdateWithoutApiTokensInput>
 }
 
+export type UserCreateNestedOneWithoutMissionAcceptancesInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutMissionAcceptancesInput, Prisma.UserUncheckedCreateWithoutMissionAcceptancesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutMissionAcceptancesInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutMissionAcceptancesNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutMissionAcceptancesInput, Prisma.UserUncheckedCreateWithoutMissionAcceptancesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutMissionAcceptancesInput
+  upsert?: Prisma.UserUpsertWithoutMissionAcceptancesInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutMissionAcceptancesInput, Prisma.UserUpdateWithoutMissionAcceptancesInput>, Prisma.UserUncheckedUpdateWithoutMissionAcceptancesInput>
+}
+
+export type UserCreateNestedOneWithoutArtistApplicationInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutArtistApplicationInput, Prisma.UserUncheckedCreateWithoutArtistApplicationInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutArtistApplicationInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutArtistApplicationNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutArtistApplicationInput, Prisma.UserUncheckedCreateWithoutArtistApplicationInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutArtistApplicationInput
+  upsert?: Prisma.UserUpsertWithoutArtistApplicationInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutArtistApplicationInput, Prisma.UserUpdateWithoutArtistApplicationInput>, Prisma.UserUncheckedUpdateWithoutArtistApplicationInput>
+}
+
 export type UserCreateWithoutBadgesInput = {
   id?: string
   username: string
@@ -1337,6 +1379,8 @@ export type UserCreateWithoutBadgesInput = {
   linkedAccounts?: Prisma.LinkedAccountCreateNestedManyWithoutUserInput
   radioVotes?: Prisma.RadioVoteCreateNestedManyWithoutUserInput
   apiTokens?: Prisma.ApiTokenCreateNestedManyWithoutUserInput
+  missionAcceptances?: Prisma.MissionAcceptanceCreateNestedManyWithoutUserInput
+  artistApplication?: Prisma.ArtistApplicationCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutBadgesInput = {
@@ -1385,6 +1429,8 @@ export type UserUncheckedCreateWithoutBadgesInput = {
   linkedAccounts?: Prisma.LinkedAccountUncheckedCreateNestedManyWithoutUserInput
   radioVotes?: Prisma.RadioVoteUncheckedCreateNestedManyWithoutUserInput
   apiTokens?: Prisma.ApiTokenUncheckedCreateNestedManyWithoutUserInput
+  missionAcceptances?: Prisma.MissionAcceptanceUncheckedCreateNestedManyWithoutUserInput
+  artistApplication?: Prisma.ArtistApplicationUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutBadgesInput = {
@@ -1449,6 +1495,8 @@ export type UserUpdateWithoutBadgesInput = {
   linkedAccounts?: Prisma.LinkedAccountUpdateManyWithoutUserNestedInput
   radioVotes?: Prisma.RadioVoteUpdateManyWithoutUserNestedInput
   apiTokens?: Prisma.ApiTokenUpdateManyWithoutUserNestedInput
+  missionAcceptances?: Prisma.MissionAcceptanceUpdateManyWithoutUserNestedInput
+  artistApplication?: Prisma.ArtistApplicationUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutBadgesInput = {
@@ -1497,6 +1545,8 @@ export type UserUncheckedUpdateWithoutBadgesInput = {
   linkedAccounts?: Prisma.LinkedAccountUncheckedUpdateManyWithoutUserNestedInput
   radioVotes?: Prisma.RadioVoteUncheckedUpdateManyWithoutUserNestedInput
   apiTokens?: Prisma.ApiTokenUncheckedUpdateManyWithoutUserNestedInput
+  missionAcceptances?: Prisma.MissionAcceptanceUncheckedUpdateManyWithoutUserNestedInput
+  artistApplication?: Prisma.ArtistApplicationUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutLinkedAccountsInput = {
@@ -1545,6 +1595,8 @@ export type UserCreateWithoutLinkedAccountsInput = {
   badges?: Prisma.BadgeCreateNestedManyWithoutUserInput
   radioVotes?: Prisma.RadioVoteCreateNestedManyWithoutUserInput
   apiTokens?: Prisma.ApiTokenCreateNestedManyWithoutUserInput
+  missionAcceptances?: Prisma.MissionAcceptanceCreateNestedManyWithoutUserInput
+  artistApplication?: Prisma.ArtistApplicationCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutLinkedAccountsInput = {
@@ -1593,6 +1645,8 @@ export type UserUncheckedCreateWithoutLinkedAccountsInput = {
   badges?: Prisma.BadgeUncheckedCreateNestedManyWithoutUserInput
   radioVotes?: Prisma.RadioVoteUncheckedCreateNestedManyWithoutUserInput
   apiTokens?: Prisma.ApiTokenUncheckedCreateNestedManyWithoutUserInput
+  missionAcceptances?: Prisma.MissionAcceptanceUncheckedCreateNestedManyWithoutUserInput
+  artistApplication?: Prisma.ArtistApplicationUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutLinkedAccountsInput = {
@@ -1657,6 +1711,8 @@ export type UserUpdateWithoutLinkedAccountsInput = {
   badges?: Prisma.BadgeUpdateManyWithoutUserNestedInput
   radioVotes?: Prisma.RadioVoteUpdateManyWithoutUserNestedInput
   apiTokens?: Prisma.ApiTokenUpdateManyWithoutUserNestedInput
+  missionAcceptances?: Prisma.MissionAcceptanceUpdateManyWithoutUserNestedInput
+  artistApplication?: Prisma.ArtistApplicationUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutLinkedAccountsInput = {
@@ -1705,6 +1761,8 @@ export type UserUncheckedUpdateWithoutLinkedAccountsInput = {
   badges?: Prisma.BadgeUncheckedUpdateManyWithoutUserNestedInput
   radioVotes?: Prisma.RadioVoteUncheckedUpdateManyWithoutUserNestedInput
   apiTokens?: Prisma.ApiTokenUncheckedUpdateManyWithoutUserNestedInput
+  missionAcceptances?: Prisma.MissionAcceptanceUncheckedUpdateManyWithoutUserNestedInput
+  artistApplication?: Prisma.ArtistApplicationUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutSecurityEventsInput = {
@@ -1753,6 +1811,8 @@ export type UserCreateWithoutSecurityEventsInput = {
   linkedAccounts?: Prisma.LinkedAccountCreateNestedManyWithoutUserInput
   radioVotes?: Prisma.RadioVoteCreateNestedManyWithoutUserInput
   apiTokens?: Prisma.ApiTokenCreateNestedManyWithoutUserInput
+  missionAcceptances?: Prisma.MissionAcceptanceCreateNestedManyWithoutUserInput
+  artistApplication?: Prisma.ArtistApplicationCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutSecurityEventsInput = {
@@ -1801,6 +1861,8 @@ export type UserUncheckedCreateWithoutSecurityEventsInput = {
   linkedAccounts?: Prisma.LinkedAccountUncheckedCreateNestedManyWithoutUserInput
   radioVotes?: Prisma.RadioVoteUncheckedCreateNestedManyWithoutUserInput
   apiTokens?: Prisma.ApiTokenUncheckedCreateNestedManyWithoutUserInput
+  missionAcceptances?: Prisma.MissionAcceptanceUncheckedCreateNestedManyWithoutUserInput
+  artistApplication?: Prisma.ArtistApplicationUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutSecurityEventsInput = {
@@ -1865,6 +1927,8 @@ export type UserUpdateWithoutSecurityEventsInput = {
   linkedAccounts?: Prisma.LinkedAccountUpdateManyWithoutUserNestedInput
   radioVotes?: Prisma.RadioVoteUpdateManyWithoutUserNestedInput
   apiTokens?: Prisma.ApiTokenUpdateManyWithoutUserNestedInput
+  missionAcceptances?: Prisma.MissionAcceptanceUpdateManyWithoutUserNestedInput
+  artistApplication?: Prisma.ArtistApplicationUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSecurityEventsInput = {
@@ -1913,6 +1977,8 @@ export type UserUncheckedUpdateWithoutSecurityEventsInput = {
   linkedAccounts?: Prisma.LinkedAccountUncheckedUpdateManyWithoutUserNestedInput
   radioVotes?: Prisma.RadioVoteUncheckedUpdateManyWithoutUserNestedInput
   apiTokens?: Prisma.ApiTokenUncheckedUpdateManyWithoutUserNestedInput
+  missionAcceptances?: Prisma.MissionAcceptanceUncheckedUpdateManyWithoutUserNestedInput
+  artistApplication?: Prisma.ArtistApplicationUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutArtistTracksInput = {
@@ -1961,6 +2027,8 @@ export type UserCreateWithoutArtistTracksInput = {
   linkedAccounts?: Prisma.LinkedAccountCreateNestedManyWithoutUserInput
   radioVotes?: Prisma.RadioVoteCreateNestedManyWithoutUserInput
   apiTokens?: Prisma.ApiTokenCreateNestedManyWithoutUserInput
+  missionAcceptances?: Prisma.MissionAcceptanceCreateNestedManyWithoutUserInput
+  artistApplication?: Prisma.ArtistApplicationCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutArtistTracksInput = {
@@ -2009,6 +2077,8 @@ export type UserUncheckedCreateWithoutArtistTracksInput = {
   linkedAccounts?: Prisma.LinkedAccountUncheckedCreateNestedManyWithoutUserInput
   radioVotes?: Prisma.RadioVoteUncheckedCreateNestedManyWithoutUserInput
   apiTokens?: Prisma.ApiTokenUncheckedCreateNestedManyWithoutUserInput
+  missionAcceptances?: Prisma.MissionAcceptanceUncheckedCreateNestedManyWithoutUserInput
+  artistApplication?: Prisma.ArtistApplicationUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutArtistTracksInput = {
@@ -2062,6 +2132,8 @@ export type UserCreateWithoutUploadedTracksInput = {
   linkedAccounts?: Prisma.LinkedAccountCreateNestedManyWithoutUserInput
   radioVotes?: Prisma.RadioVoteCreateNestedManyWithoutUserInput
   apiTokens?: Prisma.ApiTokenCreateNestedManyWithoutUserInput
+  missionAcceptances?: Prisma.MissionAcceptanceCreateNestedManyWithoutUserInput
+  artistApplication?: Prisma.ArtistApplicationCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutUploadedTracksInput = {
@@ -2110,6 +2182,8 @@ export type UserUncheckedCreateWithoutUploadedTracksInput = {
   linkedAccounts?: Prisma.LinkedAccountUncheckedCreateNestedManyWithoutUserInput
   radioVotes?: Prisma.RadioVoteUncheckedCreateNestedManyWithoutUserInput
   apiTokens?: Prisma.ApiTokenUncheckedCreateNestedManyWithoutUserInput
+  missionAcceptances?: Prisma.MissionAcceptanceUncheckedCreateNestedManyWithoutUserInput
+  artistApplication?: Prisma.ArtistApplicationUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutUploadedTracksInput = {
@@ -2163,6 +2237,8 @@ export type UserCreateWithoutFeaturingTracksInput = {
   linkedAccounts?: Prisma.LinkedAccountCreateNestedManyWithoutUserInput
   radioVotes?: Prisma.RadioVoteCreateNestedManyWithoutUserInput
   apiTokens?: Prisma.ApiTokenCreateNestedManyWithoutUserInput
+  missionAcceptances?: Prisma.MissionAcceptanceCreateNestedManyWithoutUserInput
+  artistApplication?: Prisma.ArtistApplicationCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutFeaturingTracksInput = {
@@ -2211,6 +2287,8 @@ export type UserUncheckedCreateWithoutFeaturingTracksInput = {
   linkedAccounts?: Prisma.LinkedAccountUncheckedCreateNestedManyWithoutUserInput
   radioVotes?: Prisma.RadioVoteUncheckedCreateNestedManyWithoutUserInput
   apiTokens?: Prisma.ApiTokenUncheckedCreateNestedManyWithoutUserInput
+  missionAcceptances?: Prisma.MissionAcceptanceUncheckedCreateNestedManyWithoutUserInput
+  artistApplication?: Prisma.ArtistApplicationUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutFeaturingTracksInput = {
@@ -2275,6 +2353,8 @@ export type UserUpdateWithoutArtistTracksInput = {
   linkedAccounts?: Prisma.LinkedAccountUpdateManyWithoutUserNestedInput
   radioVotes?: Prisma.RadioVoteUpdateManyWithoutUserNestedInput
   apiTokens?: Prisma.ApiTokenUpdateManyWithoutUserNestedInput
+  missionAcceptances?: Prisma.MissionAcceptanceUpdateManyWithoutUserNestedInput
+  artistApplication?: Prisma.ArtistApplicationUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutArtistTracksInput = {
@@ -2323,6 +2403,8 @@ export type UserUncheckedUpdateWithoutArtistTracksInput = {
   linkedAccounts?: Prisma.LinkedAccountUncheckedUpdateManyWithoutUserNestedInput
   radioVotes?: Prisma.RadioVoteUncheckedUpdateManyWithoutUserNestedInput
   apiTokens?: Prisma.ApiTokenUncheckedUpdateManyWithoutUserNestedInput
+  missionAcceptances?: Prisma.MissionAcceptanceUncheckedUpdateManyWithoutUserNestedInput
+  artistApplication?: Prisma.ArtistApplicationUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutUploadedTracksInput = {
@@ -2382,6 +2464,8 @@ export type UserUpdateWithoutUploadedTracksInput = {
   linkedAccounts?: Prisma.LinkedAccountUpdateManyWithoutUserNestedInput
   radioVotes?: Prisma.RadioVoteUpdateManyWithoutUserNestedInput
   apiTokens?: Prisma.ApiTokenUpdateManyWithoutUserNestedInput
+  missionAcceptances?: Prisma.MissionAcceptanceUpdateManyWithoutUserNestedInput
+  artistApplication?: Prisma.ArtistApplicationUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutUploadedTracksInput = {
@@ -2430,6 +2514,8 @@ export type UserUncheckedUpdateWithoutUploadedTracksInput = {
   linkedAccounts?: Prisma.LinkedAccountUncheckedUpdateManyWithoutUserNestedInput
   radioVotes?: Prisma.RadioVoteUncheckedUpdateManyWithoutUserNestedInput
   apiTokens?: Prisma.ApiTokenUncheckedUpdateManyWithoutUserNestedInput
+  missionAcceptances?: Prisma.MissionAcceptanceUncheckedUpdateManyWithoutUserNestedInput
+  artistApplication?: Prisma.ArtistApplicationUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutFeaturingTracksInput = {
@@ -2489,6 +2575,8 @@ export type UserUpdateWithoutFeaturingTracksInput = {
   linkedAccounts?: Prisma.LinkedAccountUpdateManyWithoutUserNestedInput
   radioVotes?: Prisma.RadioVoteUpdateManyWithoutUserNestedInput
   apiTokens?: Prisma.ApiTokenUpdateManyWithoutUserNestedInput
+  missionAcceptances?: Prisma.MissionAcceptanceUpdateManyWithoutUserNestedInput
+  artistApplication?: Prisma.ArtistApplicationUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutFeaturingTracksInput = {
@@ -2537,6 +2625,8 @@ export type UserUncheckedUpdateWithoutFeaturingTracksInput = {
   linkedAccounts?: Prisma.LinkedAccountUncheckedUpdateManyWithoutUserNestedInput
   radioVotes?: Prisma.RadioVoteUncheckedUpdateManyWithoutUserNestedInput
   apiTokens?: Prisma.ApiTokenUncheckedUpdateManyWithoutUserNestedInput
+  missionAcceptances?: Prisma.MissionAcceptanceUncheckedUpdateManyWithoutUserNestedInput
+  artistApplication?: Prisma.ArtistApplicationUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutVotesInput = {
@@ -2585,6 +2675,8 @@ export type UserCreateWithoutVotesInput = {
   linkedAccounts?: Prisma.LinkedAccountCreateNestedManyWithoutUserInput
   radioVotes?: Prisma.RadioVoteCreateNestedManyWithoutUserInput
   apiTokens?: Prisma.ApiTokenCreateNestedManyWithoutUserInput
+  missionAcceptances?: Prisma.MissionAcceptanceCreateNestedManyWithoutUserInput
+  artistApplication?: Prisma.ArtistApplicationCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutVotesInput = {
@@ -2633,6 +2725,8 @@ export type UserUncheckedCreateWithoutVotesInput = {
   linkedAccounts?: Prisma.LinkedAccountUncheckedCreateNestedManyWithoutUserInput
   radioVotes?: Prisma.RadioVoteUncheckedCreateNestedManyWithoutUserInput
   apiTokens?: Prisma.ApiTokenUncheckedCreateNestedManyWithoutUserInput
+  missionAcceptances?: Prisma.MissionAcceptanceUncheckedCreateNestedManyWithoutUserInput
+  artistApplication?: Prisma.ArtistApplicationUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutVotesInput = {
@@ -2697,6 +2791,8 @@ export type UserUpdateWithoutVotesInput = {
   linkedAccounts?: Prisma.LinkedAccountUpdateManyWithoutUserNestedInput
   radioVotes?: Prisma.RadioVoteUpdateManyWithoutUserNestedInput
   apiTokens?: Prisma.ApiTokenUpdateManyWithoutUserNestedInput
+  missionAcceptances?: Prisma.MissionAcceptanceUpdateManyWithoutUserNestedInput
+  artistApplication?: Prisma.ArtistApplicationUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutVotesInput = {
@@ -2745,6 +2841,8 @@ export type UserUncheckedUpdateWithoutVotesInput = {
   linkedAccounts?: Prisma.LinkedAccountUncheckedUpdateManyWithoutUserNestedInput
   radioVotes?: Prisma.RadioVoteUncheckedUpdateManyWithoutUserNestedInput
   apiTokens?: Prisma.ApiTokenUncheckedUpdateManyWithoutUserNestedInput
+  missionAcceptances?: Prisma.MissionAcceptanceUncheckedUpdateManyWithoutUserNestedInput
+  artistApplication?: Prisma.ArtistApplicationUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutWallPostsInput = {
@@ -2793,6 +2891,8 @@ export type UserCreateWithoutWallPostsInput = {
   linkedAccounts?: Prisma.LinkedAccountCreateNestedManyWithoutUserInput
   radioVotes?: Prisma.RadioVoteCreateNestedManyWithoutUserInput
   apiTokens?: Prisma.ApiTokenCreateNestedManyWithoutUserInput
+  missionAcceptances?: Prisma.MissionAcceptanceCreateNestedManyWithoutUserInput
+  artistApplication?: Prisma.ArtistApplicationCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutWallPostsInput = {
@@ -2841,6 +2941,8 @@ export type UserUncheckedCreateWithoutWallPostsInput = {
   linkedAccounts?: Prisma.LinkedAccountUncheckedCreateNestedManyWithoutUserInput
   radioVotes?: Prisma.RadioVoteUncheckedCreateNestedManyWithoutUserInput
   apiTokens?: Prisma.ApiTokenUncheckedCreateNestedManyWithoutUserInput
+  missionAcceptances?: Prisma.MissionAcceptanceUncheckedCreateNestedManyWithoutUserInput
+  artistApplication?: Prisma.ArtistApplicationUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutWallPostsInput = {
@@ -2905,6 +3007,8 @@ export type UserUpdateWithoutWallPostsInput = {
   linkedAccounts?: Prisma.LinkedAccountUpdateManyWithoutUserNestedInput
   radioVotes?: Prisma.RadioVoteUpdateManyWithoutUserNestedInput
   apiTokens?: Prisma.ApiTokenUpdateManyWithoutUserNestedInput
+  missionAcceptances?: Prisma.MissionAcceptanceUpdateManyWithoutUserNestedInput
+  artistApplication?: Prisma.ArtistApplicationUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutWallPostsInput = {
@@ -2953,6 +3057,8 @@ export type UserUncheckedUpdateWithoutWallPostsInput = {
   linkedAccounts?: Prisma.LinkedAccountUncheckedUpdateManyWithoutUserNestedInput
   radioVotes?: Prisma.RadioVoteUncheckedUpdateManyWithoutUserNestedInput
   apiTokens?: Prisma.ApiTokenUncheckedUpdateManyWithoutUserNestedInput
+  missionAcceptances?: Prisma.MissionAcceptanceUncheckedUpdateManyWithoutUserNestedInput
+  artistApplication?: Prisma.ArtistApplicationUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutReleaseSlotsInput = {
@@ -3001,6 +3107,8 @@ export type UserCreateWithoutReleaseSlotsInput = {
   linkedAccounts?: Prisma.LinkedAccountCreateNestedManyWithoutUserInput
   radioVotes?: Prisma.RadioVoteCreateNestedManyWithoutUserInput
   apiTokens?: Prisma.ApiTokenCreateNestedManyWithoutUserInput
+  missionAcceptances?: Prisma.MissionAcceptanceCreateNestedManyWithoutUserInput
+  artistApplication?: Prisma.ArtistApplicationCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutReleaseSlotsInput = {
@@ -3049,6 +3157,8 @@ export type UserUncheckedCreateWithoutReleaseSlotsInput = {
   linkedAccounts?: Prisma.LinkedAccountUncheckedCreateNestedManyWithoutUserInput
   radioVotes?: Prisma.RadioVoteUncheckedCreateNestedManyWithoutUserInput
   apiTokens?: Prisma.ApiTokenUncheckedCreateNestedManyWithoutUserInput
+  missionAcceptances?: Prisma.MissionAcceptanceUncheckedCreateNestedManyWithoutUserInput
+  artistApplication?: Prisma.ArtistApplicationUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutReleaseSlotsInput = {
@@ -3113,6 +3223,8 @@ export type UserUpdateWithoutReleaseSlotsInput = {
   linkedAccounts?: Prisma.LinkedAccountUpdateManyWithoutUserNestedInput
   radioVotes?: Prisma.RadioVoteUpdateManyWithoutUserNestedInput
   apiTokens?: Prisma.ApiTokenUpdateManyWithoutUserNestedInput
+  missionAcceptances?: Prisma.MissionAcceptanceUpdateManyWithoutUserNestedInput
+  artistApplication?: Prisma.ArtistApplicationUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutReleaseSlotsInput = {
@@ -3161,6 +3273,8 @@ export type UserUncheckedUpdateWithoutReleaseSlotsInput = {
   linkedAccounts?: Prisma.LinkedAccountUncheckedUpdateManyWithoutUserNestedInput
   radioVotes?: Prisma.RadioVoteUncheckedUpdateManyWithoutUserNestedInput
   apiTokens?: Prisma.ApiTokenUncheckedUpdateManyWithoutUserNestedInput
+  missionAcceptances?: Prisma.MissionAcceptanceUncheckedUpdateManyWithoutUserNestedInput
+  artistApplication?: Prisma.ArtistApplicationUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutOwnedPoolsInput = {
@@ -3209,6 +3323,8 @@ export type UserCreateWithoutOwnedPoolsInput = {
   linkedAccounts?: Prisma.LinkedAccountCreateNestedManyWithoutUserInput
   radioVotes?: Prisma.RadioVoteCreateNestedManyWithoutUserInput
   apiTokens?: Prisma.ApiTokenCreateNestedManyWithoutUserInput
+  missionAcceptances?: Prisma.MissionAcceptanceCreateNestedManyWithoutUserInput
+  artistApplication?: Prisma.ArtistApplicationCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutOwnedPoolsInput = {
@@ -3257,6 +3373,8 @@ export type UserUncheckedCreateWithoutOwnedPoolsInput = {
   linkedAccounts?: Prisma.LinkedAccountUncheckedCreateNestedManyWithoutUserInput
   radioVotes?: Prisma.RadioVoteUncheckedCreateNestedManyWithoutUserInput
   apiTokens?: Prisma.ApiTokenUncheckedCreateNestedManyWithoutUserInput
+  missionAcceptances?: Prisma.MissionAcceptanceUncheckedCreateNestedManyWithoutUserInput
+  artistApplication?: Prisma.ArtistApplicationUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutOwnedPoolsInput = {
@@ -3321,6 +3439,8 @@ export type UserUpdateWithoutOwnedPoolsInput = {
   linkedAccounts?: Prisma.LinkedAccountUpdateManyWithoutUserNestedInput
   radioVotes?: Prisma.RadioVoteUpdateManyWithoutUserNestedInput
   apiTokens?: Prisma.ApiTokenUpdateManyWithoutUserNestedInput
+  missionAcceptances?: Prisma.MissionAcceptanceUpdateManyWithoutUserNestedInput
+  artistApplication?: Prisma.ArtistApplicationUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutOwnedPoolsInput = {
@@ -3369,6 +3489,8 @@ export type UserUncheckedUpdateWithoutOwnedPoolsInput = {
   linkedAccounts?: Prisma.LinkedAccountUncheckedUpdateManyWithoutUserNestedInput
   radioVotes?: Prisma.RadioVoteUncheckedUpdateManyWithoutUserNestedInput
   apiTokens?: Prisma.ApiTokenUncheckedUpdateManyWithoutUserNestedInput
+  missionAcceptances?: Prisma.MissionAcceptanceUncheckedUpdateManyWithoutUserNestedInput
+  artistApplication?: Prisma.ArtistApplicationUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutRadioVotesInput = {
@@ -3417,6 +3539,8 @@ export type UserCreateWithoutRadioVotesInput = {
   badges?: Prisma.BadgeCreateNestedManyWithoutUserInput
   linkedAccounts?: Prisma.LinkedAccountCreateNestedManyWithoutUserInput
   apiTokens?: Prisma.ApiTokenCreateNestedManyWithoutUserInput
+  missionAcceptances?: Prisma.MissionAcceptanceCreateNestedManyWithoutUserInput
+  artistApplication?: Prisma.ArtistApplicationCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutRadioVotesInput = {
@@ -3465,6 +3589,8 @@ export type UserUncheckedCreateWithoutRadioVotesInput = {
   badges?: Prisma.BadgeUncheckedCreateNestedManyWithoutUserInput
   linkedAccounts?: Prisma.LinkedAccountUncheckedCreateNestedManyWithoutUserInput
   apiTokens?: Prisma.ApiTokenUncheckedCreateNestedManyWithoutUserInput
+  missionAcceptances?: Prisma.MissionAcceptanceUncheckedCreateNestedManyWithoutUserInput
+  artistApplication?: Prisma.ArtistApplicationUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutRadioVotesInput = {
@@ -3529,6 +3655,8 @@ export type UserUpdateWithoutRadioVotesInput = {
   badges?: Prisma.BadgeUpdateManyWithoutUserNestedInput
   linkedAccounts?: Prisma.LinkedAccountUpdateManyWithoutUserNestedInput
   apiTokens?: Prisma.ApiTokenUpdateManyWithoutUserNestedInput
+  missionAcceptances?: Prisma.MissionAcceptanceUpdateManyWithoutUserNestedInput
+  artistApplication?: Prisma.ArtistApplicationUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutRadioVotesInput = {
@@ -3577,6 +3705,8 @@ export type UserUncheckedUpdateWithoutRadioVotesInput = {
   badges?: Prisma.BadgeUncheckedUpdateManyWithoutUserNestedInput
   linkedAccounts?: Prisma.LinkedAccountUncheckedUpdateManyWithoutUserNestedInput
   apiTokens?: Prisma.ApiTokenUncheckedUpdateManyWithoutUserNestedInput
+  missionAcceptances?: Prisma.MissionAcceptanceUncheckedUpdateManyWithoutUserNestedInput
+  artistApplication?: Prisma.ArtistApplicationUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutApiTokensInput = {
@@ -3625,6 +3755,8 @@ export type UserCreateWithoutApiTokensInput = {
   badges?: Prisma.BadgeCreateNestedManyWithoutUserInput
   linkedAccounts?: Prisma.LinkedAccountCreateNestedManyWithoutUserInput
   radioVotes?: Prisma.RadioVoteCreateNestedManyWithoutUserInput
+  missionAcceptances?: Prisma.MissionAcceptanceCreateNestedManyWithoutUserInput
+  artistApplication?: Prisma.ArtistApplicationCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutApiTokensInput = {
@@ -3673,6 +3805,8 @@ export type UserUncheckedCreateWithoutApiTokensInput = {
   badges?: Prisma.BadgeUncheckedCreateNestedManyWithoutUserInput
   linkedAccounts?: Prisma.LinkedAccountUncheckedCreateNestedManyWithoutUserInput
   radioVotes?: Prisma.RadioVoteUncheckedCreateNestedManyWithoutUserInput
+  missionAcceptances?: Prisma.MissionAcceptanceUncheckedCreateNestedManyWithoutUserInput
+  artistApplication?: Prisma.ArtistApplicationUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutApiTokensInput = {
@@ -3737,6 +3871,8 @@ export type UserUpdateWithoutApiTokensInput = {
   badges?: Prisma.BadgeUpdateManyWithoutUserNestedInput
   linkedAccounts?: Prisma.LinkedAccountUpdateManyWithoutUserNestedInput
   radioVotes?: Prisma.RadioVoteUpdateManyWithoutUserNestedInput
+  missionAcceptances?: Prisma.MissionAcceptanceUpdateManyWithoutUserNestedInput
+  artistApplication?: Prisma.ArtistApplicationUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutApiTokensInput = {
@@ -3785,6 +3921,440 @@ export type UserUncheckedUpdateWithoutApiTokensInput = {
   badges?: Prisma.BadgeUncheckedUpdateManyWithoutUserNestedInput
   linkedAccounts?: Prisma.LinkedAccountUncheckedUpdateManyWithoutUserNestedInput
   radioVotes?: Prisma.RadioVoteUncheckedUpdateManyWithoutUserNestedInput
+  missionAcceptances?: Prisma.MissionAcceptanceUncheckedUpdateManyWithoutUserNestedInput
+  artistApplication?: Prisma.ArtistApplicationUncheckedUpdateOneWithoutUserNestedInput
+}
+
+export type UserCreateWithoutMissionAcceptancesInput = {
+  id?: string
+  username: string
+  email: string
+  passwordHash: string
+  role?: string
+  displayName?: string | null
+  avatarUrl?: string | null
+  bio?: string | null
+  socialSoundcloud?: string | null
+  socialInstagram?: string | null
+  socialTelegram?: string | null
+  socialWebsite?: string | null
+  twitchChannel?: string | null
+  isActive?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  realName?: string | null
+  failedLoginAttempts?: number
+  lockedUntil?: Date | string | null
+  tokenVersion?: number
+  trustTier?: string
+  twoFactorEnabled?: boolean
+  twoFactorMethod?: string | null
+  twoFactorSecret?: string | null
+  twoFactorBackupCodes?: string | null
+  twoFactorEmailCode?: string | null
+  twoFactorEmailExpiry?: Date | string | null
+  emailVerified?: Date | string | null
+  emailVerificationToken?: string | null
+  emailVerificationExpiry?: Date | string | null
+  newsletterOptIn?: boolean
+  newsletterOptInAt?: Date | string | null
+  resetToken?: string | null
+  resetTokenExpiry?: Date | string | null
+  artistTracks?: Prisma.TrackCreateNestedManyWithoutArtistInput
+  uploadedTracks?: Prisma.TrackCreateNestedManyWithoutUploaderInput
+  featuringTracks?: Prisma.TrackCreateNestedManyWithoutFeaturingArtistInput
+  wallPosts?: Prisma.WallPostCreateNestedManyWithoutAuthorInput
+  votes?: Prisma.VoteCreateNestedManyWithoutUserInput
+  releaseSlots?: Prisma.ReleaseSlotCreateNestedManyWithoutAssigneeInput
+  ownedPools?: Prisma.PoolCreateNestedManyWithoutOwnerArtistInput
+  securityEvents?: Prisma.SecurityEventCreateNestedManyWithoutUserInput
+  badges?: Prisma.BadgeCreateNestedManyWithoutUserInput
+  linkedAccounts?: Prisma.LinkedAccountCreateNestedManyWithoutUserInput
+  radioVotes?: Prisma.RadioVoteCreateNestedManyWithoutUserInput
+  apiTokens?: Prisma.ApiTokenCreateNestedManyWithoutUserInput
+  artistApplication?: Prisma.ArtistApplicationCreateNestedOneWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutMissionAcceptancesInput = {
+  id?: string
+  username: string
+  email: string
+  passwordHash: string
+  role?: string
+  displayName?: string | null
+  avatarUrl?: string | null
+  bio?: string | null
+  socialSoundcloud?: string | null
+  socialInstagram?: string | null
+  socialTelegram?: string | null
+  socialWebsite?: string | null
+  twitchChannel?: string | null
+  isActive?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  realName?: string | null
+  failedLoginAttempts?: number
+  lockedUntil?: Date | string | null
+  tokenVersion?: number
+  trustTier?: string
+  twoFactorEnabled?: boolean
+  twoFactorMethod?: string | null
+  twoFactorSecret?: string | null
+  twoFactorBackupCodes?: string | null
+  twoFactorEmailCode?: string | null
+  twoFactorEmailExpiry?: Date | string | null
+  emailVerified?: Date | string | null
+  emailVerificationToken?: string | null
+  emailVerificationExpiry?: Date | string | null
+  newsletterOptIn?: boolean
+  newsletterOptInAt?: Date | string | null
+  resetToken?: string | null
+  resetTokenExpiry?: Date | string | null
+  artistTracks?: Prisma.TrackUncheckedCreateNestedManyWithoutArtistInput
+  uploadedTracks?: Prisma.TrackUncheckedCreateNestedManyWithoutUploaderInput
+  featuringTracks?: Prisma.TrackUncheckedCreateNestedManyWithoutFeaturingArtistInput
+  wallPosts?: Prisma.WallPostUncheckedCreateNestedManyWithoutAuthorInput
+  votes?: Prisma.VoteUncheckedCreateNestedManyWithoutUserInput
+  releaseSlots?: Prisma.ReleaseSlotUncheckedCreateNestedManyWithoutAssigneeInput
+  ownedPools?: Prisma.PoolUncheckedCreateNestedManyWithoutOwnerArtistInput
+  securityEvents?: Prisma.SecurityEventUncheckedCreateNestedManyWithoutUserInput
+  badges?: Prisma.BadgeUncheckedCreateNestedManyWithoutUserInput
+  linkedAccounts?: Prisma.LinkedAccountUncheckedCreateNestedManyWithoutUserInput
+  radioVotes?: Prisma.RadioVoteUncheckedCreateNestedManyWithoutUserInput
+  apiTokens?: Prisma.ApiTokenUncheckedCreateNestedManyWithoutUserInput
+  artistApplication?: Prisma.ArtistApplicationUncheckedCreateNestedOneWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutMissionAcceptancesInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutMissionAcceptancesInput, Prisma.UserUncheckedCreateWithoutMissionAcceptancesInput>
+}
+
+export type UserUpsertWithoutMissionAcceptancesInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutMissionAcceptancesInput, Prisma.UserUncheckedUpdateWithoutMissionAcceptancesInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutMissionAcceptancesInput, Prisma.UserUncheckedCreateWithoutMissionAcceptancesInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutMissionAcceptancesInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutMissionAcceptancesInput, Prisma.UserUncheckedUpdateWithoutMissionAcceptancesInput>
+}
+
+export type UserUpdateWithoutMissionAcceptancesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSoundcloud?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialInstagram?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialTelegram?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialWebsite?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twitchChannel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  realName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  failedLoginAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  lockedUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  trustTier?: Prisma.StringFieldUpdateOperationsInput | string
+  twoFactorEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  twoFactorMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorBackupCodes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorEmailCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorEmailExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailVerificationToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailVerificationExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  newsletterOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  newsletterOptInAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  artistTracks?: Prisma.TrackUpdateManyWithoutArtistNestedInput
+  uploadedTracks?: Prisma.TrackUpdateManyWithoutUploaderNestedInput
+  featuringTracks?: Prisma.TrackUpdateManyWithoutFeaturingArtistNestedInput
+  wallPosts?: Prisma.WallPostUpdateManyWithoutAuthorNestedInput
+  votes?: Prisma.VoteUpdateManyWithoutUserNestedInput
+  releaseSlots?: Prisma.ReleaseSlotUpdateManyWithoutAssigneeNestedInput
+  ownedPools?: Prisma.PoolUpdateManyWithoutOwnerArtistNestedInput
+  securityEvents?: Prisma.SecurityEventUpdateManyWithoutUserNestedInput
+  badges?: Prisma.BadgeUpdateManyWithoutUserNestedInput
+  linkedAccounts?: Prisma.LinkedAccountUpdateManyWithoutUserNestedInput
+  radioVotes?: Prisma.RadioVoteUpdateManyWithoutUserNestedInput
+  apiTokens?: Prisma.ApiTokenUpdateManyWithoutUserNestedInput
+  artistApplication?: Prisma.ArtistApplicationUpdateOneWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutMissionAcceptancesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSoundcloud?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialInstagram?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialTelegram?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialWebsite?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twitchChannel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  realName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  failedLoginAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  lockedUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  trustTier?: Prisma.StringFieldUpdateOperationsInput | string
+  twoFactorEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  twoFactorMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorBackupCodes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorEmailCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorEmailExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailVerificationToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailVerificationExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  newsletterOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  newsletterOptInAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  artistTracks?: Prisma.TrackUncheckedUpdateManyWithoutArtistNestedInput
+  uploadedTracks?: Prisma.TrackUncheckedUpdateManyWithoutUploaderNestedInput
+  featuringTracks?: Prisma.TrackUncheckedUpdateManyWithoutFeaturingArtistNestedInput
+  wallPosts?: Prisma.WallPostUncheckedUpdateManyWithoutAuthorNestedInput
+  votes?: Prisma.VoteUncheckedUpdateManyWithoutUserNestedInput
+  releaseSlots?: Prisma.ReleaseSlotUncheckedUpdateManyWithoutAssigneeNestedInput
+  ownedPools?: Prisma.PoolUncheckedUpdateManyWithoutOwnerArtistNestedInput
+  securityEvents?: Prisma.SecurityEventUncheckedUpdateManyWithoutUserNestedInput
+  badges?: Prisma.BadgeUncheckedUpdateManyWithoutUserNestedInput
+  linkedAccounts?: Prisma.LinkedAccountUncheckedUpdateManyWithoutUserNestedInput
+  radioVotes?: Prisma.RadioVoteUncheckedUpdateManyWithoutUserNestedInput
+  apiTokens?: Prisma.ApiTokenUncheckedUpdateManyWithoutUserNestedInput
+  artistApplication?: Prisma.ArtistApplicationUncheckedUpdateOneWithoutUserNestedInput
+}
+
+export type UserCreateWithoutArtistApplicationInput = {
+  id?: string
+  username: string
+  email: string
+  passwordHash: string
+  role?: string
+  displayName?: string | null
+  avatarUrl?: string | null
+  bio?: string | null
+  socialSoundcloud?: string | null
+  socialInstagram?: string | null
+  socialTelegram?: string | null
+  socialWebsite?: string | null
+  twitchChannel?: string | null
+  isActive?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  realName?: string | null
+  failedLoginAttempts?: number
+  lockedUntil?: Date | string | null
+  tokenVersion?: number
+  trustTier?: string
+  twoFactorEnabled?: boolean
+  twoFactorMethod?: string | null
+  twoFactorSecret?: string | null
+  twoFactorBackupCodes?: string | null
+  twoFactorEmailCode?: string | null
+  twoFactorEmailExpiry?: Date | string | null
+  emailVerified?: Date | string | null
+  emailVerificationToken?: string | null
+  emailVerificationExpiry?: Date | string | null
+  newsletterOptIn?: boolean
+  newsletterOptInAt?: Date | string | null
+  resetToken?: string | null
+  resetTokenExpiry?: Date | string | null
+  artistTracks?: Prisma.TrackCreateNestedManyWithoutArtistInput
+  uploadedTracks?: Prisma.TrackCreateNestedManyWithoutUploaderInput
+  featuringTracks?: Prisma.TrackCreateNestedManyWithoutFeaturingArtistInput
+  wallPosts?: Prisma.WallPostCreateNestedManyWithoutAuthorInput
+  votes?: Prisma.VoteCreateNestedManyWithoutUserInput
+  releaseSlots?: Prisma.ReleaseSlotCreateNestedManyWithoutAssigneeInput
+  ownedPools?: Prisma.PoolCreateNestedManyWithoutOwnerArtistInput
+  securityEvents?: Prisma.SecurityEventCreateNestedManyWithoutUserInput
+  badges?: Prisma.BadgeCreateNestedManyWithoutUserInput
+  linkedAccounts?: Prisma.LinkedAccountCreateNestedManyWithoutUserInput
+  radioVotes?: Prisma.RadioVoteCreateNestedManyWithoutUserInput
+  apiTokens?: Prisma.ApiTokenCreateNestedManyWithoutUserInput
+  missionAcceptances?: Prisma.MissionAcceptanceCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutArtistApplicationInput = {
+  id?: string
+  username: string
+  email: string
+  passwordHash: string
+  role?: string
+  displayName?: string | null
+  avatarUrl?: string | null
+  bio?: string | null
+  socialSoundcloud?: string | null
+  socialInstagram?: string | null
+  socialTelegram?: string | null
+  socialWebsite?: string | null
+  twitchChannel?: string | null
+  isActive?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  realName?: string | null
+  failedLoginAttempts?: number
+  lockedUntil?: Date | string | null
+  tokenVersion?: number
+  trustTier?: string
+  twoFactorEnabled?: boolean
+  twoFactorMethod?: string | null
+  twoFactorSecret?: string | null
+  twoFactorBackupCodes?: string | null
+  twoFactorEmailCode?: string | null
+  twoFactorEmailExpiry?: Date | string | null
+  emailVerified?: Date | string | null
+  emailVerificationToken?: string | null
+  emailVerificationExpiry?: Date | string | null
+  newsletterOptIn?: boolean
+  newsletterOptInAt?: Date | string | null
+  resetToken?: string | null
+  resetTokenExpiry?: Date | string | null
+  artistTracks?: Prisma.TrackUncheckedCreateNestedManyWithoutArtistInput
+  uploadedTracks?: Prisma.TrackUncheckedCreateNestedManyWithoutUploaderInput
+  featuringTracks?: Prisma.TrackUncheckedCreateNestedManyWithoutFeaturingArtistInput
+  wallPosts?: Prisma.WallPostUncheckedCreateNestedManyWithoutAuthorInput
+  votes?: Prisma.VoteUncheckedCreateNestedManyWithoutUserInput
+  releaseSlots?: Prisma.ReleaseSlotUncheckedCreateNestedManyWithoutAssigneeInput
+  ownedPools?: Prisma.PoolUncheckedCreateNestedManyWithoutOwnerArtistInput
+  securityEvents?: Prisma.SecurityEventUncheckedCreateNestedManyWithoutUserInput
+  badges?: Prisma.BadgeUncheckedCreateNestedManyWithoutUserInput
+  linkedAccounts?: Prisma.LinkedAccountUncheckedCreateNestedManyWithoutUserInput
+  radioVotes?: Prisma.RadioVoteUncheckedCreateNestedManyWithoutUserInput
+  apiTokens?: Prisma.ApiTokenUncheckedCreateNestedManyWithoutUserInput
+  missionAcceptances?: Prisma.MissionAcceptanceUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutArtistApplicationInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutArtistApplicationInput, Prisma.UserUncheckedCreateWithoutArtistApplicationInput>
+}
+
+export type UserUpsertWithoutArtistApplicationInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutArtistApplicationInput, Prisma.UserUncheckedUpdateWithoutArtistApplicationInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutArtistApplicationInput, Prisma.UserUncheckedCreateWithoutArtistApplicationInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutArtistApplicationInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutArtistApplicationInput, Prisma.UserUncheckedUpdateWithoutArtistApplicationInput>
+}
+
+export type UserUpdateWithoutArtistApplicationInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSoundcloud?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialInstagram?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialTelegram?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialWebsite?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twitchChannel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  realName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  failedLoginAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  lockedUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  trustTier?: Prisma.StringFieldUpdateOperationsInput | string
+  twoFactorEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  twoFactorMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorBackupCodes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorEmailCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorEmailExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailVerificationToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailVerificationExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  newsletterOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  newsletterOptInAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  artistTracks?: Prisma.TrackUpdateManyWithoutArtistNestedInput
+  uploadedTracks?: Prisma.TrackUpdateManyWithoutUploaderNestedInput
+  featuringTracks?: Prisma.TrackUpdateManyWithoutFeaturingArtistNestedInput
+  wallPosts?: Prisma.WallPostUpdateManyWithoutAuthorNestedInput
+  votes?: Prisma.VoteUpdateManyWithoutUserNestedInput
+  releaseSlots?: Prisma.ReleaseSlotUpdateManyWithoutAssigneeNestedInput
+  ownedPools?: Prisma.PoolUpdateManyWithoutOwnerArtistNestedInput
+  securityEvents?: Prisma.SecurityEventUpdateManyWithoutUserNestedInput
+  badges?: Prisma.BadgeUpdateManyWithoutUserNestedInput
+  linkedAccounts?: Prisma.LinkedAccountUpdateManyWithoutUserNestedInput
+  radioVotes?: Prisma.RadioVoteUpdateManyWithoutUserNestedInput
+  apiTokens?: Prisma.ApiTokenUpdateManyWithoutUserNestedInput
+  missionAcceptances?: Prisma.MissionAcceptanceUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutArtistApplicationInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  displayName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialSoundcloud?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialInstagram?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialTelegram?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  socialWebsite?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twitchChannel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  realName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  failedLoginAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  lockedUntil?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  tokenVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  trustTier?: Prisma.StringFieldUpdateOperationsInput | string
+  twoFactorEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  twoFactorMethod?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorBackupCodes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorEmailCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorEmailExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailVerified?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  emailVerificationToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emailVerificationExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  newsletterOptIn?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  newsletterOptInAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  artistTracks?: Prisma.TrackUncheckedUpdateManyWithoutArtistNestedInput
+  uploadedTracks?: Prisma.TrackUncheckedUpdateManyWithoutUploaderNestedInput
+  featuringTracks?: Prisma.TrackUncheckedUpdateManyWithoutFeaturingArtistNestedInput
+  wallPosts?: Prisma.WallPostUncheckedUpdateManyWithoutAuthorNestedInput
+  votes?: Prisma.VoteUncheckedUpdateManyWithoutUserNestedInput
+  releaseSlots?: Prisma.ReleaseSlotUncheckedUpdateManyWithoutAssigneeNestedInput
+  ownedPools?: Prisma.PoolUncheckedUpdateManyWithoutOwnerArtistNestedInput
+  securityEvents?: Prisma.SecurityEventUncheckedUpdateManyWithoutUserNestedInput
+  badges?: Prisma.BadgeUncheckedUpdateManyWithoutUserNestedInput
+  linkedAccounts?: Prisma.LinkedAccountUncheckedUpdateManyWithoutUserNestedInput
+  radioVotes?: Prisma.RadioVoteUncheckedUpdateManyWithoutUserNestedInput
+  apiTokens?: Prisma.ApiTokenUncheckedUpdateManyWithoutUserNestedInput
+  missionAcceptances?: Prisma.MissionAcceptanceUncheckedUpdateManyWithoutUserNestedInput
 }
 
 
@@ -3805,6 +4375,7 @@ export type UserCountOutputType = {
   linkedAccounts: number
   radioVotes: number
   apiTokens: number
+  missionAcceptances: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -3820,6 +4391,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   linkedAccounts?: boolean | UserCountOutputTypeCountLinkedAccountsArgs
   radioVotes?: boolean | UserCountOutputTypeCountRadioVotesArgs
   apiTokens?: boolean | UserCountOutputTypeCountApiTokensArgs
+  missionAcceptances?: boolean | UserCountOutputTypeCountMissionAcceptancesArgs
 }
 
 /**
@@ -3916,6 +4488,13 @@ export type UserCountOutputTypeCountApiTokensArgs<ExtArgs extends runtime.Types.
   where?: Prisma.ApiTokenWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountMissionAcceptancesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.MissionAcceptanceWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -3964,6 +4543,8 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   linkedAccounts?: boolean | Prisma.User$linkedAccountsArgs<ExtArgs>
   radioVotes?: boolean | Prisma.User$radioVotesArgs<ExtArgs>
   apiTokens?: boolean | Prisma.User$apiTokensArgs<ExtArgs>
+  missionAcceptances?: boolean | Prisma.User$missionAcceptancesArgs<ExtArgs>
+  artistApplication?: boolean | Prisma.User$artistApplicationArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -4092,6 +4673,8 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   linkedAccounts?: boolean | Prisma.User$linkedAccountsArgs<ExtArgs>
   radioVotes?: boolean | Prisma.User$radioVotesArgs<ExtArgs>
   apiTokens?: boolean | Prisma.User$apiTokensArgs<ExtArgs>
+  missionAcceptances?: boolean | Prisma.User$missionAcceptancesArgs<ExtArgs>
+  artistApplication?: boolean | Prisma.User$artistApplicationArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -4112,6 +4695,8 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     linkedAccounts: Prisma.$LinkedAccountPayload<ExtArgs>[]
     radioVotes: Prisma.$RadioVotePayload<ExtArgs>[]
     apiTokens: Prisma.$ApiTokenPayload<ExtArgs>[]
+    missionAcceptances: Prisma.$MissionAcceptancePayload<ExtArgs>[]
+    artistApplication: Prisma.$ArtistApplicationPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -4554,6 +5139,8 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   linkedAccounts<T extends Prisma.User$linkedAccountsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$linkedAccountsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$LinkedAccountPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   radioVotes<T extends Prisma.User$radioVotesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$radioVotesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RadioVotePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   apiTokens<T extends Prisma.User$apiTokensArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$apiTokensArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ApiTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  missionAcceptances<T extends Prisma.User$missionAcceptancesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$missionAcceptancesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MissionAcceptancePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  artistApplication<T extends Prisma.User$artistApplicationArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$artistApplicationArgs<ExtArgs>>): Prisma.Prisma__ArtistApplicationClient<runtime.Types.Result.GetResult<Prisma.$ArtistApplicationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -5288,6 +5875,49 @@ export type User$apiTokensArgs<ExtArgs extends runtime.Types.Extensions.Internal
   take?: number
   skip?: number
   distinct?: Prisma.ApiTokenScalarFieldEnum | Prisma.ApiTokenScalarFieldEnum[]
+}
+
+/**
+ * User.missionAcceptances
+ */
+export type User$missionAcceptancesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the MissionAcceptance
+   */
+  select?: Prisma.MissionAcceptanceSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the MissionAcceptance
+   */
+  omit?: Prisma.MissionAcceptanceOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.MissionAcceptanceInclude<ExtArgs> | null
+  where?: Prisma.MissionAcceptanceWhereInput
+  orderBy?: Prisma.MissionAcceptanceOrderByWithRelationInput | Prisma.MissionAcceptanceOrderByWithRelationInput[]
+  cursor?: Prisma.MissionAcceptanceWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.MissionAcceptanceScalarFieldEnum | Prisma.MissionAcceptanceScalarFieldEnum[]
+}
+
+/**
+ * User.artistApplication
+ */
+export type User$artistApplicationArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ArtistApplication
+   */
+  select?: Prisma.ArtistApplicationSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ArtistApplication
+   */
+  omit?: Prisma.ArtistApplicationOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ArtistApplicationInclude<ExtArgs> | null
+  where?: Prisma.ArtistApplicationWhereInput
 }
 
 /**

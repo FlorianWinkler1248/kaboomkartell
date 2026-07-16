@@ -26,6 +26,9 @@ export const VANITY_MIN = {
   trackVotes: 5,
   /** „N plays" pro Track. */
   playCount: 50,
+  /** „N wolves on it" pro Mission (Board + Detail). Schwelle 3 laut
+   *  kbk-mission-board-Fehlerszenario — Flow kann am Gate anders entscheiden. */
+  missionAcceptances: 3,
 } as const;
 
 export type VanityKey = keyof typeof VANITY_MIN;

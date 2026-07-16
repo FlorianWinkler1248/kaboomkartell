@@ -32,9 +32,11 @@ export async function GET(req: Request) {
         summary: item.summary,
         hasEn: item.hasEn,
         hasMermaid: item.hasMermaid,
+        featured: item.featured,
       };
     })
-    .sort((a, b) => a.title.localeCompare(b.title));
+    // Featured-Artikel (ADR-039) VOR die alphabetische Sortierung.
+    .sort((a, b) => Number(b.featured) - Number(a.featured) || a.title.localeCompare(b.title));
 
   return NextResponse.json({ success: true, lang, items });
 }

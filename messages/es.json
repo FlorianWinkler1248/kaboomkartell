@@ -49,7 +49,8 @@
     "emptyBody": "Las guías de ayuda no están disponibles ahora mismo. Vuelve pronto.",
     "noMatches": "Ninguna guía coincide con tu búsqueda.",
     "close": "Cerrar",
-    "deFallbackNote": "La versión en inglés aún no está disponible — se muestra el original en alemán."
+    "deFallbackNote": "La versión en inglés aún no está disponible — se muestra el original en alemán.",
+    "featuredBadge": "DESTACADO"
   },
   "passwordField": {
     "generate": "GENERAR",
@@ -64,6 +65,7 @@
     "library": "BIBLIOTECA",
     "schedule": "PROGRAMA",
     "learn": "APRENDER",
+    "mission": "MISIÓN",
     "admin": "ADMIN",
     "settings": "AJUSTES",
     "signIn": "INICIAR SESIÓN",
@@ -282,6 +284,11 @@
       "title": "Aviso legal — KaboomKartell",
       "description": "Aviso legal y datos de contacto de KaboomKartell."
     },
+    "mission": {
+      "title": "Misiones — KaboomKartell",
+      "description": "Misiones comunitarias de la manada KaboomKartell — metas de donación, reclutamiento de artistas, alianzas y todos los canales sociales oficiales.",
+      "notFound": "Misión no encontrada — KaboomKartell"
+    },
     "learn": {
       "title": "Learn — KaboomKartell",
       "description": "Labs prácticos para aprender cómo se crea el sonido en KaboomKartell."
@@ -325,6 +332,93 @@
       "ogTitle": "KBK Synth Lab — Aprende diseño de sonido",
       "ogDescription": "Tutorial interactivo de sintetizador. Aprende formas de onda, filtros y cómo crear sonidos de bajo.",
       "keywords": "sintetizador, aprender síntesis, formas de onda, diseño de sonido, bajo, tutorial, web audio"
+    }
+  },
+  "mission": {
+    "kicker": "MISSION BOARD",
+    "title": "MISIONES",
+    "intro": "El tablón de la manada — metas, llamados y alianzas directo de 4Flow y Boomy. Todos pueden leer; los lobos totalmente verificados pueden aceptar una misión.",
+    "empty": "No hay misiones en el tablón ahora mismo. Vuelve pronto.",
+    "type": {
+      "donation": "DONACIÓN",
+      "recruiting": "RECLUTAMIENTO",
+      "partnership": "ALIANZA",
+      "goal": "META"
+    },
+    "statusPaused": "EN PAUSA",
+    "statusCompleted": "COMPLETADA",
+    "calledByBoomy": "convocada por Boomy",
+    "progressLabel": "PROGRESO",
+    "linkComingSoon": "Enlace de donación próximamente",
+    "actionDefault": "ABRIR ENLACE",
+    "acceptedCount": "{count, plural, one {# aceptación} other {# aceptaciones}}",
+    "progressAbsolute": "{value} recaudado",
+    "viewMission": "VER MISIÓN →",
+    "follow": {
+      "kicker": "FOLLOW THE PACK",
+      "title": "CANALES SOCIALES",
+      "intro": "Cuentas oficiales de KBK, Boomy y los artistas — sigue el ruido donde se hace.",
+      "empty": "Aún no hay cuentas sociales listadas."
+    },
+    "detail": {
+      "back": "← VOLVER AL TABLÓN",
+      "briefing": "BRIEFING DE MISIÓN"
+    },
+    "accept": {
+      "loginHint": "Inicia sesión para aceptar esta misión.",
+      "loginCta": "INICIAR SESIÓN",
+      "tierHint": "Se requiere verificación completa (2FA) para aceptar misiones.",
+      "tierCta": "Activa la 2FA en los ajustes de seguridad",
+      "acceptCta": "ACEPTAR MISIÓN",
+      "withdrawCta": "RETIRARSE",
+      "acceptedBadge": "ACEPTADA",
+      "fulfilledBadge": "Misión cumplida 🐺",
+      "acceptedNote": "Estás en esta misión — la manada cuenta contigo.",
+      "toastAccepted": "Misión aceptada. ¡A por ella!",
+      "toastWithdrawn": "Te has retirado de esta misión.",
+      "toastGone": "Esta misión ya no está disponible.",
+      "toastConflict": "Esta misión no se puede aceptar ahora mismo.",
+      "toastError": "Algo salió mal. Inténtalo de nuevo."
+    }
+  },
+  "humanArtists": {
+    "kicker": "HUMAN ARTISTS WANTED",
+    "title": "TU SONIDO EN LAS BANDEJAS",
+    "message": "KBK no es un escaparate de IA — queremos TU sonido en las bandejas.",
+    "pitch": "Phonk, Hardtek, Raggatek, Brazilian Phonk o algo que la manada nunca haya oído: si haces ruido, queremos oírlo. Curado por 4Flow, sonando en una radio que nunca se detiene.",
+    "keepNote": "Conserva tu SoundCloud y Spotify — nosotros reproducimos tu audio, tú te quedas con tus clics.",
+    "ctaHelp": "CÓMO UNIRTE",
+    "ctaMissions": "VER MISIONES",
+    "apply": {
+      "heading": "POSTULA COMO ARTISTA",
+      "loginHint": "Necesitas una cuenta para postular — únete primero a la manada.",
+      "loginCta": "INICIAR SESIÓN",
+      "tierHint": "Las postulaciones requieren una cuenta totalmente verificada (2FA). Así el camino sigue siendo humano — actívala en tus ajustes de seguridad.",
+      "tierCta": "ACTIVAR 2FA",
+      "checking": "Comprobando el estado de tu postulación…",
+      "alreadyAppliedTitle": "POSTULACIÓN RECIBIDA",
+      "alreadyAppliedBody": "Una postulación por cuenta — la tuya ya está dentro. Lo leemos todo y respondemos si encaja.",
+      "warningTitle": "UN SOLO INTENTO",
+      "warningBody": "Tienes UNA SOLA postulación por cuenta. Haz que cuente. Sin segunda oportunidad, sin volver a postular — lo leemos todo y respondemos si encaja.",
+      "messageLabel": "TU MENSAJE",
+      "messagePlaceholder": "¿Quién eres, qué haces, por qué KBK? (20–2000 caracteres)",
+      "linksLabel": "ENLACES — OPCIONAL, MÁX. 5",
+      "linksHint": "SoundCloud, Spotify, YouTube … solo enlaces http(s).",
+      "linkPlaceholder": "https://…",
+      "addLink": "+ AÑADIR ENLACE",
+      "removeLink": "QUITAR",
+      "reviewCta": "REVISAR Y ENVIAR",
+      "confirmTitle": "ÚLTIMO CHECK — UN SOLO INTENTO",
+      "confirmBody": "Esta es la única postulación para esta cuenta. Una vez enviada, la puerta se cierra.",
+      "confirmCheckbox": "Entiendo: una postulación por cuenta, sin segundo intento.",
+      "confirmSend": "ENVIAR POSTULACIÓN",
+      "confirmBack": "VOLVER",
+      "sending": "ENVIANDO…",
+      "successTitle": "POSTULACIÓN RECIBIDA",
+      "successBody": "Tu postulación está con el Alpha Wolf. Lo leemos todo y respondemos si encaja.",
+      "toastValidation": "Revisa tu mensaje (20–2000 caracteres) y usa solo enlaces http(s).",
+      "toastRateLimit": "Demasiados intentos — inténtalo más tarde.",
+      "toastError": "Algo salió mal. Inténtalo de nuevo."
     }
   },
   "home": {
