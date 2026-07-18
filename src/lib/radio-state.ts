@@ -66,8 +66,9 @@ export function isVotableDuration(startedAt: Date, endsAt: Date): boolean {
 }
 /** Obergrenze für Catch-up-Schritte bei einer Null-Listener-Lücke → sonst Reset. */
 const MAX_CATCHUP = 50
-/** Wie viele letzte Plays (pool-lokal) die Recency-Berechnung lädt. */
-const HISTORY_LOOKBACK = 40
+/** Wie viele letzte Plays (pool-lokal) die Recency-Berechnung lädt — muss
+ *  Hard-Sperre (max MAX_HARD_COOLDOWN=35) + Soft-Fenster (max ⌈G/4⌉) abdecken. */
+const HISTORY_LOOKBACK = 60
 /** RadioPlay-Retention pro Channel (append-only Log nicht unbegrenzt wachsen lassen). */
 const RETENTION_PER_CHANNEL = 500
 

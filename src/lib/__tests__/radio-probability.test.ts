@@ -38,6 +38,8 @@ describe('hardCooldownLength', () => {
   it('wächst monoton mit G und ist bei MAX_HARD_COOLDOWN gedeckelt', () => {
     expect(hardCooldownLength(8)).toBe(3) // 8 - KEEP_MIN(5) = 3
     expect(hardCooldownLength(15)).toBe(10) // 15 - 5 = 10
+    expect(hardCooldownLength(31)).toBe(26) // Brazilian-Poolgröße: 31 - 5 = 26, unter dem Deckel
+    expect(hardCooldownLength(60)).toBe(MAX_HARD_COOLDOWN) // Phonk-Poolgröße: 60 - 5 = 55 → gedeckelt bei 35
     expect(hardCooldownLength(200)).toBe(MAX_HARD_COOLDOWN) // gedeckelt
   })
 })

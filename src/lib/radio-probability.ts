@@ -11,7 +11,7 @@
 import { hashSeed } from './shuffle'
 
 export const KEEP_MIN = 5 // so viele Voll-Gewicht-Kandidaten bleiben mindestens übrig
-export const MAX_HARD_COOLDOWN = 10 // Obergrenze der Hard-Sperre (User-Vorgabe "10 Wiedergaben")
+export const MAX_HARD_COOLDOWN = 35 // Obergrenze der Hard-Sperre (Flow-Freigabe 18.07.2026: 35 statt 10 — Pools auf 31–60 Tracks gewachsen, ein 2h-Slot (~35 Plays) bleibt damit wiederholungsfrei)
 export const SOFT_WEIGHT = 0.5 // halbes Gewicht im Soft-Fenster (das "Halbieren")
 export const DEFAULT_CANDIDATES = 5 // Top-N Vote-Kandidaten
 
