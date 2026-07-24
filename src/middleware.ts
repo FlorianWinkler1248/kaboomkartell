@@ -17,6 +17,7 @@ export const { auth: middleware } = NextAuth(authConfig);
 export default middleware;
 
 export const config = {
-  // Matcher: Nur auf relevanten Pfaden laufen (Performance)
-  matcher: ['/admin/:path*'],
+  // Matcher: Nur auf relevanten Pfaden laufen (Performance).
+  // /studio (ADR-041): Artist-Studio — Rolle KUENSTLER/ADMIN, Edge-safe im JWT.
+  matcher: ['/admin/:path*', '/studio/:path*'],
 };

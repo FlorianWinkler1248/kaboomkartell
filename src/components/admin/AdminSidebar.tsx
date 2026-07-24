@@ -31,6 +31,8 @@ import {
   Library,
   BookOpen,
   Target,
+  Mic2,
+  Inbox,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -46,6 +48,9 @@ const ADMIN_LINKS = [
   { href: '/admin/votes', label: 'Votes', icon: Vote },
   // Mission-Board + Artist-Funnel + Socials (ADR-039)
   { href: '/admin/missions', label: 'Missions', icon: Target },
+  // Artist-Ökosystem: Profile + Review-Queue (ADR-041)
+  { href: '/admin/artist-profiles', label: 'Artists', icon: Mic2 },
+  { href: '/admin/submissions', label: 'Submissions', icon: Inbox },
   { href: '/admin/users', label: 'Users', icon: Users },
   { href: '/admin/processes', label: 'Process Library', icon: BookOpen },
   { href: '/admin/settings', label: 'Settings', icon: Settings },

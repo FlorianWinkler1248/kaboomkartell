@@ -104,8 +104,8 @@ export default function MiniPlayer() {
   const aiTag = useTrackAiTag();
   const channelAccent = useChannelAccent();
 
-  // Hide nur im Admin-Bereich (eigenes Layout, andere Höhen-Mechanik).
-  const hide = pathname?.startsWith('/admin') ?? false;
+  // Hide im Admin- und Studio-Bereich (eigenes Layout, andere Höhen-Mechanik).
+  const hide = (pathname?.startsWith('/admin') || pathname?.startsWith('/studio')) ?? false;
 
   // Body-Class für globalen padding-bottom-Spacer.
   useEffect(() => {

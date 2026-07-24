@@ -36,6 +36,8 @@ export default async function ShowcaseSection() {
               include: {
                 artist: { select: { id: true, username: true, displayName: true } },
                 featuringArtist: { select: { id: true, username: true, displayName: true } },
+                // ADR-041: Profil-Name externer Künstler hat Anzeige-Priorität
+                artistProfile: { select: { slug: true, name: true } },
               },
             },
           },

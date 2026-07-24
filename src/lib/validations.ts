@@ -98,6 +98,93 @@ export const createScVoteSchema = z.object({
   listenedSeconds: z.number().int().min(0).default(0),
 });
 
+// === Artist-Studio (ADR-041) ===
+
+// ISRC: CC (Land) + XXX (Registrant) + YY (Jahr) + NNNNN (laufende Nummer)
+const ISRC_REGEX = /^[A-Z]{2}[A-Z0-9]{3}\d{7}$/;
+// Leere Strings aus Formularen als "nicht gesetzt" behandeln.
+const urlOrEmpty = z
+  .string()
+  .max(300)
+  .refine((v) => v === '' || /^https?:\/\//.test(v), 'Must start with http(s)://');
+// Nur Pfade aus dem eigenen Upload-System akzeptieren (kein fremder filePath).
+const UPLOAD_TRACK_PATH_REGEX = /^tracks[/\\][A-Za-z0-9._-]+\.mp3$/;
+
+export const studioProfileSchema = z.object({
+  bio: z.string().max(1000).optional(),
+  avatarUrl: z.string().max(300).optional(),
+  headerUrl: z.string().max(300).optional(),
+  socialSoundcloud: urlOrEmpty.optional(),
+  socialInstagram: urlOrEmpty.optional(),
+  socialTelegram: urlOrEmpty.optional(),
+  socialWebsite: urlOrEmpty.optional(),
+});
+
+export const createStudioTrackSchema = z.object({
+  title: z.string().min(1).max(140),
+  genre: z.string().min(1).max(40),
+  bpm: z.number().int().min(40).max(300).nullable().optional(),
+  description: z.string().max(2000).optional(),
+  aiDisclosure: z.enum(['human', 'ai_assisted', 'ai_generated']),
+  aiSource: z.string().max(40).optional(),
+  isrc: z.union([z.literal(''), z.string().regex(ISRC_REGEX, 'Invalid ISRC (format: CCXXXYYNNNNN)')]).optional(),
+  label: z.string().max(120).optional(),
+  message: z.string().max(1000).optional(),
+  fileName: z.string().min(1).max(255),
+  filePath: z.string().regex(UPLOAD_TRACK_PATH_REGEX, 'Invalid file path'),
+  fileSize: z.number().int().positive(),
+  coverUrl: z.string().max(300).optional(),
+});
+
+// Studio-Edit: KEIN isPublic/status/sortOrder — Review-Bypass unmöglich machen.
+export const updateStudioTrackSchema = createStudioTrackSchema
+  .pick({
+    title: true,
+    genre: true,
+    bpm: true,
+    description: true,
+    isrc: true,
+    label: true,
+    message: true,
+    coverUrl: true,
+  })
+  .partial();
+
+export const claimTokenSchema = z.object({
+  token: z.string().min(20).max(200),
+});
+
+export const adminArtistProfileSchema = z.object({
+  name: z.string().min(1).max(120),
+  slug: z
+    .string()
+    .regex(/^[a-z0-9-]+$/, 'Lowercase letters, numbers and hyphens only')
+    .min(2)
+    .max(80)
+    .optional(),
+  bio: z.string().max(1000).optional(),
+  avatarUrl: z.string().max(300).optional(),
+  headerUrl: z.string().max(300).optional(),
+  socialSoundcloud: urlOrEmpty.optional(),
+  socialInstagram: urlOrEmpty.optional(),
+  socialTelegram: urlOrEmpty.optional(),
+  socialWebsite: urlOrEmpty.optional(),
+  isPublished: z.boolean().optional(),
+  sortOrder: z.number().int().min(0).max(9999).optional(),
+});
+
+export const adminArtistProfileUpdateSchema = adminArtistProfileSchema.partial();
+
+export const inviteCreateSchema = z.object({
+  expiresInDays: z.number().int().min(1).max(90).default(14),
+});
+
+export const submissionReviewSchema = z.object({
+  action: z.enum(['APPROVE', 'REJECT', 'REQUEST_CHANGES']),
+  note: z.string().max(1000).optional(),
+  publish: z.boolean().optional(),
+});
+
 // Session-Like-Import (ADR-041): anonyme localStorage-Likes werden nach der
 // Registrierung als echte Votes übernommen. Partition-Regeln in lib/my-playlist.ts.
 export const importLikesSchema = z.object({
@@ -117,6 +204,9 @@ export const importLikesSchema = z.object({
 const SOUNDCLOUD_URL_REGEX = /^https?:\/\/(www\.)?soundcloud\.com\/.+\/.+/;
 
 export const createSoundcloudTrackSchema = z.object({
+  // ADR-041: optionales Künstler-Profil (Showcase) — wenn gesetzt, wird der
+  // Track dem externen Artist zugeordnet und NICHT in Genre-Pools gehängt.
+  artistProfileId: z.string().min(10).max(64).optional(),
   soundcloudUrl: z
     .string()
     .url('Please enter a valid URL')

@@ -73,7 +73,9 @@ export const ModelName = {
   Mission: 'Mission',
   MissionAcceptance: 'MissionAcceptance',
   SocialAccount: 'SocialAccount',
-  ArtistApplication: 'ArtistApplication'
+  ArtistApplication: 'ArtistApplication',
+  ArtistProfile: 'ArtistProfile',
+  UploadSubmission: 'UploadSubmission'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -191,6 +193,9 @@ export const TrackScalarFieldEnum = {
   sortOrder: 'sortOrder',
   aiDisclosure: 'aiDisclosure',
   aiSource: 'aiSource',
+  isrc: 'isrc',
+  label: 'label',
+  contributors: 'contributors',
   auraCount: 'auraCount',
   susCount: 'susCount',
   totalVotes: 'totalVotes',
@@ -201,7 +206,8 @@ export const TrackScalarFieldEnum = {
   updatedAt: 'updatedAt',
   artistId: 'artistId',
   uploaderId: 'uploaderId',
-  featuringArtistId: 'featuringArtistId'
+  featuringArtistId: 'featuringArtistId',
+  artistProfileId: 'artistProfileId'
 } as const
 
 export type TrackScalarFieldEnum = (typeof TrackScalarFieldEnum)[keyof typeof TrackScalarFieldEnum]
@@ -481,6 +487,47 @@ export const ArtistApplicationScalarFieldEnum = {
 } as const
 
 export type ArtistApplicationScalarFieldEnum = (typeof ArtistApplicationScalarFieldEnum)[keyof typeof ArtistApplicationScalarFieldEnum]
+
+
+export const ArtistProfileScalarFieldEnum = {
+  id: 'id',
+  slug: 'slug',
+  name: 'name',
+  bio: 'bio',
+  avatarUrl: 'avatarUrl',
+  headerUrl: 'headerUrl',
+  socialSoundcloud: 'socialSoundcloud',
+  socialInstagram: 'socialInstagram',
+  socialTelegram: 'socialTelegram',
+  socialWebsite: 'socialWebsite',
+  claimTokenHash: 'claimTokenHash',
+  claimTokenExpiry: 'claimTokenExpiry',
+  userId: 'userId',
+  claimedAt: 'claimedAt',
+  isPublished: 'isPublished',
+  createdBy: 'createdBy',
+  sortOrder: 'sortOrder',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ArtistProfileScalarFieldEnum = (typeof ArtistProfileScalarFieldEnum)[keyof typeof ArtistProfileScalarFieldEnum]
+
+
+export const UploadSubmissionScalarFieldEnum = {
+  id: 'id',
+  trackId: 'trackId',
+  submitterId: 'submitterId',
+  status: 'status',
+  message: 'message',
+  reviewNote: 'reviewNote',
+  reviewedBy: 'reviewedBy',
+  reviewedAt: 'reviewedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type UploadSubmissionScalarFieldEnum = (typeof UploadSubmissionScalarFieldEnum)[keyof typeof UploadSubmissionScalarFieldEnum]
 
 
 export const SortOrder = {

@@ -49,6 +49,8 @@ interface PlaylistTrackItem {
   susPercentage: number;
   artist: { id: string; username: string; displayName: string | null };
   featuringArtist: { id: string; username: string; displayName: string | null } | null;
+  // ADR-041: externes Künstler-Profil — formatArtistDisplay priorisiert den Namen
+  artistProfile?: { slug: string; name: string } | null;
   streamUrl: string;
   soundcloudUrl?: string | null;
   soundcloudEmbedUrl?: string | null;

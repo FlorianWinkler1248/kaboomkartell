@@ -183,6 +183,21 @@ export async function POST(request: NextRequest) {
 
       const scGenre = scResult.data.genre || null;
 
+      // ADR-041: SC-Track einem externen Artist-Profil zuordnen (Showcase).
+      const scProfileId = scResult.data.artistProfileId || null;
+      if (scProfileId) {
+        const profileExists = await prisma.artistProfile.findUnique({
+          where: { id: scProfileId },
+          select: { id: true },
+        });
+        if (!profileExists) {
+          return NextResponse.json(
+            { success: false, error: 'Artist profile not found.' },
+            { status: 400 }
+          );
+        }
+      }
+
       const track = await prisma.track.create({
         data: {
           title: scTitle,
@@ -200,6 +215,7 @@ export async function POST(request: NextRequest) {
           duration: 0,
           artistId: scResult.data.artistId || session.user.id,
           uploaderId: session.user.id,
+          artistProfileId: scProfileId,
         },
         include: {
           artist: { select: { id: true, username: true, displayName: true } },
@@ -207,7 +223,10 @@ export async function POST(request: NextRequest) {
       });
 
       // In den Genre-Pool einhängen, falls das Genre eines der 4 KBK-Genres ist.
-      const scPoolSlug = isGenre(scGenre) ? genrePoolSlug(scGenre) : null;
+      // Showcase-Tracks externer Künstler (artistProfileId) bleiben draußen —
+      // sie sind kein Genre-Vorrat und würden Pool-Zählungen verfälschen
+      // (airplay-harmlos wären sie eh: mapPoolTracks filtert auf LOCAL).
+      const scPoolSlug = !scProfileId && isGenre(scGenre) ? genrePoolSlug(scGenre) : null;
       if (scPoolSlug) {
         await attachTrackToPool(track.id, scPoolSlug);
       }

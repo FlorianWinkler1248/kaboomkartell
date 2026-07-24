@@ -11,5 +11,8 @@ Allow: /
 Disallow: /admin
 Disallow: /api/admin
 Disallow: /api/auth
+Disallow: /studio
+Disallow: /api/studio
+Disallow: /claim
 
 Sitemap: https://kaboomkartell.com/sitemap.xml

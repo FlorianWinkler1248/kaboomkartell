@@ -88,6 +88,8 @@ export default async function RecentReleasesSection() {
         artistId: true,
         artist: { select: { username: true, displayName: true } },
         featuringArtist: { select: { username: true, displayName: true } },
+        // ADR-041: Profil-Name externer Künstler (formatArtistDisplay-Priorität)
+        artistProfile: { select: { name: true } },
       },
     });
 

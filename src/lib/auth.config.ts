@@ -68,6 +68,15 @@ export const authConfig: NextAuthConfig = {
         }
       }
 
+      // Artist-Studio (ADR-041): KUENSTLER oder ADMIN. Nicht-Künstler landen
+      // beim Artist-Funnel (/mission) statt auf einer 403-Wand.
+      if (pathname.startsWith('/studio')) {
+        if (!isLoggedIn) return false; // -> Redirect zu signIn page
+        if (userRole !== 'KUENSTLER' && userRole !== 'ADMIN') {
+          return Response.redirect(new URL('/mission', nextUrl.origin));
+        }
+      }
+
       return true;
     },
   },

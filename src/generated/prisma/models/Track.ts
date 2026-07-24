@@ -72,6 +72,9 @@ export type TrackMinAggregateOutputType = {
   sortOrder: number | null
   aiDisclosure: string | null
   aiSource: string | null
+  isrc: string | null
+  label: string | null
+  contributors: string | null
   auraCount: number | null
   susCount: number | null
   totalVotes: number | null
@@ -83,6 +86,7 @@ export type TrackMinAggregateOutputType = {
   artistId: string | null
   uploaderId: string | null
   featuringArtistId: string | null
+  artistProfileId: string | null
 }
 
 export type TrackMaxAggregateOutputType = {
@@ -107,6 +111,9 @@ export type TrackMaxAggregateOutputType = {
   sortOrder: number | null
   aiDisclosure: string | null
   aiSource: string | null
+  isrc: string | null
+  label: string | null
+  contributors: string | null
   auraCount: number | null
   susCount: number | null
   totalVotes: number | null
@@ -118,6 +125,7 @@ export type TrackMaxAggregateOutputType = {
   artistId: string | null
   uploaderId: string | null
   featuringArtistId: string | null
+  artistProfileId: string | null
 }
 
 export type TrackCountAggregateOutputType = {
@@ -142,6 +150,9 @@ export type TrackCountAggregateOutputType = {
   sortOrder: number
   aiDisclosure: number
   aiSource: number
+  isrc: number
+  label: number
+  contributors: number
   auraCount: number
   susCount: number
   totalVotes: number
@@ -153,6 +164,7 @@ export type TrackCountAggregateOutputType = {
   artistId: number
   uploaderId: number
   featuringArtistId: number
+  artistProfileId: number
   _all: number
 }
 
@@ -203,6 +215,9 @@ export type TrackMinAggregateInputType = {
   sortOrder?: true
   aiDisclosure?: true
   aiSource?: true
+  isrc?: true
+  label?: true
+  contributors?: true
   auraCount?: true
   susCount?: true
   totalVotes?: true
@@ -214,6 +229,7 @@ export type TrackMinAggregateInputType = {
   artistId?: true
   uploaderId?: true
   featuringArtistId?: true
+  artistProfileId?: true
 }
 
 export type TrackMaxAggregateInputType = {
@@ -238,6 +254,9 @@ export type TrackMaxAggregateInputType = {
   sortOrder?: true
   aiDisclosure?: true
   aiSource?: true
+  isrc?: true
+  label?: true
+  contributors?: true
   auraCount?: true
   susCount?: true
   totalVotes?: true
@@ -249,6 +268,7 @@ export type TrackMaxAggregateInputType = {
   artistId?: true
   uploaderId?: true
   featuringArtistId?: true
+  artistProfileId?: true
 }
 
 export type TrackCountAggregateInputType = {
@@ -273,6 +293,9 @@ export type TrackCountAggregateInputType = {
   sortOrder?: true
   aiDisclosure?: true
   aiSource?: true
+  isrc?: true
+  label?: true
+  contributors?: true
   auraCount?: true
   susCount?: true
   totalVotes?: true
@@ -284,6 +307,7 @@ export type TrackCountAggregateInputType = {
   artistId?: true
   uploaderId?: true
   featuringArtistId?: true
+  artistProfileId?: true
   _all?: true
 }
 
@@ -395,6 +419,9 @@ export type TrackGroupByOutputType = {
   sortOrder: number
   aiDisclosure: string | null
   aiSource: string | null
+  isrc: string | null
+  label: string | null
+  contributors: string | null
   auraCount: number
   susCount: number
   totalVotes: number
@@ -406,6 +433,7 @@ export type TrackGroupByOutputType = {
   artistId: string
   uploaderId: string
   featuringArtistId: string | null
+  artistProfileId: string | null
   _count: TrackCountAggregateOutputType | null
   _avg: TrackAvgAggregateOutputType | null
   _sum: TrackSumAggregateOutputType | null
@@ -453,6 +481,9 @@ export type TrackWhereInput = {
   sortOrder?: Prisma.IntFilter<"Track"> | number
   aiDisclosure?: Prisma.StringNullableFilter<"Track"> | string | null
   aiSource?: Prisma.StringNullableFilter<"Track"> | string | null
+  isrc?: Prisma.StringNullableFilter<"Track"> | string | null
+  label?: Prisma.StringNullableFilter<"Track"> | string | null
+  contributors?: Prisma.StringNullableFilter<"Track"> | string | null
   auraCount?: Prisma.IntFilter<"Track"> | number
   susCount?: Prisma.IntFilter<"Track"> | number
   totalVotes?: Prisma.IntFilter<"Track"> | number
@@ -464,11 +495,14 @@ export type TrackWhereInput = {
   artistId?: Prisma.StringFilter<"Track"> | string
   uploaderId?: Prisma.StringFilter<"Track"> | string
   featuringArtistId?: Prisma.StringNullableFilter<"Track"> | string | null
+  artistProfileId?: Prisma.StringNullableFilter<"Track"> | string | null
   artist?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   uploader?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   featuringArtist?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
+  artistProfile?: Prisma.XOR<Prisma.ArtistProfileNullableScalarRelationFilter, Prisma.ArtistProfileWhereInput> | null
   votes?: Prisma.VoteListRelationFilter
   releaseSlot?: Prisma.XOR<Prisma.ReleaseSlotNullableScalarRelationFilter, Prisma.ReleaseSlotWhereInput> | null
+  uploadSubmission?: Prisma.XOR<Prisma.UploadSubmissionNullableScalarRelationFilter, Prisma.UploadSubmissionWhereInput> | null
   playlists?: Prisma.PlaylistTrackListRelationFilter
   poolTracks?: Prisma.PoolTrackListRelationFilter
 }
@@ -495,6 +529,9 @@ export type TrackOrderByWithRelationInput = {
   sortOrder?: Prisma.SortOrder
   aiDisclosure?: Prisma.SortOrderInput | Prisma.SortOrder
   aiSource?: Prisma.SortOrderInput | Prisma.SortOrder
+  isrc?: Prisma.SortOrderInput | Prisma.SortOrder
+  label?: Prisma.SortOrderInput | Prisma.SortOrder
+  contributors?: Prisma.SortOrderInput | Prisma.SortOrder
   auraCount?: Prisma.SortOrder
   susCount?: Prisma.SortOrder
   totalVotes?: Prisma.SortOrder
@@ -506,11 +543,14 @@ export type TrackOrderByWithRelationInput = {
   artistId?: Prisma.SortOrder
   uploaderId?: Prisma.SortOrder
   featuringArtistId?: Prisma.SortOrderInput | Prisma.SortOrder
+  artistProfileId?: Prisma.SortOrderInput | Prisma.SortOrder
   artist?: Prisma.UserOrderByWithRelationInput
   uploader?: Prisma.UserOrderByWithRelationInput
   featuringArtist?: Prisma.UserOrderByWithRelationInput
+  artistProfile?: Prisma.ArtistProfileOrderByWithRelationInput
   votes?: Prisma.VoteOrderByRelationAggregateInput
   releaseSlot?: Prisma.ReleaseSlotOrderByWithRelationInput
+  uploadSubmission?: Prisma.UploadSubmissionOrderByWithRelationInput
   playlists?: Prisma.PlaylistTrackOrderByRelationAggregateInput
   poolTracks?: Prisma.PoolTrackOrderByRelationAggregateInput
 }
@@ -540,6 +580,9 @@ export type TrackWhereUniqueInput = Prisma.AtLeast<{
   sortOrder?: Prisma.IntFilter<"Track"> | number
   aiDisclosure?: Prisma.StringNullableFilter<"Track"> | string | null
   aiSource?: Prisma.StringNullableFilter<"Track"> | string | null
+  isrc?: Prisma.StringNullableFilter<"Track"> | string | null
+  label?: Prisma.StringNullableFilter<"Track"> | string | null
+  contributors?: Prisma.StringNullableFilter<"Track"> | string | null
   auraCount?: Prisma.IntFilter<"Track"> | number
   susCount?: Prisma.IntFilter<"Track"> | number
   totalVotes?: Prisma.IntFilter<"Track"> | number
@@ -551,11 +594,14 @@ export type TrackWhereUniqueInput = Prisma.AtLeast<{
   artistId?: Prisma.StringFilter<"Track"> | string
   uploaderId?: Prisma.StringFilter<"Track"> | string
   featuringArtistId?: Prisma.StringNullableFilter<"Track"> | string | null
+  artistProfileId?: Prisma.StringNullableFilter<"Track"> | string | null
   artist?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   uploader?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   featuringArtist?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
+  artistProfile?: Prisma.XOR<Prisma.ArtistProfileNullableScalarRelationFilter, Prisma.ArtistProfileWhereInput> | null
   votes?: Prisma.VoteListRelationFilter
   releaseSlot?: Prisma.XOR<Prisma.ReleaseSlotNullableScalarRelationFilter, Prisma.ReleaseSlotWhereInput> | null
+  uploadSubmission?: Prisma.XOR<Prisma.UploadSubmissionNullableScalarRelationFilter, Prisma.UploadSubmissionWhereInput> | null
   playlists?: Prisma.PlaylistTrackListRelationFilter
   poolTracks?: Prisma.PoolTrackListRelationFilter
 }, "id" | "slug">
@@ -582,6 +628,9 @@ export type TrackOrderByWithAggregationInput = {
   sortOrder?: Prisma.SortOrder
   aiDisclosure?: Prisma.SortOrderInput | Prisma.SortOrder
   aiSource?: Prisma.SortOrderInput | Prisma.SortOrder
+  isrc?: Prisma.SortOrderInput | Prisma.SortOrder
+  label?: Prisma.SortOrderInput | Prisma.SortOrder
+  contributors?: Prisma.SortOrderInput | Prisma.SortOrder
   auraCount?: Prisma.SortOrder
   susCount?: Prisma.SortOrder
   totalVotes?: Prisma.SortOrder
@@ -593,6 +642,7 @@ export type TrackOrderByWithAggregationInput = {
   artistId?: Prisma.SortOrder
   uploaderId?: Prisma.SortOrder
   featuringArtistId?: Prisma.SortOrderInput | Prisma.SortOrder
+  artistProfileId?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.TrackCountOrderByAggregateInput
   _avg?: Prisma.TrackAvgOrderByAggregateInput
   _max?: Prisma.TrackMaxOrderByAggregateInput
@@ -625,6 +675,9 @@ export type TrackScalarWhereWithAggregatesInput = {
   sortOrder?: Prisma.IntWithAggregatesFilter<"Track"> | number
   aiDisclosure?: Prisma.StringNullableWithAggregatesFilter<"Track"> | string | null
   aiSource?: Prisma.StringNullableWithAggregatesFilter<"Track"> | string | null
+  isrc?: Prisma.StringNullableWithAggregatesFilter<"Track"> | string | null
+  label?: Prisma.StringNullableWithAggregatesFilter<"Track"> | string | null
+  contributors?: Prisma.StringNullableWithAggregatesFilter<"Track"> | string | null
   auraCount?: Prisma.IntWithAggregatesFilter<"Track"> | number
   susCount?: Prisma.IntWithAggregatesFilter<"Track"> | number
   totalVotes?: Prisma.IntWithAggregatesFilter<"Track"> | number
@@ -636,6 +689,7 @@ export type TrackScalarWhereWithAggregatesInput = {
   artistId?: Prisma.StringWithAggregatesFilter<"Track"> | string
   uploaderId?: Prisma.StringWithAggregatesFilter<"Track"> | string
   featuringArtistId?: Prisma.StringNullableWithAggregatesFilter<"Track"> | string | null
+  artistProfileId?: Prisma.StringNullableWithAggregatesFilter<"Track"> | string | null
 }
 
 export type TrackCreateInput = {
@@ -660,6 +714,9 @@ export type TrackCreateInput = {
   sortOrder?: number
   aiDisclosure?: string | null
   aiSource?: string | null
+  isrc?: string | null
+  label?: string | null
+  contributors?: string | null
   auraCount?: number
   susCount?: number
   totalVotes?: number
@@ -671,8 +728,10 @@ export type TrackCreateInput = {
   artist: Prisma.UserCreateNestedOneWithoutArtistTracksInput
   uploader: Prisma.UserCreateNestedOneWithoutUploadedTracksInput
   featuringArtist?: Prisma.UserCreateNestedOneWithoutFeaturingTracksInput
+  artistProfile?: Prisma.ArtistProfileCreateNestedOneWithoutTracksInput
   votes?: Prisma.VoteCreateNestedManyWithoutTrackInput
   releaseSlot?: Prisma.ReleaseSlotCreateNestedOneWithoutTrackInput
+  uploadSubmission?: Prisma.UploadSubmissionCreateNestedOneWithoutTrackInput
   playlists?: Prisma.PlaylistTrackCreateNestedManyWithoutTrackInput
   poolTracks?: Prisma.PoolTrackCreateNestedManyWithoutTrackInput
 }
@@ -699,6 +758,9 @@ export type TrackUncheckedCreateInput = {
   sortOrder?: number
   aiDisclosure?: string | null
   aiSource?: string | null
+  isrc?: string | null
+  label?: string | null
+  contributors?: string | null
   auraCount?: number
   susCount?: number
   totalVotes?: number
@@ -710,8 +772,10 @@ export type TrackUncheckedCreateInput = {
   artistId: string
   uploaderId: string
   featuringArtistId?: string | null
+  artistProfileId?: string | null
   votes?: Prisma.VoteUncheckedCreateNestedManyWithoutTrackInput
   releaseSlot?: Prisma.ReleaseSlotUncheckedCreateNestedOneWithoutTrackInput
+  uploadSubmission?: Prisma.UploadSubmissionUncheckedCreateNestedOneWithoutTrackInput
   playlists?: Prisma.PlaylistTrackUncheckedCreateNestedManyWithoutTrackInput
   poolTracks?: Prisma.PoolTrackUncheckedCreateNestedManyWithoutTrackInput
 }
@@ -738,6 +802,9 @@ export type TrackUpdateInput = {
   sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
   aiDisclosure?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isrc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contributors?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auraCount?: Prisma.IntFieldUpdateOperationsInput | number
   susCount?: Prisma.IntFieldUpdateOperationsInput | number
   totalVotes?: Prisma.IntFieldUpdateOperationsInput | number
@@ -749,8 +816,10 @@ export type TrackUpdateInput = {
   artist?: Prisma.UserUpdateOneRequiredWithoutArtistTracksNestedInput
   uploader?: Prisma.UserUpdateOneRequiredWithoutUploadedTracksNestedInput
   featuringArtist?: Prisma.UserUpdateOneWithoutFeaturingTracksNestedInput
+  artistProfile?: Prisma.ArtistProfileUpdateOneWithoutTracksNestedInput
   votes?: Prisma.VoteUpdateManyWithoutTrackNestedInput
   releaseSlot?: Prisma.ReleaseSlotUpdateOneWithoutTrackNestedInput
+  uploadSubmission?: Prisma.UploadSubmissionUpdateOneWithoutTrackNestedInput
   playlists?: Prisma.PlaylistTrackUpdateManyWithoutTrackNestedInput
   poolTracks?: Prisma.PoolTrackUpdateManyWithoutTrackNestedInput
 }
@@ -777,6 +846,9 @@ export type TrackUncheckedUpdateInput = {
   sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
   aiDisclosure?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isrc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contributors?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auraCount?: Prisma.IntFieldUpdateOperationsInput | number
   susCount?: Prisma.IntFieldUpdateOperationsInput | number
   totalVotes?: Prisma.IntFieldUpdateOperationsInput | number
@@ -788,8 +860,10 @@ export type TrackUncheckedUpdateInput = {
   artistId?: Prisma.StringFieldUpdateOperationsInput | string
   uploaderId?: Prisma.StringFieldUpdateOperationsInput | string
   featuringArtistId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  artistProfileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   votes?: Prisma.VoteUncheckedUpdateManyWithoutTrackNestedInput
   releaseSlot?: Prisma.ReleaseSlotUncheckedUpdateOneWithoutTrackNestedInput
+  uploadSubmission?: Prisma.UploadSubmissionUncheckedUpdateOneWithoutTrackNestedInput
   playlists?: Prisma.PlaylistTrackUncheckedUpdateManyWithoutTrackNestedInput
   poolTracks?: Prisma.PoolTrackUncheckedUpdateManyWithoutTrackNestedInput
 }
@@ -816,6 +890,9 @@ export type TrackCreateManyInput = {
   sortOrder?: number
   aiDisclosure?: string | null
   aiSource?: string | null
+  isrc?: string | null
+  label?: string | null
+  contributors?: string | null
   auraCount?: number
   susCount?: number
   totalVotes?: number
@@ -827,6 +904,7 @@ export type TrackCreateManyInput = {
   artistId: string
   uploaderId: string
   featuringArtistId?: string | null
+  artistProfileId?: string | null
 }
 
 export type TrackUpdateManyMutationInput = {
@@ -851,6 +929,9 @@ export type TrackUpdateManyMutationInput = {
   sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
   aiDisclosure?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isrc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contributors?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auraCount?: Prisma.IntFieldUpdateOperationsInput | number
   susCount?: Prisma.IntFieldUpdateOperationsInput | number
   totalVotes?: Prisma.IntFieldUpdateOperationsInput | number
@@ -883,6 +964,9 @@ export type TrackUncheckedUpdateManyInput = {
   sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
   aiDisclosure?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isrc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contributors?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auraCount?: Prisma.IntFieldUpdateOperationsInput | number
   susCount?: Prisma.IntFieldUpdateOperationsInput | number
   totalVotes?: Prisma.IntFieldUpdateOperationsInput | number
@@ -894,6 +978,7 @@ export type TrackUncheckedUpdateManyInput = {
   artistId?: Prisma.StringFieldUpdateOperationsInput | string
   uploaderId?: Prisma.StringFieldUpdateOperationsInput | string
   featuringArtistId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  artistProfileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type TrackListRelationFilter = {
@@ -928,6 +1013,9 @@ export type TrackCountOrderByAggregateInput = {
   sortOrder?: Prisma.SortOrder
   aiDisclosure?: Prisma.SortOrder
   aiSource?: Prisma.SortOrder
+  isrc?: Prisma.SortOrder
+  label?: Prisma.SortOrder
+  contributors?: Prisma.SortOrder
   auraCount?: Prisma.SortOrder
   susCount?: Prisma.SortOrder
   totalVotes?: Prisma.SortOrder
@@ -939,6 +1027,7 @@ export type TrackCountOrderByAggregateInput = {
   artistId?: Prisma.SortOrder
   uploaderId?: Prisma.SortOrder
   featuringArtistId?: Prisma.SortOrder
+  artistProfileId?: Prisma.SortOrder
 }
 
 export type TrackAvgOrderByAggregateInput = {
@@ -975,6 +1064,9 @@ export type TrackMaxOrderByAggregateInput = {
   sortOrder?: Prisma.SortOrder
   aiDisclosure?: Prisma.SortOrder
   aiSource?: Prisma.SortOrder
+  isrc?: Prisma.SortOrder
+  label?: Prisma.SortOrder
+  contributors?: Prisma.SortOrder
   auraCount?: Prisma.SortOrder
   susCount?: Prisma.SortOrder
   totalVotes?: Prisma.SortOrder
@@ -986,6 +1078,7 @@ export type TrackMaxOrderByAggregateInput = {
   artistId?: Prisma.SortOrder
   uploaderId?: Prisma.SortOrder
   featuringArtistId?: Prisma.SortOrder
+  artistProfileId?: Prisma.SortOrder
 }
 
 export type TrackMinOrderByAggregateInput = {
@@ -1010,6 +1103,9 @@ export type TrackMinOrderByAggregateInput = {
   sortOrder?: Prisma.SortOrder
   aiDisclosure?: Prisma.SortOrder
   aiSource?: Prisma.SortOrder
+  isrc?: Prisma.SortOrder
+  label?: Prisma.SortOrder
+  contributors?: Prisma.SortOrder
   auraCount?: Prisma.SortOrder
   susCount?: Prisma.SortOrder
   totalVotes?: Prisma.SortOrder
@@ -1021,6 +1117,7 @@ export type TrackMinOrderByAggregateInput = {
   artistId?: Prisma.SortOrder
   uploaderId?: Prisma.SortOrder
   featuringArtistId?: Prisma.SortOrder
+  artistProfileId?: Prisma.SortOrder
 }
 
 export type TrackSumOrderByAggregateInput = {
@@ -1245,6 +1342,62 @@ export type TrackUpdateOneRequiredWithoutPoolTracksNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.TrackUpdateToOneWithWhereWithoutPoolTracksInput, Prisma.TrackUpdateWithoutPoolTracksInput>, Prisma.TrackUncheckedUpdateWithoutPoolTracksInput>
 }
 
+export type TrackCreateNestedManyWithoutArtistProfileInput = {
+  create?: Prisma.XOR<Prisma.TrackCreateWithoutArtistProfileInput, Prisma.TrackUncheckedCreateWithoutArtistProfileInput> | Prisma.TrackCreateWithoutArtistProfileInput[] | Prisma.TrackUncheckedCreateWithoutArtistProfileInput[]
+  connectOrCreate?: Prisma.TrackCreateOrConnectWithoutArtistProfileInput | Prisma.TrackCreateOrConnectWithoutArtistProfileInput[]
+  createMany?: Prisma.TrackCreateManyArtistProfileInputEnvelope
+  connect?: Prisma.TrackWhereUniqueInput | Prisma.TrackWhereUniqueInput[]
+}
+
+export type TrackUncheckedCreateNestedManyWithoutArtistProfileInput = {
+  create?: Prisma.XOR<Prisma.TrackCreateWithoutArtistProfileInput, Prisma.TrackUncheckedCreateWithoutArtistProfileInput> | Prisma.TrackCreateWithoutArtistProfileInput[] | Prisma.TrackUncheckedCreateWithoutArtistProfileInput[]
+  connectOrCreate?: Prisma.TrackCreateOrConnectWithoutArtistProfileInput | Prisma.TrackCreateOrConnectWithoutArtistProfileInput[]
+  createMany?: Prisma.TrackCreateManyArtistProfileInputEnvelope
+  connect?: Prisma.TrackWhereUniqueInput | Prisma.TrackWhereUniqueInput[]
+}
+
+export type TrackUpdateManyWithoutArtistProfileNestedInput = {
+  create?: Prisma.XOR<Prisma.TrackCreateWithoutArtistProfileInput, Prisma.TrackUncheckedCreateWithoutArtistProfileInput> | Prisma.TrackCreateWithoutArtistProfileInput[] | Prisma.TrackUncheckedCreateWithoutArtistProfileInput[]
+  connectOrCreate?: Prisma.TrackCreateOrConnectWithoutArtistProfileInput | Prisma.TrackCreateOrConnectWithoutArtistProfileInput[]
+  upsert?: Prisma.TrackUpsertWithWhereUniqueWithoutArtistProfileInput | Prisma.TrackUpsertWithWhereUniqueWithoutArtistProfileInput[]
+  createMany?: Prisma.TrackCreateManyArtistProfileInputEnvelope
+  set?: Prisma.TrackWhereUniqueInput | Prisma.TrackWhereUniqueInput[]
+  disconnect?: Prisma.TrackWhereUniqueInput | Prisma.TrackWhereUniqueInput[]
+  delete?: Prisma.TrackWhereUniqueInput | Prisma.TrackWhereUniqueInput[]
+  connect?: Prisma.TrackWhereUniqueInput | Prisma.TrackWhereUniqueInput[]
+  update?: Prisma.TrackUpdateWithWhereUniqueWithoutArtistProfileInput | Prisma.TrackUpdateWithWhereUniqueWithoutArtistProfileInput[]
+  updateMany?: Prisma.TrackUpdateManyWithWhereWithoutArtistProfileInput | Prisma.TrackUpdateManyWithWhereWithoutArtistProfileInput[]
+  deleteMany?: Prisma.TrackScalarWhereInput | Prisma.TrackScalarWhereInput[]
+}
+
+export type TrackUncheckedUpdateManyWithoutArtistProfileNestedInput = {
+  create?: Prisma.XOR<Prisma.TrackCreateWithoutArtistProfileInput, Prisma.TrackUncheckedCreateWithoutArtistProfileInput> | Prisma.TrackCreateWithoutArtistProfileInput[] | Prisma.TrackUncheckedCreateWithoutArtistProfileInput[]
+  connectOrCreate?: Prisma.TrackCreateOrConnectWithoutArtistProfileInput | Prisma.TrackCreateOrConnectWithoutArtistProfileInput[]
+  upsert?: Prisma.TrackUpsertWithWhereUniqueWithoutArtistProfileInput | Prisma.TrackUpsertWithWhereUniqueWithoutArtistProfileInput[]
+  createMany?: Prisma.TrackCreateManyArtistProfileInputEnvelope
+  set?: Prisma.TrackWhereUniqueInput | Prisma.TrackWhereUniqueInput[]
+  disconnect?: Prisma.TrackWhereUniqueInput | Prisma.TrackWhereUniqueInput[]
+  delete?: Prisma.TrackWhereUniqueInput | Prisma.TrackWhereUniqueInput[]
+  connect?: Prisma.TrackWhereUniqueInput | Prisma.TrackWhereUniqueInput[]
+  update?: Prisma.TrackUpdateWithWhereUniqueWithoutArtistProfileInput | Prisma.TrackUpdateWithWhereUniqueWithoutArtistProfileInput[]
+  updateMany?: Prisma.TrackUpdateManyWithWhereWithoutArtistProfileInput | Prisma.TrackUpdateManyWithWhereWithoutArtistProfileInput[]
+  deleteMany?: Prisma.TrackScalarWhereInput | Prisma.TrackScalarWhereInput[]
+}
+
+export type TrackCreateNestedOneWithoutUploadSubmissionInput = {
+  create?: Prisma.XOR<Prisma.TrackCreateWithoutUploadSubmissionInput, Prisma.TrackUncheckedCreateWithoutUploadSubmissionInput>
+  connectOrCreate?: Prisma.TrackCreateOrConnectWithoutUploadSubmissionInput
+  connect?: Prisma.TrackWhereUniqueInput
+}
+
+export type TrackUpdateOneRequiredWithoutUploadSubmissionNestedInput = {
+  create?: Prisma.XOR<Prisma.TrackCreateWithoutUploadSubmissionInput, Prisma.TrackUncheckedCreateWithoutUploadSubmissionInput>
+  connectOrCreate?: Prisma.TrackCreateOrConnectWithoutUploadSubmissionInput
+  upsert?: Prisma.TrackUpsertWithoutUploadSubmissionInput
+  connect?: Prisma.TrackWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.TrackUpdateToOneWithWhereWithoutUploadSubmissionInput, Prisma.TrackUpdateWithoutUploadSubmissionInput>, Prisma.TrackUncheckedUpdateWithoutUploadSubmissionInput>
+}
+
 export type TrackCreateWithoutArtistInput = {
   id?: string
   title: string
@@ -1267,6 +1420,9 @@ export type TrackCreateWithoutArtistInput = {
   sortOrder?: number
   aiDisclosure?: string | null
   aiSource?: string | null
+  isrc?: string | null
+  label?: string | null
+  contributors?: string | null
   auraCount?: number
   susCount?: number
   totalVotes?: number
@@ -1277,8 +1433,10 @@ export type TrackCreateWithoutArtistInput = {
   updatedAt?: Date | string
   uploader: Prisma.UserCreateNestedOneWithoutUploadedTracksInput
   featuringArtist?: Prisma.UserCreateNestedOneWithoutFeaturingTracksInput
+  artistProfile?: Prisma.ArtistProfileCreateNestedOneWithoutTracksInput
   votes?: Prisma.VoteCreateNestedManyWithoutTrackInput
   releaseSlot?: Prisma.ReleaseSlotCreateNestedOneWithoutTrackInput
+  uploadSubmission?: Prisma.UploadSubmissionCreateNestedOneWithoutTrackInput
   playlists?: Prisma.PlaylistTrackCreateNestedManyWithoutTrackInput
   poolTracks?: Prisma.PoolTrackCreateNestedManyWithoutTrackInput
 }
@@ -1305,6 +1463,9 @@ export type TrackUncheckedCreateWithoutArtistInput = {
   sortOrder?: number
   aiDisclosure?: string | null
   aiSource?: string | null
+  isrc?: string | null
+  label?: string | null
+  contributors?: string | null
   auraCount?: number
   susCount?: number
   totalVotes?: number
@@ -1315,8 +1476,10 @@ export type TrackUncheckedCreateWithoutArtistInput = {
   updatedAt?: Date | string
   uploaderId: string
   featuringArtistId?: string | null
+  artistProfileId?: string | null
   votes?: Prisma.VoteUncheckedCreateNestedManyWithoutTrackInput
   releaseSlot?: Prisma.ReleaseSlotUncheckedCreateNestedOneWithoutTrackInput
+  uploadSubmission?: Prisma.UploadSubmissionUncheckedCreateNestedOneWithoutTrackInput
   playlists?: Prisma.PlaylistTrackUncheckedCreateNestedManyWithoutTrackInput
   poolTracks?: Prisma.PoolTrackUncheckedCreateNestedManyWithoutTrackInput
 }
@@ -1352,6 +1515,9 @@ export type TrackCreateWithoutUploaderInput = {
   sortOrder?: number
   aiDisclosure?: string | null
   aiSource?: string | null
+  isrc?: string | null
+  label?: string | null
+  contributors?: string | null
   auraCount?: number
   susCount?: number
   totalVotes?: number
@@ -1362,8 +1528,10 @@ export type TrackCreateWithoutUploaderInput = {
   updatedAt?: Date | string
   artist: Prisma.UserCreateNestedOneWithoutArtistTracksInput
   featuringArtist?: Prisma.UserCreateNestedOneWithoutFeaturingTracksInput
+  artistProfile?: Prisma.ArtistProfileCreateNestedOneWithoutTracksInput
   votes?: Prisma.VoteCreateNestedManyWithoutTrackInput
   releaseSlot?: Prisma.ReleaseSlotCreateNestedOneWithoutTrackInput
+  uploadSubmission?: Prisma.UploadSubmissionCreateNestedOneWithoutTrackInput
   playlists?: Prisma.PlaylistTrackCreateNestedManyWithoutTrackInput
   poolTracks?: Prisma.PoolTrackCreateNestedManyWithoutTrackInput
 }
@@ -1390,6 +1558,9 @@ export type TrackUncheckedCreateWithoutUploaderInput = {
   sortOrder?: number
   aiDisclosure?: string | null
   aiSource?: string | null
+  isrc?: string | null
+  label?: string | null
+  contributors?: string | null
   auraCount?: number
   susCount?: number
   totalVotes?: number
@@ -1400,8 +1571,10 @@ export type TrackUncheckedCreateWithoutUploaderInput = {
   updatedAt?: Date | string
   artistId: string
   featuringArtistId?: string | null
+  artistProfileId?: string | null
   votes?: Prisma.VoteUncheckedCreateNestedManyWithoutTrackInput
   releaseSlot?: Prisma.ReleaseSlotUncheckedCreateNestedOneWithoutTrackInput
+  uploadSubmission?: Prisma.UploadSubmissionUncheckedCreateNestedOneWithoutTrackInput
   playlists?: Prisma.PlaylistTrackUncheckedCreateNestedManyWithoutTrackInput
   poolTracks?: Prisma.PoolTrackUncheckedCreateNestedManyWithoutTrackInput
 }
@@ -1437,6 +1610,9 @@ export type TrackCreateWithoutFeaturingArtistInput = {
   sortOrder?: number
   aiDisclosure?: string | null
   aiSource?: string | null
+  isrc?: string | null
+  label?: string | null
+  contributors?: string | null
   auraCount?: number
   susCount?: number
   totalVotes?: number
@@ -1447,8 +1623,10 @@ export type TrackCreateWithoutFeaturingArtistInput = {
   updatedAt?: Date | string
   artist: Prisma.UserCreateNestedOneWithoutArtistTracksInput
   uploader: Prisma.UserCreateNestedOneWithoutUploadedTracksInput
+  artistProfile?: Prisma.ArtistProfileCreateNestedOneWithoutTracksInput
   votes?: Prisma.VoteCreateNestedManyWithoutTrackInput
   releaseSlot?: Prisma.ReleaseSlotCreateNestedOneWithoutTrackInput
+  uploadSubmission?: Prisma.UploadSubmissionCreateNestedOneWithoutTrackInput
   playlists?: Prisma.PlaylistTrackCreateNestedManyWithoutTrackInput
   poolTracks?: Prisma.PoolTrackCreateNestedManyWithoutTrackInput
 }
@@ -1475,6 +1653,9 @@ export type TrackUncheckedCreateWithoutFeaturingArtistInput = {
   sortOrder?: number
   aiDisclosure?: string | null
   aiSource?: string | null
+  isrc?: string | null
+  label?: string | null
+  contributors?: string | null
   auraCount?: number
   susCount?: number
   totalVotes?: number
@@ -1485,8 +1666,10 @@ export type TrackUncheckedCreateWithoutFeaturingArtistInput = {
   updatedAt?: Date | string
   artistId: string
   uploaderId: string
+  artistProfileId?: string | null
   votes?: Prisma.VoteUncheckedCreateNestedManyWithoutTrackInput
   releaseSlot?: Prisma.ReleaseSlotUncheckedCreateNestedOneWithoutTrackInput
+  uploadSubmission?: Prisma.UploadSubmissionUncheckedCreateNestedOneWithoutTrackInput
   playlists?: Prisma.PlaylistTrackUncheckedCreateNestedManyWithoutTrackInput
   poolTracks?: Prisma.PoolTrackUncheckedCreateNestedManyWithoutTrackInput
 }
@@ -1541,6 +1724,9 @@ export type TrackScalarWhereInput = {
   sortOrder?: Prisma.IntFilter<"Track"> | number
   aiDisclosure?: Prisma.StringNullableFilter<"Track"> | string | null
   aiSource?: Prisma.StringNullableFilter<"Track"> | string | null
+  isrc?: Prisma.StringNullableFilter<"Track"> | string | null
+  label?: Prisma.StringNullableFilter<"Track"> | string | null
+  contributors?: Prisma.StringNullableFilter<"Track"> | string | null
   auraCount?: Prisma.IntFilter<"Track"> | number
   susCount?: Prisma.IntFilter<"Track"> | number
   totalVotes?: Prisma.IntFilter<"Track"> | number
@@ -1552,6 +1738,7 @@ export type TrackScalarWhereInput = {
   artistId?: Prisma.StringFilter<"Track"> | string
   uploaderId?: Prisma.StringFilter<"Track"> | string
   featuringArtistId?: Prisma.StringNullableFilter<"Track"> | string | null
+  artistProfileId?: Prisma.StringNullableFilter<"Track"> | string | null
 }
 
 export type TrackUpsertWithWhereUniqueWithoutUploaderInput = {
@@ -1608,6 +1795,9 @@ export type TrackCreateWithoutVotesInput = {
   sortOrder?: number
   aiDisclosure?: string | null
   aiSource?: string | null
+  isrc?: string | null
+  label?: string | null
+  contributors?: string | null
   auraCount?: number
   susCount?: number
   totalVotes?: number
@@ -1619,7 +1809,9 @@ export type TrackCreateWithoutVotesInput = {
   artist: Prisma.UserCreateNestedOneWithoutArtistTracksInput
   uploader: Prisma.UserCreateNestedOneWithoutUploadedTracksInput
   featuringArtist?: Prisma.UserCreateNestedOneWithoutFeaturingTracksInput
+  artistProfile?: Prisma.ArtistProfileCreateNestedOneWithoutTracksInput
   releaseSlot?: Prisma.ReleaseSlotCreateNestedOneWithoutTrackInput
+  uploadSubmission?: Prisma.UploadSubmissionCreateNestedOneWithoutTrackInput
   playlists?: Prisma.PlaylistTrackCreateNestedManyWithoutTrackInput
   poolTracks?: Prisma.PoolTrackCreateNestedManyWithoutTrackInput
 }
@@ -1646,6 +1838,9 @@ export type TrackUncheckedCreateWithoutVotesInput = {
   sortOrder?: number
   aiDisclosure?: string | null
   aiSource?: string | null
+  isrc?: string | null
+  label?: string | null
+  contributors?: string | null
   auraCount?: number
   susCount?: number
   totalVotes?: number
@@ -1657,7 +1852,9 @@ export type TrackUncheckedCreateWithoutVotesInput = {
   artistId: string
   uploaderId: string
   featuringArtistId?: string | null
+  artistProfileId?: string | null
   releaseSlot?: Prisma.ReleaseSlotUncheckedCreateNestedOneWithoutTrackInput
+  uploadSubmission?: Prisma.UploadSubmissionUncheckedCreateNestedOneWithoutTrackInput
   playlists?: Prisma.PlaylistTrackUncheckedCreateNestedManyWithoutTrackInput
   poolTracks?: Prisma.PoolTrackUncheckedCreateNestedManyWithoutTrackInput
 }
@@ -1700,6 +1897,9 @@ export type TrackUpdateWithoutVotesInput = {
   sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
   aiDisclosure?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isrc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contributors?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auraCount?: Prisma.IntFieldUpdateOperationsInput | number
   susCount?: Prisma.IntFieldUpdateOperationsInput | number
   totalVotes?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1711,7 +1911,9 @@ export type TrackUpdateWithoutVotesInput = {
   artist?: Prisma.UserUpdateOneRequiredWithoutArtistTracksNestedInput
   uploader?: Prisma.UserUpdateOneRequiredWithoutUploadedTracksNestedInput
   featuringArtist?: Prisma.UserUpdateOneWithoutFeaturingTracksNestedInput
+  artistProfile?: Prisma.ArtistProfileUpdateOneWithoutTracksNestedInput
   releaseSlot?: Prisma.ReleaseSlotUpdateOneWithoutTrackNestedInput
+  uploadSubmission?: Prisma.UploadSubmissionUpdateOneWithoutTrackNestedInput
   playlists?: Prisma.PlaylistTrackUpdateManyWithoutTrackNestedInput
   poolTracks?: Prisma.PoolTrackUpdateManyWithoutTrackNestedInput
 }
@@ -1738,6 +1940,9 @@ export type TrackUncheckedUpdateWithoutVotesInput = {
   sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
   aiDisclosure?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isrc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contributors?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auraCount?: Prisma.IntFieldUpdateOperationsInput | number
   susCount?: Prisma.IntFieldUpdateOperationsInput | number
   totalVotes?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1749,7 +1954,9 @@ export type TrackUncheckedUpdateWithoutVotesInput = {
   artistId?: Prisma.StringFieldUpdateOperationsInput | string
   uploaderId?: Prisma.StringFieldUpdateOperationsInput | string
   featuringArtistId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  artistProfileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   releaseSlot?: Prisma.ReleaseSlotUncheckedUpdateOneWithoutTrackNestedInput
+  uploadSubmission?: Prisma.UploadSubmissionUncheckedUpdateOneWithoutTrackNestedInput
   playlists?: Prisma.PlaylistTrackUncheckedUpdateManyWithoutTrackNestedInput
   poolTracks?: Prisma.PoolTrackUncheckedUpdateManyWithoutTrackNestedInput
 }
@@ -1776,6 +1983,9 @@ export type TrackCreateWithoutReleaseSlotInput = {
   sortOrder?: number
   aiDisclosure?: string | null
   aiSource?: string | null
+  isrc?: string | null
+  label?: string | null
+  contributors?: string | null
   auraCount?: number
   susCount?: number
   totalVotes?: number
@@ -1787,7 +1997,9 @@ export type TrackCreateWithoutReleaseSlotInput = {
   artist: Prisma.UserCreateNestedOneWithoutArtistTracksInput
   uploader: Prisma.UserCreateNestedOneWithoutUploadedTracksInput
   featuringArtist?: Prisma.UserCreateNestedOneWithoutFeaturingTracksInput
+  artistProfile?: Prisma.ArtistProfileCreateNestedOneWithoutTracksInput
   votes?: Prisma.VoteCreateNestedManyWithoutTrackInput
+  uploadSubmission?: Prisma.UploadSubmissionCreateNestedOneWithoutTrackInput
   playlists?: Prisma.PlaylistTrackCreateNestedManyWithoutTrackInput
   poolTracks?: Prisma.PoolTrackCreateNestedManyWithoutTrackInput
 }
@@ -1814,6 +2026,9 @@ export type TrackUncheckedCreateWithoutReleaseSlotInput = {
   sortOrder?: number
   aiDisclosure?: string | null
   aiSource?: string | null
+  isrc?: string | null
+  label?: string | null
+  contributors?: string | null
   auraCount?: number
   susCount?: number
   totalVotes?: number
@@ -1825,7 +2040,9 @@ export type TrackUncheckedCreateWithoutReleaseSlotInput = {
   artistId: string
   uploaderId: string
   featuringArtistId?: string | null
+  artistProfileId?: string | null
   votes?: Prisma.VoteUncheckedCreateNestedManyWithoutTrackInput
+  uploadSubmission?: Prisma.UploadSubmissionUncheckedCreateNestedOneWithoutTrackInput
   playlists?: Prisma.PlaylistTrackUncheckedCreateNestedManyWithoutTrackInput
   poolTracks?: Prisma.PoolTrackUncheckedCreateNestedManyWithoutTrackInput
 }
@@ -1868,6 +2085,9 @@ export type TrackUpdateWithoutReleaseSlotInput = {
   sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
   aiDisclosure?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isrc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contributors?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auraCount?: Prisma.IntFieldUpdateOperationsInput | number
   susCount?: Prisma.IntFieldUpdateOperationsInput | number
   totalVotes?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1879,7 +2099,9 @@ export type TrackUpdateWithoutReleaseSlotInput = {
   artist?: Prisma.UserUpdateOneRequiredWithoutArtistTracksNestedInput
   uploader?: Prisma.UserUpdateOneRequiredWithoutUploadedTracksNestedInput
   featuringArtist?: Prisma.UserUpdateOneWithoutFeaturingTracksNestedInput
+  artistProfile?: Prisma.ArtistProfileUpdateOneWithoutTracksNestedInput
   votes?: Prisma.VoteUpdateManyWithoutTrackNestedInput
+  uploadSubmission?: Prisma.UploadSubmissionUpdateOneWithoutTrackNestedInput
   playlists?: Prisma.PlaylistTrackUpdateManyWithoutTrackNestedInput
   poolTracks?: Prisma.PoolTrackUpdateManyWithoutTrackNestedInput
 }
@@ -1906,6 +2128,9 @@ export type TrackUncheckedUpdateWithoutReleaseSlotInput = {
   sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
   aiDisclosure?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isrc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contributors?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auraCount?: Prisma.IntFieldUpdateOperationsInput | number
   susCount?: Prisma.IntFieldUpdateOperationsInput | number
   totalVotes?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1917,7 +2142,9 @@ export type TrackUncheckedUpdateWithoutReleaseSlotInput = {
   artistId?: Prisma.StringFieldUpdateOperationsInput | string
   uploaderId?: Prisma.StringFieldUpdateOperationsInput | string
   featuringArtistId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  artistProfileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   votes?: Prisma.VoteUncheckedUpdateManyWithoutTrackNestedInput
+  uploadSubmission?: Prisma.UploadSubmissionUncheckedUpdateOneWithoutTrackNestedInput
   playlists?: Prisma.PlaylistTrackUncheckedUpdateManyWithoutTrackNestedInput
   poolTracks?: Prisma.PoolTrackUncheckedUpdateManyWithoutTrackNestedInput
 }
@@ -1944,6 +2171,9 @@ export type TrackCreateWithoutPlaylistsInput = {
   sortOrder?: number
   aiDisclosure?: string | null
   aiSource?: string | null
+  isrc?: string | null
+  label?: string | null
+  contributors?: string | null
   auraCount?: number
   susCount?: number
   totalVotes?: number
@@ -1955,8 +2185,10 @@ export type TrackCreateWithoutPlaylistsInput = {
   artist: Prisma.UserCreateNestedOneWithoutArtistTracksInput
   uploader: Prisma.UserCreateNestedOneWithoutUploadedTracksInput
   featuringArtist?: Prisma.UserCreateNestedOneWithoutFeaturingTracksInput
+  artistProfile?: Prisma.ArtistProfileCreateNestedOneWithoutTracksInput
   votes?: Prisma.VoteCreateNestedManyWithoutTrackInput
   releaseSlot?: Prisma.ReleaseSlotCreateNestedOneWithoutTrackInput
+  uploadSubmission?: Prisma.UploadSubmissionCreateNestedOneWithoutTrackInput
   poolTracks?: Prisma.PoolTrackCreateNestedManyWithoutTrackInput
 }
 
@@ -1982,6 +2214,9 @@ export type TrackUncheckedCreateWithoutPlaylistsInput = {
   sortOrder?: number
   aiDisclosure?: string | null
   aiSource?: string | null
+  isrc?: string | null
+  label?: string | null
+  contributors?: string | null
   auraCount?: number
   susCount?: number
   totalVotes?: number
@@ -1993,8 +2228,10 @@ export type TrackUncheckedCreateWithoutPlaylistsInput = {
   artistId: string
   uploaderId: string
   featuringArtistId?: string | null
+  artistProfileId?: string | null
   votes?: Prisma.VoteUncheckedCreateNestedManyWithoutTrackInput
   releaseSlot?: Prisma.ReleaseSlotUncheckedCreateNestedOneWithoutTrackInput
+  uploadSubmission?: Prisma.UploadSubmissionUncheckedCreateNestedOneWithoutTrackInput
   poolTracks?: Prisma.PoolTrackUncheckedCreateNestedManyWithoutTrackInput
 }
 
@@ -2036,6 +2273,9 @@ export type TrackUpdateWithoutPlaylistsInput = {
   sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
   aiDisclosure?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isrc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contributors?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auraCount?: Prisma.IntFieldUpdateOperationsInput | number
   susCount?: Prisma.IntFieldUpdateOperationsInput | number
   totalVotes?: Prisma.IntFieldUpdateOperationsInput | number
@@ -2047,8 +2287,10 @@ export type TrackUpdateWithoutPlaylistsInput = {
   artist?: Prisma.UserUpdateOneRequiredWithoutArtistTracksNestedInput
   uploader?: Prisma.UserUpdateOneRequiredWithoutUploadedTracksNestedInput
   featuringArtist?: Prisma.UserUpdateOneWithoutFeaturingTracksNestedInput
+  artistProfile?: Prisma.ArtistProfileUpdateOneWithoutTracksNestedInput
   votes?: Prisma.VoteUpdateManyWithoutTrackNestedInput
   releaseSlot?: Prisma.ReleaseSlotUpdateOneWithoutTrackNestedInput
+  uploadSubmission?: Prisma.UploadSubmissionUpdateOneWithoutTrackNestedInput
   poolTracks?: Prisma.PoolTrackUpdateManyWithoutTrackNestedInput
 }
 
@@ -2074,6 +2316,9 @@ export type TrackUncheckedUpdateWithoutPlaylistsInput = {
   sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
   aiDisclosure?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isrc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contributors?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auraCount?: Prisma.IntFieldUpdateOperationsInput | number
   susCount?: Prisma.IntFieldUpdateOperationsInput | number
   totalVotes?: Prisma.IntFieldUpdateOperationsInput | number
@@ -2085,8 +2330,10 @@ export type TrackUncheckedUpdateWithoutPlaylistsInput = {
   artistId?: Prisma.StringFieldUpdateOperationsInput | string
   uploaderId?: Prisma.StringFieldUpdateOperationsInput | string
   featuringArtistId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  artistProfileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   votes?: Prisma.VoteUncheckedUpdateManyWithoutTrackNestedInput
   releaseSlot?: Prisma.ReleaseSlotUncheckedUpdateOneWithoutTrackNestedInput
+  uploadSubmission?: Prisma.UploadSubmissionUncheckedUpdateOneWithoutTrackNestedInput
   poolTracks?: Prisma.PoolTrackUncheckedUpdateManyWithoutTrackNestedInput
 }
 
@@ -2112,6 +2359,9 @@ export type TrackCreateWithoutPoolTracksInput = {
   sortOrder?: number
   aiDisclosure?: string | null
   aiSource?: string | null
+  isrc?: string | null
+  label?: string | null
+  contributors?: string | null
   auraCount?: number
   susCount?: number
   totalVotes?: number
@@ -2123,8 +2373,10 @@ export type TrackCreateWithoutPoolTracksInput = {
   artist: Prisma.UserCreateNestedOneWithoutArtistTracksInput
   uploader: Prisma.UserCreateNestedOneWithoutUploadedTracksInput
   featuringArtist?: Prisma.UserCreateNestedOneWithoutFeaturingTracksInput
+  artistProfile?: Prisma.ArtistProfileCreateNestedOneWithoutTracksInput
   votes?: Prisma.VoteCreateNestedManyWithoutTrackInput
   releaseSlot?: Prisma.ReleaseSlotCreateNestedOneWithoutTrackInput
+  uploadSubmission?: Prisma.UploadSubmissionCreateNestedOneWithoutTrackInput
   playlists?: Prisma.PlaylistTrackCreateNestedManyWithoutTrackInput
 }
 
@@ -2150,6 +2402,9 @@ export type TrackUncheckedCreateWithoutPoolTracksInput = {
   sortOrder?: number
   aiDisclosure?: string | null
   aiSource?: string | null
+  isrc?: string | null
+  label?: string | null
+  contributors?: string | null
   auraCount?: number
   susCount?: number
   totalVotes?: number
@@ -2161,8 +2416,10 @@ export type TrackUncheckedCreateWithoutPoolTracksInput = {
   artistId: string
   uploaderId: string
   featuringArtistId?: string | null
+  artistProfileId?: string | null
   votes?: Prisma.VoteUncheckedCreateNestedManyWithoutTrackInput
   releaseSlot?: Prisma.ReleaseSlotUncheckedCreateNestedOneWithoutTrackInput
+  uploadSubmission?: Prisma.UploadSubmissionUncheckedCreateNestedOneWithoutTrackInput
   playlists?: Prisma.PlaylistTrackUncheckedCreateNestedManyWithoutTrackInput
 }
 
@@ -2204,6 +2461,9 @@ export type TrackUpdateWithoutPoolTracksInput = {
   sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
   aiDisclosure?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isrc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contributors?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auraCount?: Prisma.IntFieldUpdateOperationsInput | number
   susCount?: Prisma.IntFieldUpdateOperationsInput | number
   totalVotes?: Prisma.IntFieldUpdateOperationsInput | number
@@ -2215,8 +2475,10 @@ export type TrackUpdateWithoutPoolTracksInput = {
   artist?: Prisma.UserUpdateOneRequiredWithoutArtistTracksNestedInput
   uploader?: Prisma.UserUpdateOneRequiredWithoutUploadedTracksNestedInput
   featuringArtist?: Prisma.UserUpdateOneWithoutFeaturingTracksNestedInput
+  artistProfile?: Prisma.ArtistProfileUpdateOneWithoutTracksNestedInput
   votes?: Prisma.VoteUpdateManyWithoutTrackNestedInput
   releaseSlot?: Prisma.ReleaseSlotUpdateOneWithoutTrackNestedInput
+  uploadSubmission?: Prisma.UploadSubmissionUpdateOneWithoutTrackNestedInput
   playlists?: Prisma.PlaylistTrackUpdateManyWithoutTrackNestedInput
 }
 
@@ -2242,6 +2504,9 @@ export type TrackUncheckedUpdateWithoutPoolTracksInput = {
   sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
   aiDisclosure?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isrc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contributors?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auraCount?: Prisma.IntFieldUpdateOperationsInput | number
   susCount?: Prisma.IntFieldUpdateOperationsInput | number
   totalVotes?: Prisma.IntFieldUpdateOperationsInput | number
@@ -2253,9 +2518,310 @@ export type TrackUncheckedUpdateWithoutPoolTracksInput = {
   artistId?: Prisma.StringFieldUpdateOperationsInput | string
   uploaderId?: Prisma.StringFieldUpdateOperationsInput | string
   featuringArtistId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  artistProfileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  votes?: Prisma.VoteUncheckedUpdateManyWithoutTrackNestedInput
+  releaseSlot?: Prisma.ReleaseSlotUncheckedUpdateOneWithoutTrackNestedInput
+  uploadSubmission?: Prisma.UploadSubmissionUncheckedUpdateOneWithoutTrackNestedInput
+  playlists?: Prisma.PlaylistTrackUncheckedUpdateManyWithoutTrackNestedInput
+}
+
+export type TrackCreateWithoutArtistProfileInput = {
+  id?: string
+  title: string
+  slug: string
+  trackType?: string
+  fileName?: string | null
+  filePath?: string | null
+  fileSize?: number | null
+  soundcloudUrl?: string | null
+  soundcloudEmbedUrl?: string | null
+  soundcloudArtwork?: string | null
+  duration?: number
+  coverUrl?: string | null
+  genre?: string | null
+  bpm?: number | null
+  description?: string | null
+  status?: string
+  isPublic?: boolean
+  playCount?: number
+  sortOrder?: number
+  aiDisclosure?: string | null
+  aiSource?: string | null
+  isrc?: string | null
+  label?: string | null
+  contributors?: string | null
+  auraCount?: number
+  susCount?: number
+  totalVotes?: number
+  susPercentage?: number
+  scheduledPublishAt?: Date | string | null
+  publishedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  artist: Prisma.UserCreateNestedOneWithoutArtistTracksInput
+  uploader: Prisma.UserCreateNestedOneWithoutUploadedTracksInput
+  featuringArtist?: Prisma.UserCreateNestedOneWithoutFeaturingTracksInput
+  votes?: Prisma.VoteCreateNestedManyWithoutTrackInput
+  releaseSlot?: Prisma.ReleaseSlotCreateNestedOneWithoutTrackInput
+  uploadSubmission?: Prisma.UploadSubmissionCreateNestedOneWithoutTrackInput
+  playlists?: Prisma.PlaylistTrackCreateNestedManyWithoutTrackInput
+  poolTracks?: Prisma.PoolTrackCreateNestedManyWithoutTrackInput
+}
+
+export type TrackUncheckedCreateWithoutArtistProfileInput = {
+  id?: string
+  title: string
+  slug: string
+  trackType?: string
+  fileName?: string | null
+  filePath?: string | null
+  fileSize?: number | null
+  soundcloudUrl?: string | null
+  soundcloudEmbedUrl?: string | null
+  soundcloudArtwork?: string | null
+  duration?: number
+  coverUrl?: string | null
+  genre?: string | null
+  bpm?: number | null
+  description?: string | null
+  status?: string
+  isPublic?: boolean
+  playCount?: number
+  sortOrder?: number
+  aiDisclosure?: string | null
+  aiSource?: string | null
+  isrc?: string | null
+  label?: string | null
+  contributors?: string | null
+  auraCount?: number
+  susCount?: number
+  totalVotes?: number
+  susPercentage?: number
+  scheduledPublishAt?: Date | string | null
+  publishedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  artistId: string
+  uploaderId: string
+  featuringArtistId?: string | null
+  votes?: Prisma.VoteUncheckedCreateNestedManyWithoutTrackInput
+  releaseSlot?: Prisma.ReleaseSlotUncheckedCreateNestedOneWithoutTrackInput
+  uploadSubmission?: Prisma.UploadSubmissionUncheckedCreateNestedOneWithoutTrackInput
+  playlists?: Prisma.PlaylistTrackUncheckedCreateNestedManyWithoutTrackInput
+  poolTracks?: Prisma.PoolTrackUncheckedCreateNestedManyWithoutTrackInput
+}
+
+export type TrackCreateOrConnectWithoutArtistProfileInput = {
+  where: Prisma.TrackWhereUniqueInput
+  create: Prisma.XOR<Prisma.TrackCreateWithoutArtistProfileInput, Prisma.TrackUncheckedCreateWithoutArtistProfileInput>
+}
+
+export type TrackCreateManyArtistProfileInputEnvelope = {
+  data: Prisma.TrackCreateManyArtistProfileInput | Prisma.TrackCreateManyArtistProfileInput[]
+}
+
+export type TrackUpsertWithWhereUniqueWithoutArtistProfileInput = {
+  where: Prisma.TrackWhereUniqueInput
+  update: Prisma.XOR<Prisma.TrackUpdateWithoutArtistProfileInput, Prisma.TrackUncheckedUpdateWithoutArtistProfileInput>
+  create: Prisma.XOR<Prisma.TrackCreateWithoutArtistProfileInput, Prisma.TrackUncheckedCreateWithoutArtistProfileInput>
+}
+
+export type TrackUpdateWithWhereUniqueWithoutArtistProfileInput = {
+  where: Prisma.TrackWhereUniqueInput
+  data: Prisma.XOR<Prisma.TrackUpdateWithoutArtistProfileInput, Prisma.TrackUncheckedUpdateWithoutArtistProfileInput>
+}
+
+export type TrackUpdateManyWithWhereWithoutArtistProfileInput = {
+  where: Prisma.TrackScalarWhereInput
+  data: Prisma.XOR<Prisma.TrackUpdateManyMutationInput, Prisma.TrackUncheckedUpdateManyWithoutArtistProfileInput>
+}
+
+export type TrackCreateWithoutUploadSubmissionInput = {
+  id?: string
+  title: string
+  slug: string
+  trackType?: string
+  fileName?: string | null
+  filePath?: string | null
+  fileSize?: number | null
+  soundcloudUrl?: string | null
+  soundcloudEmbedUrl?: string | null
+  soundcloudArtwork?: string | null
+  duration?: number
+  coverUrl?: string | null
+  genre?: string | null
+  bpm?: number | null
+  description?: string | null
+  status?: string
+  isPublic?: boolean
+  playCount?: number
+  sortOrder?: number
+  aiDisclosure?: string | null
+  aiSource?: string | null
+  isrc?: string | null
+  label?: string | null
+  contributors?: string | null
+  auraCount?: number
+  susCount?: number
+  totalVotes?: number
+  susPercentage?: number
+  scheduledPublishAt?: Date | string | null
+  publishedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  artist: Prisma.UserCreateNestedOneWithoutArtistTracksInput
+  uploader: Prisma.UserCreateNestedOneWithoutUploadedTracksInput
+  featuringArtist?: Prisma.UserCreateNestedOneWithoutFeaturingTracksInput
+  artistProfile?: Prisma.ArtistProfileCreateNestedOneWithoutTracksInput
+  votes?: Prisma.VoteCreateNestedManyWithoutTrackInput
+  releaseSlot?: Prisma.ReleaseSlotCreateNestedOneWithoutTrackInput
+  playlists?: Prisma.PlaylistTrackCreateNestedManyWithoutTrackInput
+  poolTracks?: Prisma.PoolTrackCreateNestedManyWithoutTrackInput
+}
+
+export type TrackUncheckedCreateWithoutUploadSubmissionInput = {
+  id?: string
+  title: string
+  slug: string
+  trackType?: string
+  fileName?: string | null
+  filePath?: string | null
+  fileSize?: number | null
+  soundcloudUrl?: string | null
+  soundcloudEmbedUrl?: string | null
+  soundcloudArtwork?: string | null
+  duration?: number
+  coverUrl?: string | null
+  genre?: string | null
+  bpm?: number | null
+  description?: string | null
+  status?: string
+  isPublic?: boolean
+  playCount?: number
+  sortOrder?: number
+  aiDisclosure?: string | null
+  aiSource?: string | null
+  isrc?: string | null
+  label?: string | null
+  contributors?: string | null
+  auraCount?: number
+  susCount?: number
+  totalVotes?: number
+  susPercentage?: number
+  scheduledPublishAt?: Date | string | null
+  publishedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  artistId: string
+  uploaderId: string
+  featuringArtistId?: string | null
+  artistProfileId?: string | null
+  votes?: Prisma.VoteUncheckedCreateNestedManyWithoutTrackInput
+  releaseSlot?: Prisma.ReleaseSlotUncheckedCreateNestedOneWithoutTrackInput
+  playlists?: Prisma.PlaylistTrackUncheckedCreateNestedManyWithoutTrackInput
+  poolTracks?: Prisma.PoolTrackUncheckedCreateNestedManyWithoutTrackInput
+}
+
+export type TrackCreateOrConnectWithoutUploadSubmissionInput = {
+  where: Prisma.TrackWhereUniqueInput
+  create: Prisma.XOR<Prisma.TrackCreateWithoutUploadSubmissionInput, Prisma.TrackUncheckedCreateWithoutUploadSubmissionInput>
+}
+
+export type TrackUpsertWithoutUploadSubmissionInput = {
+  update: Prisma.XOR<Prisma.TrackUpdateWithoutUploadSubmissionInput, Prisma.TrackUncheckedUpdateWithoutUploadSubmissionInput>
+  create: Prisma.XOR<Prisma.TrackCreateWithoutUploadSubmissionInput, Prisma.TrackUncheckedCreateWithoutUploadSubmissionInput>
+  where?: Prisma.TrackWhereInput
+}
+
+export type TrackUpdateToOneWithWhereWithoutUploadSubmissionInput = {
+  where?: Prisma.TrackWhereInput
+  data: Prisma.XOR<Prisma.TrackUpdateWithoutUploadSubmissionInput, Prisma.TrackUncheckedUpdateWithoutUploadSubmissionInput>
+}
+
+export type TrackUpdateWithoutUploadSubmissionInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  trackType?: Prisma.StringFieldUpdateOperationsInput | string
+  fileName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  filePath?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileSize?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  soundcloudUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  soundcloudEmbedUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  soundcloudArtwork?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  duration?: Prisma.FloatFieldUpdateOperationsInput | number
+  coverUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  genre?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  playCount?: Prisma.IntFieldUpdateOperationsInput | number
+  sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
+  aiDisclosure?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isrc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contributors?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  auraCount?: Prisma.IntFieldUpdateOperationsInput | number
+  susCount?: Prisma.IntFieldUpdateOperationsInput | number
+  totalVotes?: Prisma.IntFieldUpdateOperationsInput | number
+  susPercentage?: Prisma.FloatFieldUpdateOperationsInput | number
+  scheduledPublishAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  artist?: Prisma.UserUpdateOneRequiredWithoutArtistTracksNestedInput
+  uploader?: Prisma.UserUpdateOneRequiredWithoutUploadedTracksNestedInput
+  featuringArtist?: Prisma.UserUpdateOneWithoutFeaturingTracksNestedInput
+  artistProfile?: Prisma.ArtistProfileUpdateOneWithoutTracksNestedInput
+  votes?: Prisma.VoteUpdateManyWithoutTrackNestedInput
+  releaseSlot?: Prisma.ReleaseSlotUpdateOneWithoutTrackNestedInput
+  playlists?: Prisma.PlaylistTrackUpdateManyWithoutTrackNestedInput
+  poolTracks?: Prisma.PoolTrackUpdateManyWithoutTrackNestedInput
+}
+
+export type TrackUncheckedUpdateWithoutUploadSubmissionInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  trackType?: Prisma.StringFieldUpdateOperationsInput | string
+  fileName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  filePath?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileSize?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  soundcloudUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  soundcloudEmbedUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  soundcloudArtwork?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  duration?: Prisma.FloatFieldUpdateOperationsInput | number
+  coverUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  genre?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  playCount?: Prisma.IntFieldUpdateOperationsInput | number
+  sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
+  aiDisclosure?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isrc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contributors?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  auraCount?: Prisma.IntFieldUpdateOperationsInput | number
+  susCount?: Prisma.IntFieldUpdateOperationsInput | number
+  totalVotes?: Prisma.IntFieldUpdateOperationsInput | number
+  susPercentage?: Prisma.FloatFieldUpdateOperationsInput | number
+  scheduledPublishAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  artistId?: Prisma.StringFieldUpdateOperationsInput | string
+  uploaderId?: Prisma.StringFieldUpdateOperationsInput | string
+  featuringArtistId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  artistProfileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   votes?: Prisma.VoteUncheckedUpdateManyWithoutTrackNestedInput
   releaseSlot?: Prisma.ReleaseSlotUncheckedUpdateOneWithoutTrackNestedInput
   playlists?: Prisma.PlaylistTrackUncheckedUpdateManyWithoutTrackNestedInput
+  poolTracks?: Prisma.PoolTrackUncheckedUpdateManyWithoutTrackNestedInput
 }
 
 export type TrackCreateManyArtistInput = {
@@ -2280,6 +2846,9 @@ export type TrackCreateManyArtistInput = {
   sortOrder?: number
   aiDisclosure?: string | null
   aiSource?: string | null
+  isrc?: string | null
+  label?: string | null
+  contributors?: string | null
   auraCount?: number
   susCount?: number
   totalVotes?: number
@@ -2290,6 +2859,7 @@ export type TrackCreateManyArtistInput = {
   updatedAt?: Date | string
   uploaderId: string
   featuringArtistId?: string | null
+  artistProfileId?: string | null
 }
 
 export type TrackCreateManyUploaderInput = {
@@ -2314,6 +2884,9 @@ export type TrackCreateManyUploaderInput = {
   sortOrder?: number
   aiDisclosure?: string | null
   aiSource?: string | null
+  isrc?: string | null
+  label?: string | null
+  contributors?: string | null
   auraCount?: number
   susCount?: number
   totalVotes?: number
@@ -2324,6 +2897,7 @@ export type TrackCreateManyUploaderInput = {
   updatedAt?: Date | string
   artistId: string
   featuringArtistId?: string | null
+  artistProfileId?: string | null
 }
 
 export type TrackCreateManyFeaturingArtistInput = {
@@ -2348,6 +2922,9 @@ export type TrackCreateManyFeaturingArtistInput = {
   sortOrder?: number
   aiDisclosure?: string | null
   aiSource?: string | null
+  isrc?: string | null
+  label?: string | null
+  contributors?: string | null
   auraCount?: number
   susCount?: number
   totalVotes?: number
@@ -2358,6 +2935,7 @@ export type TrackCreateManyFeaturingArtistInput = {
   updatedAt?: Date | string
   artistId: string
   uploaderId: string
+  artistProfileId?: string | null
 }
 
 export type TrackUpdateWithoutArtistInput = {
@@ -2382,6 +2960,9 @@ export type TrackUpdateWithoutArtistInput = {
   sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
   aiDisclosure?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isrc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contributors?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auraCount?: Prisma.IntFieldUpdateOperationsInput | number
   susCount?: Prisma.IntFieldUpdateOperationsInput | number
   totalVotes?: Prisma.IntFieldUpdateOperationsInput | number
@@ -2392,8 +2973,10 @@ export type TrackUpdateWithoutArtistInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   uploader?: Prisma.UserUpdateOneRequiredWithoutUploadedTracksNestedInput
   featuringArtist?: Prisma.UserUpdateOneWithoutFeaturingTracksNestedInput
+  artistProfile?: Prisma.ArtistProfileUpdateOneWithoutTracksNestedInput
   votes?: Prisma.VoteUpdateManyWithoutTrackNestedInput
   releaseSlot?: Prisma.ReleaseSlotUpdateOneWithoutTrackNestedInput
+  uploadSubmission?: Prisma.UploadSubmissionUpdateOneWithoutTrackNestedInput
   playlists?: Prisma.PlaylistTrackUpdateManyWithoutTrackNestedInput
   poolTracks?: Prisma.PoolTrackUpdateManyWithoutTrackNestedInput
 }
@@ -2420,6 +3003,9 @@ export type TrackUncheckedUpdateWithoutArtistInput = {
   sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
   aiDisclosure?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isrc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contributors?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auraCount?: Prisma.IntFieldUpdateOperationsInput | number
   susCount?: Prisma.IntFieldUpdateOperationsInput | number
   totalVotes?: Prisma.IntFieldUpdateOperationsInput | number
@@ -2430,8 +3016,10 @@ export type TrackUncheckedUpdateWithoutArtistInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   uploaderId?: Prisma.StringFieldUpdateOperationsInput | string
   featuringArtistId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  artistProfileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   votes?: Prisma.VoteUncheckedUpdateManyWithoutTrackNestedInput
   releaseSlot?: Prisma.ReleaseSlotUncheckedUpdateOneWithoutTrackNestedInput
+  uploadSubmission?: Prisma.UploadSubmissionUncheckedUpdateOneWithoutTrackNestedInput
   playlists?: Prisma.PlaylistTrackUncheckedUpdateManyWithoutTrackNestedInput
   poolTracks?: Prisma.PoolTrackUncheckedUpdateManyWithoutTrackNestedInput
 }
@@ -2458,6 +3046,9 @@ export type TrackUncheckedUpdateManyWithoutArtistInput = {
   sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
   aiDisclosure?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isrc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contributors?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auraCount?: Prisma.IntFieldUpdateOperationsInput | number
   susCount?: Prisma.IntFieldUpdateOperationsInput | number
   totalVotes?: Prisma.IntFieldUpdateOperationsInput | number
@@ -2468,6 +3059,7 @@ export type TrackUncheckedUpdateManyWithoutArtistInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   uploaderId?: Prisma.StringFieldUpdateOperationsInput | string
   featuringArtistId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  artistProfileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type TrackUpdateWithoutUploaderInput = {
@@ -2492,6 +3084,9 @@ export type TrackUpdateWithoutUploaderInput = {
   sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
   aiDisclosure?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isrc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contributors?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auraCount?: Prisma.IntFieldUpdateOperationsInput | number
   susCount?: Prisma.IntFieldUpdateOperationsInput | number
   totalVotes?: Prisma.IntFieldUpdateOperationsInput | number
@@ -2502,8 +3097,10 @@ export type TrackUpdateWithoutUploaderInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   artist?: Prisma.UserUpdateOneRequiredWithoutArtistTracksNestedInput
   featuringArtist?: Prisma.UserUpdateOneWithoutFeaturingTracksNestedInput
+  artistProfile?: Prisma.ArtistProfileUpdateOneWithoutTracksNestedInput
   votes?: Prisma.VoteUpdateManyWithoutTrackNestedInput
   releaseSlot?: Prisma.ReleaseSlotUpdateOneWithoutTrackNestedInput
+  uploadSubmission?: Prisma.UploadSubmissionUpdateOneWithoutTrackNestedInput
   playlists?: Prisma.PlaylistTrackUpdateManyWithoutTrackNestedInput
   poolTracks?: Prisma.PoolTrackUpdateManyWithoutTrackNestedInput
 }
@@ -2530,6 +3127,9 @@ export type TrackUncheckedUpdateWithoutUploaderInput = {
   sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
   aiDisclosure?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isrc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contributors?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auraCount?: Prisma.IntFieldUpdateOperationsInput | number
   susCount?: Prisma.IntFieldUpdateOperationsInput | number
   totalVotes?: Prisma.IntFieldUpdateOperationsInput | number
@@ -2540,8 +3140,10 @@ export type TrackUncheckedUpdateWithoutUploaderInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   artistId?: Prisma.StringFieldUpdateOperationsInput | string
   featuringArtistId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  artistProfileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   votes?: Prisma.VoteUncheckedUpdateManyWithoutTrackNestedInput
   releaseSlot?: Prisma.ReleaseSlotUncheckedUpdateOneWithoutTrackNestedInput
+  uploadSubmission?: Prisma.UploadSubmissionUncheckedUpdateOneWithoutTrackNestedInput
   playlists?: Prisma.PlaylistTrackUncheckedUpdateManyWithoutTrackNestedInput
   poolTracks?: Prisma.PoolTrackUncheckedUpdateManyWithoutTrackNestedInput
 }
@@ -2568,6 +3170,9 @@ export type TrackUncheckedUpdateManyWithoutUploaderInput = {
   sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
   aiDisclosure?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isrc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contributors?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auraCount?: Prisma.IntFieldUpdateOperationsInput | number
   susCount?: Prisma.IntFieldUpdateOperationsInput | number
   totalVotes?: Prisma.IntFieldUpdateOperationsInput | number
@@ -2578,6 +3183,7 @@ export type TrackUncheckedUpdateManyWithoutUploaderInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   artistId?: Prisma.StringFieldUpdateOperationsInput | string
   featuringArtistId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  artistProfileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type TrackUpdateWithoutFeaturingArtistInput = {
@@ -2602,6 +3208,9 @@ export type TrackUpdateWithoutFeaturingArtistInput = {
   sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
   aiDisclosure?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isrc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contributors?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auraCount?: Prisma.IntFieldUpdateOperationsInput | number
   susCount?: Prisma.IntFieldUpdateOperationsInput | number
   totalVotes?: Prisma.IntFieldUpdateOperationsInput | number
@@ -2612,8 +3221,10 @@ export type TrackUpdateWithoutFeaturingArtistInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   artist?: Prisma.UserUpdateOneRequiredWithoutArtistTracksNestedInput
   uploader?: Prisma.UserUpdateOneRequiredWithoutUploadedTracksNestedInput
+  artistProfile?: Prisma.ArtistProfileUpdateOneWithoutTracksNestedInput
   votes?: Prisma.VoteUpdateManyWithoutTrackNestedInput
   releaseSlot?: Prisma.ReleaseSlotUpdateOneWithoutTrackNestedInput
+  uploadSubmission?: Prisma.UploadSubmissionUpdateOneWithoutTrackNestedInput
   playlists?: Prisma.PlaylistTrackUpdateManyWithoutTrackNestedInput
   poolTracks?: Prisma.PoolTrackUpdateManyWithoutTrackNestedInput
 }
@@ -2640,6 +3251,9 @@ export type TrackUncheckedUpdateWithoutFeaturingArtistInput = {
   sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
   aiDisclosure?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isrc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contributors?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auraCount?: Prisma.IntFieldUpdateOperationsInput | number
   susCount?: Prisma.IntFieldUpdateOperationsInput | number
   totalVotes?: Prisma.IntFieldUpdateOperationsInput | number
@@ -2650,8 +3264,10 @@ export type TrackUncheckedUpdateWithoutFeaturingArtistInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   artistId?: Prisma.StringFieldUpdateOperationsInput | string
   uploaderId?: Prisma.StringFieldUpdateOperationsInput | string
+  artistProfileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   votes?: Prisma.VoteUncheckedUpdateManyWithoutTrackNestedInput
   releaseSlot?: Prisma.ReleaseSlotUncheckedUpdateOneWithoutTrackNestedInput
+  uploadSubmission?: Prisma.UploadSubmissionUncheckedUpdateOneWithoutTrackNestedInput
   playlists?: Prisma.PlaylistTrackUncheckedUpdateManyWithoutTrackNestedInput
   poolTracks?: Prisma.PoolTrackUncheckedUpdateManyWithoutTrackNestedInput
 }
@@ -2678,6 +3294,9 @@ export type TrackUncheckedUpdateManyWithoutFeaturingArtistInput = {
   sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
   aiDisclosure?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   aiSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isrc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contributors?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auraCount?: Prisma.IntFieldUpdateOperationsInput | number
   susCount?: Prisma.IntFieldUpdateOperationsInput | number
   totalVotes?: Prisma.IntFieldUpdateOperationsInput | number
@@ -2688,6 +3307,169 @@ export type TrackUncheckedUpdateManyWithoutFeaturingArtistInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   artistId?: Prisma.StringFieldUpdateOperationsInput | string
   uploaderId?: Prisma.StringFieldUpdateOperationsInput | string
+  artistProfileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+}
+
+export type TrackCreateManyArtistProfileInput = {
+  id?: string
+  title: string
+  slug: string
+  trackType?: string
+  fileName?: string | null
+  filePath?: string | null
+  fileSize?: number | null
+  soundcloudUrl?: string | null
+  soundcloudEmbedUrl?: string | null
+  soundcloudArtwork?: string | null
+  duration?: number
+  coverUrl?: string | null
+  genre?: string | null
+  bpm?: number | null
+  description?: string | null
+  status?: string
+  isPublic?: boolean
+  playCount?: number
+  sortOrder?: number
+  aiDisclosure?: string | null
+  aiSource?: string | null
+  isrc?: string | null
+  label?: string | null
+  contributors?: string | null
+  auraCount?: number
+  susCount?: number
+  totalVotes?: number
+  susPercentage?: number
+  scheduledPublishAt?: Date | string | null
+  publishedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  artistId: string
+  uploaderId: string
+  featuringArtistId?: string | null
+}
+
+export type TrackUpdateWithoutArtistProfileInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  trackType?: Prisma.StringFieldUpdateOperationsInput | string
+  fileName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  filePath?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileSize?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  soundcloudUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  soundcloudEmbedUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  soundcloudArtwork?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  duration?: Prisma.FloatFieldUpdateOperationsInput | number
+  coverUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  genre?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  playCount?: Prisma.IntFieldUpdateOperationsInput | number
+  sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
+  aiDisclosure?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isrc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contributors?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  auraCount?: Prisma.IntFieldUpdateOperationsInput | number
+  susCount?: Prisma.IntFieldUpdateOperationsInput | number
+  totalVotes?: Prisma.IntFieldUpdateOperationsInput | number
+  susPercentage?: Prisma.FloatFieldUpdateOperationsInput | number
+  scheduledPublishAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  artist?: Prisma.UserUpdateOneRequiredWithoutArtistTracksNestedInput
+  uploader?: Prisma.UserUpdateOneRequiredWithoutUploadedTracksNestedInput
+  featuringArtist?: Prisma.UserUpdateOneWithoutFeaturingTracksNestedInput
+  votes?: Prisma.VoteUpdateManyWithoutTrackNestedInput
+  releaseSlot?: Prisma.ReleaseSlotUpdateOneWithoutTrackNestedInput
+  uploadSubmission?: Prisma.UploadSubmissionUpdateOneWithoutTrackNestedInput
+  playlists?: Prisma.PlaylistTrackUpdateManyWithoutTrackNestedInput
+  poolTracks?: Prisma.PoolTrackUpdateManyWithoutTrackNestedInput
+}
+
+export type TrackUncheckedUpdateWithoutArtistProfileInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  trackType?: Prisma.StringFieldUpdateOperationsInput | string
+  fileName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  filePath?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileSize?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  soundcloudUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  soundcloudEmbedUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  soundcloudArtwork?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  duration?: Prisma.FloatFieldUpdateOperationsInput | number
+  coverUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  genre?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  playCount?: Prisma.IntFieldUpdateOperationsInput | number
+  sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
+  aiDisclosure?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isrc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contributors?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  auraCount?: Prisma.IntFieldUpdateOperationsInput | number
+  susCount?: Prisma.IntFieldUpdateOperationsInput | number
+  totalVotes?: Prisma.IntFieldUpdateOperationsInput | number
+  susPercentage?: Prisma.FloatFieldUpdateOperationsInput | number
+  scheduledPublishAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  artistId?: Prisma.StringFieldUpdateOperationsInput | string
+  uploaderId?: Prisma.StringFieldUpdateOperationsInput | string
+  featuringArtistId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  votes?: Prisma.VoteUncheckedUpdateManyWithoutTrackNestedInput
+  releaseSlot?: Prisma.ReleaseSlotUncheckedUpdateOneWithoutTrackNestedInput
+  uploadSubmission?: Prisma.UploadSubmissionUncheckedUpdateOneWithoutTrackNestedInput
+  playlists?: Prisma.PlaylistTrackUncheckedUpdateManyWithoutTrackNestedInput
+  poolTracks?: Prisma.PoolTrackUncheckedUpdateManyWithoutTrackNestedInput
+}
+
+export type TrackUncheckedUpdateManyWithoutArtistProfileInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  slug?: Prisma.StringFieldUpdateOperationsInput | string
+  trackType?: Prisma.StringFieldUpdateOperationsInput | string
+  fileName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  filePath?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileSize?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  soundcloudUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  soundcloudEmbedUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  soundcloudArtwork?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  duration?: Prisma.FloatFieldUpdateOperationsInput | number
+  coverUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  genre?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bpm?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  playCount?: Prisma.IntFieldUpdateOperationsInput | number
+  sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
+  aiDisclosure?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  aiSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isrc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contributors?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  auraCount?: Prisma.IntFieldUpdateOperationsInput | number
+  susCount?: Prisma.IntFieldUpdateOperationsInput | number
+  totalVotes?: Prisma.IntFieldUpdateOperationsInput | number
+  susPercentage?: Prisma.FloatFieldUpdateOperationsInput | number
+  scheduledPublishAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  publishedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  artistId?: Prisma.StringFieldUpdateOperationsInput | string
+  uploaderId?: Prisma.StringFieldUpdateOperationsInput | string
+  featuringArtistId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 
@@ -2761,6 +3543,9 @@ export type TrackSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   sortOrder?: boolean
   aiDisclosure?: boolean
   aiSource?: boolean
+  isrc?: boolean
+  label?: boolean
+  contributors?: boolean
   auraCount?: boolean
   susCount?: boolean
   totalVotes?: boolean
@@ -2772,11 +3557,14 @@ export type TrackSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   artistId?: boolean
   uploaderId?: boolean
   featuringArtistId?: boolean
+  artistProfileId?: boolean
   artist?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   uploader?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   featuringArtist?: boolean | Prisma.Track$featuringArtistArgs<ExtArgs>
+  artistProfile?: boolean | Prisma.Track$artistProfileArgs<ExtArgs>
   votes?: boolean | Prisma.Track$votesArgs<ExtArgs>
   releaseSlot?: boolean | Prisma.Track$releaseSlotArgs<ExtArgs>
+  uploadSubmission?: boolean | Prisma.Track$uploadSubmissionArgs<ExtArgs>
   playlists?: boolean | Prisma.Track$playlistsArgs<ExtArgs>
   poolTracks?: boolean | Prisma.Track$poolTracksArgs<ExtArgs>
   _count?: boolean | Prisma.TrackCountOutputTypeDefaultArgs<ExtArgs>
@@ -2804,6 +3592,9 @@ export type TrackSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   sortOrder?: boolean
   aiDisclosure?: boolean
   aiSource?: boolean
+  isrc?: boolean
+  label?: boolean
+  contributors?: boolean
   auraCount?: boolean
   susCount?: boolean
   totalVotes?: boolean
@@ -2815,9 +3606,11 @@ export type TrackSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   artistId?: boolean
   uploaderId?: boolean
   featuringArtistId?: boolean
+  artistProfileId?: boolean
   artist?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   uploader?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   featuringArtist?: boolean | Prisma.Track$featuringArtistArgs<ExtArgs>
+  artistProfile?: boolean | Prisma.Track$artistProfileArgs<ExtArgs>
 }, ExtArgs["result"]["track"]>
 
 export type TrackSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -2842,6 +3635,9 @@ export type TrackSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   sortOrder?: boolean
   aiDisclosure?: boolean
   aiSource?: boolean
+  isrc?: boolean
+  label?: boolean
+  contributors?: boolean
   auraCount?: boolean
   susCount?: boolean
   totalVotes?: boolean
@@ -2853,9 +3649,11 @@ export type TrackSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   artistId?: boolean
   uploaderId?: boolean
   featuringArtistId?: boolean
+  artistProfileId?: boolean
   artist?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   uploader?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   featuringArtist?: boolean | Prisma.Track$featuringArtistArgs<ExtArgs>
+  artistProfile?: boolean | Prisma.Track$artistProfileArgs<ExtArgs>
 }, ExtArgs["result"]["track"]>
 
 export type TrackSelectScalar = {
@@ -2880,6 +3678,9 @@ export type TrackSelectScalar = {
   sortOrder?: boolean
   aiDisclosure?: boolean
   aiSource?: boolean
+  isrc?: boolean
+  label?: boolean
+  contributors?: boolean
   auraCount?: boolean
   susCount?: boolean
   totalVotes?: boolean
@@ -2891,15 +3692,18 @@ export type TrackSelectScalar = {
   artistId?: boolean
   uploaderId?: boolean
   featuringArtistId?: boolean
+  artistProfileId?: boolean
 }
 
-export type TrackOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "title" | "slug" | "trackType" | "fileName" | "filePath" | "fileSize" | "soundcloudUrl" | "soundcloudEmbedUrl" | "soundcloudArtwork" | "duration" | "coverUrl" | "genre" | "bpm" | "description" | "status" | "isPublic" | "playCount" | "sortOrder" | "aiDisclosure" | "aiSource" | "auraCount" | "susCount" | "totalVotes" | "susPercentage" | "scheduledPublishAt" | "publishedAt" | "createdAt" | "updatedAt" | "artistId" | "uploaderId" | "featuringArtistId", ExtArgs["result"]["track"]>
+export type TrackOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "title" | "slug" | "trackType" | "fileName" | "filePath" | "fileSize" | "soundcloudUrl" | "soundcloudEmbedUrl" | "soundcloudArtwork" | "duration" | "coverUrl" | "genre" | "bpm" | "description" | "status" | "isPublic" | "playCount" | "sortOrder" | "aiDisclosure" | "aiSource" | "isrc" | "label" | "contributors" | "auraCount" | "susCount" | "totalVotes" | "susPercentage" | "scheduledPublishAt" | "publishedAt" | "createdAt" | "updatedAt" | "artistId" | "uploaderId" | "featuringArtistId" | "artistProfileId", ExtArgs["result"]["track"]>
 export type TrackInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   artist?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   uploader?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   featuringArtist?: boolean | Prisma.Track$featuringArtistArgs<ExtArgs>
+  artistProfile?: boolean | Prisma.Track$artistProfileArgs<ExtArgs>
   votes?: boolean | Prisma.Track$votesArgs<ExtArgs>
   releaseSlot?: boolean | Prisma.Track$releaseSlotArgs<ExtArgs>
+  uploadSubmission?: boolean | Prisma.Track$uploadSubmissionArgs<ExtArgs>
   playlists?: boolean | Prisma.Track$playlistsArgs<ExtArgs>
   poolTracks?: boolean | Prisma.Track$poolTracksArgs<ExtArgs>
   _count?: boolean | Prisma.TrackCountOutputTypeDefaultArgs<ExtArgs>
@@ -2908,11 +3712,13 @@ export type TrackIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extens
   artist?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   uploader?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   featuringArtist?: boolean | Prisma.Track$featuringArtistArgs<ExtArgs>
+  artistProfile?: boolean | Prisma.Track$artistProfileArgs<ExtArgs>
 }
 export type TrackIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   artist?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   uploader?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   featuringArtist?: boolean | Prisma.Track$featuringArtistArgs<ExtArgs>
+  artistProfile?: boolean | Prisma.Track$artistProfileArgs<ExtArgs>
 }
 
 export type $TrackPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2921,8 +3727,10 @@ export type $TrackPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     artist: Prisma.$UserPayload<ExtArgs>
     uploader: Prisma.$UserPayload<ExtArgs>
     featuringArtist: Prisma.$UserPayload<ExtArgs> | null
+    artistProfile: Prisma.$ArtistProfilePayload<ExtArgs> | null
     votes: Prisma.$VotePayload<ExtArgs>[]
     releaseSlot: Prisma.$ReleaseSlotPayload<ExtArgs> | null
+    uploadSubmission: Prisma.$UploadSubmissionPayload<ExtArgs> | null
     playlists: Prisma.$PlaylistTrackPayload<ExtArgs>[]
     poolTracks: Prisma.$PoolTrackPayload<ExtArgs>[]
   }
@@ -2948,6 +3756,9 @@ export type $TrackPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     sortOrder: number
     aiDisclosure: string | null
     aiSource: string | null
+    isrc: string | null
+    label: string | null
+    contributors: string | null
     auraCount: number
     susCount: number
     totalVotes: number
@@ -2959,6 +3770,7 @@ export type $TrackPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     artistId: string
     uploaderId: string
     featuringArtistId: string | null
+    artistProfileId: string | null
   }, ExtArgs["result"]["track"]>
   composites: {}
 }
@@ -3356,8 +4168,10 @@ export interface Prisma__TrackClient<T, Null = never, ExtArgs extends runtime.Ty
   artist<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   uploader<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   featuringArtist<T extends Prisma.Track$featuringArtistArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Track$featuringArtistArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  artistProfile<T extends Prisma.Track$artistProfileArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Track$artistProfileArgs<ExtArgs>>): Prisma.Prisma__ArtistProfileClient<runtime.Types.Result.GetResult<Prisma.$ArtistProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   votes<T extends Prisma.Track$votesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Track$votesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$VotePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   releaseSlot<T extends Prisma.Track$releaseSlotArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Track$releaseSlotArgs<ExtArgs>>): Prisma.Prisma__ReleaseSlotClient<runtime.Types.Result.GetResult<Prisma.$ReleaseSlotPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  uploadSubmission<T extends Prisma.Track$uploadSubmissionArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Track$uploadSubmissionArgs<ExtArgs>>): Prisma.Prisma__UploadSubmissionClient<runtime.Types.Result.GetResult<Prisma.$UploadSubmissionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   playlists<T extends Prisma.Track$playlistsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Track$playlistsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PlaylistTrackPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   poolTracks<T extends Prisma.Track$poolTracksArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Track$poolTracksArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PoolTrackPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
@@ -3410,6 +4224,9 @@ export interface TrackFieldRefs {
   readonly sortOrder: Prisma.FieldRef<"Track", 'Int'>
   readonly aiDisclosure: Prisma.FieldRef<"Track", 'String'>
   readonly aiSource: Prisma.FieldRef<"Track", 'String'>
+  readonly isrc: Prisma.FieldRef<"Track", 'String'>
+  readonly label: Prisma.FieldRef<"Track", 'String'>
+  readonly contributors: Prisma.FieldRef<"Track", 'String'>
   readonly auraCount: Prisma.FieldRef<"Track", 'Int'>
   readonly susCount: Prisma.FieldRef<"Track", 'Int'>
   readonly totalVotes: Prisma.FieldRef<"Track", 'Int'>
@@ -3421,6 +4238,7 @@ export interface TrackFieldRefs {
   readonly artistId: Prisma.FieldRef<"Track", 'String'>
   readonly uploaderId: Prisma.FieldRef<"Track", 'String'>
   readonly featuringArtistId: Prisma.FieldRef<"Track", 'String'>
+  readonly artistProfileId: Prisma.FieldRef<"Track", 'String'>
 }
     
 
@@ -3834,6 +4652,25 @@ export type Track$featuringArtistArgs<ExtArgs extends runtime.Types.Extensions.I
 }
 
 /**
+ * Track.artistProfile
+ */
+export type Track$artistProfileArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ArtistProfile
+   */
+  select?: Prisma.ArtistProfileSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ArtistProfile
+   */
+  omit?: Prisma.ArtistProfileOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ArtistProfileInclude<ExtArgs> | null
+  where?: Prisma.ArtistProfileWhereInput
+}
+
+/**
  * Track.votes
  */
 export type Track$votesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -3874,6 +4711,25 @@ export type Track$releaseSlotArgs<ExtArgs extends runtime.Types.Extensions.Inter
    */
   include?: Prisma.ReleaseSlotInclude<ExtArgs> | null
   where?: Prisma.ReleaseSlotWhereInput
+}
+
+/**
+ * Track.uploadSubmission
+ */
+export type Track$uploadSubmissionArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the UploadSubmission
+   */
+  select?: Prisma.UploadSubmissionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the UploadSubmission
+   */
+  omit?: Prisma.UploadSubmissionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UploadSubmissionInclude<ExtArgs> | null
+  where?: Prisma.UploadSubmissionWhereInput
 }
 
 /**

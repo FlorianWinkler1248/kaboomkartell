@@ -21,6 +21,8 @@ interface ArtistLike {
 interface TrackLike {
   artist?: ArtistLike | null;
   featuringArtist?: ArtistLike | null;
+  /** ADR-041: externes Künstler-Profil — hat Anzeige-Priorität vor artist. */
+  artistProfile?: { name?: string | null } | null;
 }
 
 /**
@@ -37,6 +39,10 @@ function nameOf(artist: ArtistLike | null | undefined): string {
  * Akzeptiert sowohl voll-ausgeladene als auch flachere Track-Shapes.
  */
 export function formatArtistDisplay(track: TrackLike): string {
+  // ADR-041: Tracks externer Künstler zeigen den Profil-Namen — der
+  // Account-Artist (meist Flow als Owner/Fallback) ist dann nur Verwaltung.
+  const profileName = track.artistProfile?.name?.trim();
+  if (profileName) return profileName;
   const main = nameOf(track.artist);
   if (track.featuringArtist) {
     return `${main} feat. ${nameOf(track.featuringArtist)}`;

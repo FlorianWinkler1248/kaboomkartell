@@ -406,7 +406,9 @@ export const ModelName = {
   Mission: 'Mission',
   MissionAcceptance: 'MissionAcceptance',
   SocialAccount: 'SocialAccount',
-  ArtistApplication: 'ArtistApplication'
+  ArtistApplication: 'ArtistApplication',
+  ArtistProfile: 'ArtistProfile',
+  UploadSubmission: 'UploadSubmission'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -422,7 +424,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "badge" | "linkedAccount" | "securityEvent" | "track" | "vote" | "wallPost" | "releaseSlot" | "playlist" | "playlistTrack" | "pool" | "poolTrack" | "timetableSlot" | "timetableEvent" | "radioPlay" | "radioHead" | "radioVote" | "siteSettings" | "apiToken" | "mission" | "missionAcceptance" | "socialAccount" | "artistApplication"
+    modelProps: "user" | "badge" | "linkedAccount" | "securityEvent" | "track" | "vote" | "wallPost" | "releaseSlot" | "playlist" | "playlistTrack" | "pool" | "poolTrack" | "timetableSlot" | "timetableEvent" | "radioPlay" | "radioHead" | "radioVote" | "siteSettings" | "apiToken" | "mission" | "missionAcceptance" | "socialAccount" | "artistApplication" | "artistProfile" | "uploadSubmission"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2128,6 +2130,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    ArtistProfile: {
+      payload: Prisma.$ArtistProfilePayload<ExtArgs>
+      fields: Prisma.ArtistProfileFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ArtistProfileFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArtistProfilePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ArtistProfileFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArtistProfilePayload>
+        }
+        findFirst: {
+          args: Prisma.ArtistProfileFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArtistProfilePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ArtistProfileFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArtistProfilePayload>
+        }
+        findMany: {
+          args: Prisma.ArtistProfileFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArtistProfilePayload>[]
+        }
+        create: {
+          args: Prisma.ArtistProfileCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArtistProfilePayload>
+        }
+        createMany: {
+          args: Prisma.ArtistProfileCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ArtistProfileCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArtistProfilePayload>[]
+        }
+        delete: {
+          args: Prisma.ArtistProfileDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArtistProfilePayload>
+        }
+        update: {
+          args: Prisma.ArtistProfileUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArtistProfilePayload>
+        }
+        deleteMany: {
+          args: Prisma.ArtistProfileDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ArtistProfileUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ArtistProfileUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArtistProfilePayload>[]
+        }
+        upsert: {
+          args: Prisma.ArtistProfileUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ArtistProfilePayload>
+        }
+        aggregate: {
+          args: Prisma.ArtistProfileAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateArtistProfile>
+        }
+        groupBy: {
+          args: Prisma.ArtistProfileGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ArtistProfileGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ArtistProfileCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ArtistProfileCountAggregateOutputType> | number
+        }
+      }
+    }
+    UploadSubmission: {
+      payload: Prisma.$UploadSubmissionPayload<ExtArgs>
+      fields: Prisma.UploadSubmissionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.UploadSubmissionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UploadSubmissionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.UploadSubmissionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UploadSubmissionPayload>
+        }
+        findFirst: {
+          args: Prisma.UploadSubmissionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UploadSubmissionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.UploadSubmissionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UploadSubmissionPayload>
+        }
+        findMany: {
+          args: Prisma.UploadSubmissionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UploadSubmissionPayload>[]
+        }
+        create: {
+          args: Prisma.UploadSubmissionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UploadSubmissionPayload>
+        }
+        createMany: {
+          args: Prisma.UploadSubmissionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.UploadSubmissionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UploadSubmissionPayload>[]
+        }
+        delete: {
+          args: Prisma.UploadSubmissionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UploadSubmissionPayload>
+        }
+        update: {
+          args: Prisma.UploadSubmissionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UploadSubmissionPayload>
+        }
+        deleteMany: {
+          args: Prisma.UploadSubmissionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.UploadSubmissionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.UploadSubmissionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UploadSubmissionPayload>[]
+        }
+        upsert: {
+          args: Prisma.UploadSubmissionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UploadSubmissionPayload>
+        }
+        aggregate: {
+          args: Prisma.UploadSubmissionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateUploadSubmission>
+        }
+        groupBy: {
+          args: Prisma.UploadSubmissionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UploadSubmissionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.UploadSubmissionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UploadSubmissionCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -2266,6 +2416,9 @@ export const TrackScalarFieldEnum = {
   sortOrder: 'sortOrder',
   aiDisclosure: 'aiDisclosure',
   aiSource: 'aiSource',
+  isrc: 'isrc',
+  label: 'label',
+  contributors: 'contributors',
   auraCount: 'auraCount',
   susCount: 'susCount',
   totalVotes: 'totalVotes',
@@ -2276,7 +2429,8 @@ export const TrackScalarFieldEnum = {
   updatedAt: 'updatedAt',
   artistId: 'artistId',
   uploaderId: 'uploaderId',
-  featuringArtistId: 'featuringArtistId'
+  featuringArtistId: 'featuringArtistId',
+  artistProfileId: 'artistProfileId'
 } as const
 
 export type TrackScalarFieldEnum = (typeof TrackScalarFieldEnum)[keyof typeof TrackScalarFieldEnum]
@@ -2558,6 +2712,47 @@ export const ArtistApplicationScalarFieldEnum = {
 export type ArtistApplicationScalarFieldEnum = (typeof ArtistApplicationScalarFieldEnum)[keyof typeof ArtistApplicationScalarFieldEnum]
 
 
+export const ArtistProfileScalarFieldEnum = {
+  id: 'id',
+  slug: 'slug',
+  name: 'name',
+  bio: 'bio',
+  avatarUrl: 'avatarUrl',
+  headerUrl: 'headerUrl',
+  socialSoundcloud: 'socialSoundcloud',
+  socialInstagram: 'socialInstagram',
+  socialTelegram: 'socialTelegram',
+  socialWebsite: 'socialWebsite',
+  claimTokenHash: 'claimTokenHash',
+  claimTokenExpiry: 'claimTokenExpiry',
+  userId: 'userId',
+  claimedAt: 'claimedAt',
+  isPublished: 'isPublished',
+  createdBy: 'createdBy',
+  sortOrder: 'sortOrder',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ArtistProfileScalarFieldEnum = (typeof ArtistProfileScalarFieldEnum)[keyof typeof ArtistProfileScalarFieldEnum]
+
+
+export const UploadSubmissionScalarFieldEnum = {
+  id: 'id',
+  trackId: 'trackId',
+  submitterId: 'submitterId',
+  status: 'status',
+  message: 'message',
+  reviewNote: 'reviewNote',
+  reviewedBy: 'reviewedBy',
+  reviewedAt: 'reviewedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type UploadSubmissionScalarFieldEnum = (typeof UploadSubmissionScalarFieldEnum)[keyof typeof UploadSubmissionScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -2732,6 +2927,8 @@ export type GlobalOmitConfig = {
   missionAcceptance?: Prisma.MissionAcceptanceOmit
   socialAccount?: Prisma.SocialAccountOmit
   artistApplication?: Prisma.ArtistApplicationOmit
+  artistProfile?: Prisma.ArtistProfileOmit
+  uploadSubmission?: Prisma.UploadSubmissionOmit
 }
 
 /* Types for Logging */
