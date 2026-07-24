@@ -304,6 +304,29 @@ export default async function PlaylistsPage() {
         {t('tagline')}
       </p>
 
+      {/* Permanenter Einstieg zur persönlichen Playlist (ADR-041) */}
+      <Link
+        href="/playlists/mine"
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 8,
+          marginTop: 10,
+          padding: '8px 14px',
+          minHeight: 40,
+          border: '1px solid rgba(154,160,168,0.5)',
+          color: '#9AA0A8',
+          fontFamily: 'var(--font-display)',
+          fontSize: 11,
+          fontWeight: 900,
+          letterSpacing: '0.15em',
+          textDecoration: 'none',
+          textTransform: 'uppercase',
+        }}
+      >
+        {t('minePlaylistLink')} →
+      </Link>
+
       {/* cactus + wormy wippen in der Leerstelle zwischen Tagline und Grid —
           dezent rechtsbündig, rein dekorativ, ohne Rahmen/Linien und nicht auf
           den Karten (Design-Regel Dance-Sprites). */}

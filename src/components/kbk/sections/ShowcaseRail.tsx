@@ -20,6 +20,7 @@ import { obsidianFrameVars } from '@/lib/obsidian-frame';
 import { SOUNDCLOUD_ORANGE, GENRE_ACCENT, isGenre } from '@/lib/constants';
 import { SafeImg } from '@/components/ui/SafeImg';
 import SoundCloudEmbedLazy from '@/components/player/SoundCloudEmbedLazy';
+import AuraLikeButton from '@/components/kbk/AuraLikeButton';
 
 export interface ShowcaseTrackItem {
   id: string;
@@ -27,6 +28,7 @@ export interface ShowcaseTrackItem {
   slug: string;
   trackType: string;
   genre: string | null;
+  duration: number;
   artistLabel: string;
   artworkUrl: string | null;
   soundcloudUrl: string | null;
@@ -214,26 +216,43 @@ export default function ShowcaseRail({ playlists }: { playlists: ShowcasePlaylis
                       ) : (
                         <span />
                       )}
-                      {track.soundcloudUrl && (
-                        <a
-                          href={track.soundcloudUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 4,
-                            fontFamily: 'var(--font-mono)',
-                            fontSize: 10,
-                            color: SOUNDCLOUD_ORANGE,
-                            letterSpacing: '0.1em',
-                            textDecoration: 'none',
-                            minHeight: 24,
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+                        {track.soundcloudUrl && (
+                          <a
+                            href={track.soundcloudUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 4,
+                              fontFamily: 'var(--font-mono)',
+                              fontSize: 10,
+                              color: SOUNDCLOUD_ORANGE,
+                              letterSpacing: '0.1em',
+                              textDecoration: 'none',
+                              minHeight: 24,
+                            }}
+                          >
+                            {t('listenOn')} <ExternalLink size={11} />
+                          </a>
+                        )}
+                        {/* Aura+-Like (ADR-041) — speist My Playlist */}
+                        <AuraLikeButton
+                          track={{
+                            id: track.id,
+                            title: track.title,
+                            slug: track.slug,
+                            trackType: track.trackType,
+                            duration: track.duration,
+                            coverUrl: track.artworkUrl,
+                            genre: track.genre,
+                            artistLabel: track.artistLabel,
+                            soundcloudUrl: track.soundcloudUrl,
+                            soundcloudEmbedUrl: track.soundcloudEmbedUrl,
                           }}
-                        >
-                          {t('listenOn')} <ExternalLink size={11} />
-                        </a>
-                      )}
+                        />
+                      </span>
                     </div>
                   </div>
                 </div>

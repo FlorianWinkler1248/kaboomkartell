@@ -90,6 +90,28 @@ export const createVoteSchema = z.object({
   listenedSeconds: z.number().int().min(60, 'Listen at least 60 seconds before voting'),
 });
 
+// SOUNDCLOUD-Tracks (ADR-041): Hörzeit läuft im SC-Widget und ist für uns
+// unmessbar → keine 60s-Pflicht. T1-/Rate-Limit-Gates bleiben unverändert.
+export const createScVoteSchema = z.object({
+  aura: z.boolean().default(false),
+  sus: z.boolean().default(false),
+  listenedSeconds: z.number().int().min(0).default(0),
+});
+
+// Session-Like-Import (ADR-041): anonyme localStorage-Likes werden nach der
+// Registrierung als echte Votes übernommen. Partition-Regeln in lib/my-playlist.ts.
+export const importLikesSchema = z.object({
+  likes: z
+    .array(
+      z.object({
+        trackId: z.string().min(10).max(64),
+        listenedSeconds: z.number().int().min(0).max(36_000).default(0),
+      })
+    )
+    .min(1)
+    .max(100),
+});
+
 // === SoundCloud Track-Schema ===
 
 const SOUNDCLOUD_URL_REGEX = /^https?:\/\/(www\.)?soundcloud\.com\/.+\/.+/;

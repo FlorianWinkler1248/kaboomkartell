@@ -27,7 +27,9 @@ import { useTranslations } from 'next-intl';
 import { useSession } from 'next-auth/react';
 import { usePlayer } from '@/components/providers/PlayerProvider';
 import { useToast } from '@/components/providers/ToastProvider';
+import { useMyPlaylist } from '@/components/providers/LikesProvider';
 import { consumePickIfMatches } from '@/lib/agency-picks';
+import type { PlayerTrack } from '@/types';
 import PlayerBackgroundEqualizer from '@/components/player/PlayerBackgroundEqualizer';
 import { useTrackAiTag } from '@/hooks/useTrackAiTag';
 import { useChannelAccent, CHANNEL_COLORS } from '@/hooks/useChannelAccent';
@@ -39,12 +41,17 @@ import { obsidianFrameVars } from '@/lib/obsidian-frame';
 // Subgenre-Override im Hardtek-Channel). Seit 08.06.2026 (ADR-028) zusätzlich
 // LIVE für Twitch/YouTube-Stream-Events — dieser Tab erscheint NUR, während ein
 // Live-Event läuft (activeChannels enthält dann 'live').
-type Channel = 'phonk' | 'hardtek' | 'live';
+// Seit 24.07.2026 (ADR-041) MINE: der persönliche Channel — spielt die eigenen
+// Aura+-Likes als User-Playback (KEIN Radio-Sync), dunkelgrau, immer sichtbar.
+// MINE wird bewusst nicht persistiert (PlayerProvider) — Reload bootet muted
+// ins Radio, weil Personal-Playback eine User-Geste braucht.
+type Channel = 'phonk' | 'hardtek' | 'live' | 'mine';
 
 const CHANNELS: ReadonlyArray<{ id: Channel; label: string; color: string }> = [
   { id: 'phonk', label: 'PHONK', color: CHANNEL_COLORS.phonk },
   { id: 'hardtek', label: 'HARDTEK', color: CHANNEL_COLORS.hardtek },
   { id: 'live', label: 'LIVE', color: CHANNEL_COLORS.live },
+  { id: 'mine', label: 'MINE', color: CHANNEL_COLORS.mine },
 ];
 
 // Pulse-Animation: Live-Channel-Tabs (v2.9 transform+opacity statt box-shadow).
@@ -83,8 +90,12 @@ export default function MiniPlayer() {
     syncStatus,
     radioCurrentSource,
     radioCurrentDecisionSeq,
+    playlist: playerPlaylist,
+    playTrackAtIndex,
   } = player;
   const { toast } = useToast();
+  // Aura+-Likes (ADR-041): speist den MINE-Channel + die AURA-Pill für Anonyme.
+  const likes = useMyPlaylist();
   // v2.31: Wenn der aktive Slot ein Twitch-Live-Event ist, übernehmen wir die
   // Track-Info-Box mit einem prominenten LIVESTREAM-Block + Link zu /radio.
   const liveTwitchChannel = isLiveEvent ? extractTwitchChannelFromUrl(liveStreamUrl) : null;
@@ -212,7 +223,35 @@ export default function MiniPlayer() {
     audio.setVolume(newVol);
   };
 
+  // MINE-Channel (ADR-041): nur LOCAL-Likes laufen über die eigene Audio-Pipeline
+  // (Auto-Advance). SC-Likes erscheinen auf /playlists/mine als Embed-Sektion.
+  const mineTracks = likes.likedTracks.filter((t2) => t2.trackType === 'LOCAL');
+
   const handleChannelClick = (c: Channel) => {
+    if (c === 'mine') {
+      if (mineTracks.length === 0) {
+        // Leerer Zustand: Channel NICHT wechseln, Radio läuft weiter.
+        toast({
+          type: 'info',
+          message: likes.isAnon ? t('mine.emptyAnonToast') : t('mine.emptyUserToast'),
+        });
+        return;
+      }
+      setSelectedChannel('mine');
+      const playerTracks: PlayerTrack[] = mineTracks.map((t2) => ({
+        id: t2.id,
+        title: t2.title,
+        artist: t2.artistLabel,
+        duration: t2.duration,
+        url: t2.streamUrl,
+        coverUrl: t2.coverUrl ?? undefined,
+        isLocal: false,
+      }));
+      playerPlaylist.setTracks(playerTracks);
+      // exitRadioMode + Analyser-Init übernimmt playTrackAtIndex (User-Geste).
+      playTrackAtIndex(0);
+      return;
+    }
     setSelectedChannel(c);
     // Wenn der User aus dem Single-Track-Modus kommt (z.B. nach Klick auf
     // "Play Track" auf einer Track-Detail-Page), bringen wir ihn per
@@ -226,8 +265,23 @@ export default function MiniPlayer() {
 
   // Vote-Submit. Optimistic-UI: lokal sofort setzen, bei Fehler revert.
   // Mind-Listening-Time wird vom Backend geprüft (60s); UI zeigt Tooltip wenn zu früh.
+  // Anonyme (ADR-041): AURA+ wird zum Session-Like (localStorage + Nudge),
+  // SUS bleibt Login-only (Qualitäts-Signal braucht einen Account).
   const submitVote = async (kind: 'aura' | 'sus') => {
-    if (!current?.id || !session?.user) return;
+    if (!current?.id) return;
+    if (!session?.user) {
+      if (kind !== 'aura') return;
+      likes.toggleLike({
+        id: current.id,
+        title: current.title,
+        trackType: current.isSoundcloud ? 'SOUNDCLOUD' : 'LOCAL',
+        duration: current.duration,
+        coverUrl: current.coverUrl ?? null,
+        artistLabel: current.artist,
+        soundcloudEmbedUrl: current.soundcloudEmbedUrl ?? null,
+      });
+      return;
+    }
     const previous = voteState;
     const next = {
       trackId: current.id,
@@ -247,6 +301,9 @@ export default function MiniPlayer() {
       });
       if (!res.ok) {
         setVoteState(previous);
+      } else {
+        // My Playlist synchron halten (Aura+ speist den MINE-Channel).
+        likes.refresh();
       }
     } catch {
       setVoteState(previous);
@@ -263,11 +320,19 @@ export default function MiniPlayer() {
   const trackArtist = current?.artist ?? '';
   // Wenn ein Subgenre-Override aktiv ist (z.B. Hardtek-Slot mit Raggatek-Set),
   // zeigen wir das Override-Label ('RAGGATEK SET'). Sonst das Original-Label.
-  const setName = channelAccent.isSubgenreOverride
-    ? channelAccent.label
-    : radioSlot?.label ?? null;
+  const setName = channelAccent.channel === 'mine'
+    ? channelAccent.label // 'MY PLAYLIST' (ADR-041)
+    : channelAccent.isSubgenreOverride
+      ? channelAccent.label
+      : radioSlot?.label ?? null;
   const isOffAir = !radioSlot;
   const canVote = !!session?.user && !!current?.id;
+  // AURA+ ist auch anonym klickbar (Session-Like, ADR-041); Anzeige-Zustand
+  // kommt für Anonyme aus dem LikesProvider statt aus voteState.
+  const canAura = !!current?.id;
+  const auraActive = session?.user
+    ? (voteState?.aura ?? false)
+    : current ? likes.likedIds.has(current.id) : false;
 
   return (
     <>
@@ -354,6 +419,9 @@ export default function MiniPlayer() {
               if (audio.volume === 0) {
                 audio.setVolume(prevVolumeRef.current || 0.7);
               } else if (!radioMode) {
+                // Aus dem MINE-Modus zurück ins Radio: erst den Channel
+                // korrigieren, sonst pollt der Sync einen Nicht-Radio-Channel.
+                if (selectedChannel === 'mine') setSelectedChannel('phonk');
                 enterRadioMode().catch(() => {});
               }
             }}
@@ -418,11 +486,15 @@ export default function MiniPlayer() {
                   onClick={() => handleChannelClick(c.id)}
                   aria-pressed={isActive}
                   aria-label={c.label}
-                  title={`${c.label} ${isLive ? t('mini.channelLive') : t('mini.channelOffAir')}${
-                    isActive && channelAccent.isSubgenreOverride
-                      ? ` — ${channelAccent.label}`
-                      : ''
-                  }`}
+                  title={
+                    c.id === 'mine'
+                      ? t('mine.tooltip')
+                      : `${c.label} ${isLive ? t('mini.channelLive') : t('mini.channelOffAir')}${
+                          isActive && channelAccent.isSubgenreOverride
+                            ? ` — ${channelAccent.label}`
+                            : ''
+                        }`
+                  }
                   // v2.18 (re-apply v2.14): Channel-Tabs auf Obsidian +
                   // framed mit Pulse-Speed-Signal — Active=1s, Live=1.5s,
                   // Off-Air=4s. Color folgt dem Channel.
@@ -432,7 +504,11 @@ export default function MiniPlayer() {
                   style={{
                     ...obsidianFrameVars(tabColor),
                     background: isActive ? tabColor : undefined,
-                    color: isActive ? '#0A0B0C' : isLive ? tabColor : 'rgba(255,255,255,0.7)',
+                    // MINE: weiße Schrift auf Anthrazit — die dunkle Standard-
+                    // Schrift (#0A0B0C) wäre auf #4A4E55 unlesbar (Kontrast).
+                    color: isActive
+                      ? (c.id === 'mine' ? '#fff' : '#0A0B0C')
+                      : isLive ? tabColor : 'rgba(255,255,255,0.7)',
                     padding: '8px 14px',
                     fontFamily: 'var(--font-display)',
                     fontSize: 11,
@@ -771,10 +847,10 @@ export default function MiniPlayer() {
           <button
             type="button"
             onClick={() => submitVote('aura')}
-            disabled={!canVote}
+            disabled={!canAura}
             aria-label={t('vote.markAura')}
-            aria-pressed={voteState?.aura ?? false}
-            title={canVote ? t('vote.auraTitle') : t('vote.loginRequired')}
+            aria-pressed={auraActive}
+            title={canAura ? (session?.user ? t('vote.auraTitle') : t('vote.auraAnonTitle')) : t('vote.auraTitle')}
             className={session?.user ? 'kbk-aura-glow' : undefined}
             style={{
               flexShrink: 0,
@@ -785,14 +861,14 @@ export default function MiniPlayer() {
               minWidth: 44,
               minHeight: 44,
               justifyContent: 'center',
-              background: voteState?.aura ? '#3FCF4A' : 'rgba(10,11,12,0.82)',
-              color: voteState?.aura ? '#0A0B0C' : (canVote ? '#3FCF4A' : 'rgba(63,207,74,0.35)'),
-              border: `1px solid ${canVote ? '#3FCF4A' : 'rgba(63,207,74,0.35)'}`,
+              background: auraActive ? '#3FCF4A' : 'rgba(10,11,12,0.82)',
+              color: auraActive ? '#0A0B0C' : (canAura ? '#3FCF4A' : 'rgba(63,207,74,0.35)'),
+              border: `1px solid ${canAura ? '#3FCF4A' : 'rgba(63,207,74,0.35)'}`,
               fontFamily: 'var(--font-display)',
               fontSize: 12,
               fontWeight: 900,
               letterSpacing: '0.1em',
-              cursor: canVote ? 'pointer' : 'not-allowed',
+              cursor: canAura ? 'pointer' : 'not-allowed',
               transition: 'all 0.15s',
             }}
           >

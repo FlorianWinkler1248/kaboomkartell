@@ -23,6 +23,7 @@ export const CHANNEL_COLORS = {
   hardtek: '#F5D02E', // Piss-Yellow
   raggatek: '#3FCF4A', // Venom-Green (Flow-Final-Call 02.05.2026)
   live: '#9146FF', // Twitch-Magenta (Live-Event-Channel, ADR-028)
+  mine: '#4A4E55', // Anthrazit — persönlicher Channel (ADR-041), bewusst entsättigt
 } as const;
 
 export const CHANNEL_LABELS = {
@@ -30,7 +31,12 @@ export const CHANNEL_LABELS = {
   hardtek: 'HARDTEK',
   raggatek: 'RAGGATEK',
   live: 'LIVE',
+  mine: 'MINE',
 } as const;
+
+/** EQ-Farbe für den MINE-Channel — helleres Grau, damit die Balken auf dem
+ *  dunklen Grund lesbar bleiben. */
+export const EQ_MINE_GREY = '#9AA0A8';
 
 export type ChannelKind = keyof typeof CHANNEL_COLORS;
 
@@ -79,6 +85,20 @@ export function useChannelAccent(): ChannelAccent {
     const channel = (selectedChannel as ChannelKind) || 'phonk';
     const baseColor = CHANNEL_COLORS[channel] ?? CHANNEL_COLORS.phonk;
     const baseLabel = CHANNEL_LABELS[channel] ?? 'PHONK';
+
+    // MINE-Channel (ADR-041): persönliche Playlist — reines User-Playback ohne
+    // Radio-Sync, dunkelgraues Theme, kein Subgenre.
+    if (channel === 'mine') {
+      return {
+        channel,
+        effectiveKind: 'mine',
+        label: 'MY PLAYLIST',
+        color: CHANNEL_COLORS.mine,
+        equalizerColor: EQ_MINE_GREY,
+        isSubgenreOverride: false,
+        subgenre: null,
+      };
+    }
 
     // LIVE-Channel (ADR-028): Twitch/YouTube-Stream — eigenes Magenta-Theme,
     // kein Subgenre, Equalizer in Channel-Farbe.
