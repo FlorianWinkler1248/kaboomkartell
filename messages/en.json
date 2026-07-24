@@ -543,7 +543,8 @@
     "trackCount": "{count, plural, one {# TRACK} other {# TRACKS}}",
     "auto": "AUTO",
     "showcaseZone": "ARTIST SHOWCASE",
-    "showcaseHint": "curated external drops — every play counts on the artist's own soundcloud."
+    "showcaseHint": "curated external drops — every play counts on the artist's own soundcloud.",
+    "minePlaylistLink": "MY PLAYLIST"
   },
   "showcase": {
     "sectionLabel": "FRIENDS OF THE HOUSE",
@@ -553,6 +554,24 @@
     "listenOn": "SOUNDCLOUD",
     "playVia": "Play {title} via SoundCloud",
     "openTrack": "Open {title}"
+  },
+  "myPlaylist": {
+    "metaTitle": "My Playlist — KaboomKartell",
+    "metaDescription": "Your liked tracks on KaboomKartell — hit AURA+ to stash tracks here.",
+    "kicker": "YOUR STASH",
+    "title": "MY PLAYLIST",
+    "likedCount": "{count, plural, one {# LIKED TRACK} other {# LIKED TRACKS}}",
+    "emptyAnonTitle": "NO LIKES YET",
+    "emptyAnonBody": "hit AURA+ on any track to stash it here for this session. create an account to keep your likes and set up your playlist.",
+    "emptyAnonCta": "JOIN THE PACK",
+    "emptyUserTitle": "NOTHING HERE YET",
+    "emptyUserBody": "hit AURA+ on any track — it lands right here.",
+    "sessionBanner": "these likes live in this browser session only. sign up and we'll keep them.",
+    "fromSoundcloud": "FROM SOUNDCLOUD",
+    "fromSoundcloudHint": "soundcloud likes play on the artist's own player — they don't run in the MINE channel.",
+    "playAll": "PLAY ALL ({count})",
+    "importSuccess": "{count, plural, one {# like} other {# likes}} moved to your playlist. welcome to the pack.",
+    "importSkipped": "{count, plural, one {# like} other {# likes}} skipped — listen a bit longer first."
   },
   "about": {
     "heroKicker": "/00/ ABOUT KBK",
@@ -738,7 +757,15 @@
       "auraTitle": "AURA+ — celebrate this track",
       "markSus": "Mark SUS",
       "susTitle": "SUS — flag as suspicious",
+      "auraAnonTitle": "Save to your playlist",
       "loginRequired": "Login required to vote"
+    },
+    "mine": {
+      "tab": "MINE",
+      "setLabel": "MY PLAYLIST",
+      "tooltip": "MINE — your liked tracks as your personal channel",
+      "emptyAnonToast": "Create an account to save your likes and set up your playlist.",
+      "emptyUserToast": "Nothing in your playlist yet — hit AURA+ on any track."
     },
     "sync": {
       "synced": "IN SYNC",

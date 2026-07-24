@@ -6,6 +6,7 @@ import TopNavBar from '@/components/kbk/TopNavBar';
 import SessionProvider from '@/components/providers/SessionProvider';
 import PlayerProvider from '@/components/providers/PlayerProvider';
 import ToastProvider from '@/components/providers/ToastProvider';
+import LikesProvider from '@/components/providers/LikesProvider';
 import IntroGate from '@/components/kbk/IntroGate';
 import MiniPlayer from '@/components/kbk/MiniPlayer';
 import SiteFooter from '@/components/kbk/SiteFooter';
@@ -151,6 +152,9 @@ export default async function RootLayout({
         <SessionProvider>
           <PlayerProvider>
             <ToastProvider>
+            {/* Aura+-Like-Zustand (ADR-041): Session-Likes anon + My Playlist.
+                Sitzt unter Player (braucht listenedSeconds) + Toast (Nudges). */}
+            <LikesProvider>
               {/* Intro-Sequence (einmalig pro Browser, respektiert reduced-motion) */}
               <IntroGate />
 
@@ -212,6 +216,7 @@ export default async function RootLayout({
                 {/* P0.8: PII-freier Ref-Beacon (zählt ?ref=-Deep-Link-Landungen). */}
                 <RefBeacon />
               </div>
+            </LikesProvider>
             </ToastProvider>
           </PlayerProvider>
         </SessionProvider>

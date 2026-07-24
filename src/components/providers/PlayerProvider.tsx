@@ -117,12 +117,17 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
   const [selectedChannel, setSelectedChannelState] = useState<string>(() => {
     if (typeof window === 'undefined') return DEFAULT_CHANNEL;
     const stored = window.localStorage.getItem(CHANNEL_STORAGE_KEY);
+    // 'mine' (ADR-041) wird nie persistiert/restauriert — der persönliche
+    // Channel braucht eine User-Geste (Autoplay-Policy) und darf den
+    // Radio-Boot (now-playing?channel=…) nicht mit einem Nicht-Radio-Channel
+    // füttern. Defensiv trotzdem abfangen, falls ein alter Wert drinsteht.
+    if (stored === 'mine') return DEFAULT_CHANNEL;
     return stored || DEFAULT_CHANNEL;
   });
 
   const setSelectedChannel = useCallback((c: string) => {
     setSelectedChannelState(c);
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && c !== 'mine') {
       window.localStorage.setItem(CHANNEL_STORAGE_KEY, c);
     }
   }, []);

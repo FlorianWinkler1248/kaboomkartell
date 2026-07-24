@@ -35,6 +35,7 @@ import AiBadge from '@/components/tracks/AiBadge';
 import VotingStats from '@/components/tracks/VotingStats';
 import { formatTime } from '@/lib/utils';
 import { SafeImg } from '@/components/ui/SafeImg';
+import AuraLikeButton from '@/components/kbk/AuraLikeButton';
 
 interface TrackData {
   id: string;
@@ -315,14 +316,30 @@ export default function TrackDetailClient({ track, relatedTracks }: TrackDetailC
                 </div>
               )}
 
-              {/* Voting-Stats — immer anzeigen als Einladung zum Voten */}
-              <div>
+              {/* Voting-Stats — immer anzeigen als Einladung zum Voten.
+                  Daneben die Aura+-Like-Geste (ADR-041): speist My Playlist. */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                 <VotingStats
                   auraCount={track.auraCount}
                   susCount={track.susCount}
                   totalVotes={track.totalVotes}
                   susPercentage={track.susPercentage}
                   size="md"
+                />
+                <AuraLikeButton
+                  size="md"
+                  track={{
+                    id: track.id,
+                    title: track.title,
+                    slug: track.slug,
+                    trackType: track.trackType,
+                    duration: track.duration,
+                    coverUrl: artwork,
+                    genre: track.genre,
+                    artistLabel: track.artistName,
+                    soundcloudUrl: track.soundcloudUrl,
+                    soundcloudEmbedUrl: track.soundcloudEmbedUrl,
+                  }}
                 />
               </div>
 

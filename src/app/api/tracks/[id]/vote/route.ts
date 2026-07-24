@@ -10,7 +10,7 @@ import prisma from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { resolveActor, requireScope } from '@/lib/agent-auth';
 import { PermissionError } from '@/lib/permissions';
-import { createVoteSchema } from '@/lib/validations';
+import { createVoteSchema, createScVoteSchema } from '@/lib/validations';
 import { applyRateLimit, voteLimit } from '@/lib/rate-limit';
 
 interface RouteParams {
@@ -109,8 +109,20 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const { id } = await params;
     const body = await request.json();
 
-    // Validierung über Zod-Schema
-    const result = createVoteSchema.safeParse(body);
+    // Prüfen ob Track existiert — VOR der Validierung, weil das Schema vom
+    // Track-Typ abhängt (ADR-041): SOUNDCLOUD ohne 60s-Hörpflicht (Widget-
+    // Wiedergabe ist für uns unmessbar), LOCAL unverändert min. 60s.
+    const track = await prisma.track.findUnique({ where: { id } });
+    if (!track) {
+      return NextResponse.json(
+        { success: false, error: 'Track not found.' },
+        { status: 404 }
+      );
+    }
+
+    // Validierung über Zod-Schema (typ-abhängig, s.o.)
+    const schema = track.trackType === 'SOUNDCLOUD' ? createScVoteSchema : createVoteSchema;
+    const result = schema.safeParse(body);
     if (!result.success) {
       return NextResponse.json(
         {
@@ -119,15 +131,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
           details: result.error.flatten().fieldErrors,
         },
         { status: 400 }
-      );
-    }
-
-    // Prüfen ob Track existiert
-    const track = await prisma.track.findUnique({ where: { id } });
-    if (!track) {
-      return NextResponse.json(
-        { success: false, error: 'Track not found.' },
-        { status: 404 }
       );
     }
 

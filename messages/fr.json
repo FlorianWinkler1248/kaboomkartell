@@ -543,7 +543,8 @@
     "trackCount": "{count, plural, one {# TRACK} other {# TRACKS}}",
     "auto": "AUTO",
     "showcaseZone": "ARTIST SHOWCASE",
-    "showcaseHint": "drops externes sélectionnés — chaque lecture compte sur le soundcloud de l'artiste."
+    "showcaseHint": "drops externes sélectionnés — chaque lecture compte sur le soundcloud de l'artiste.",
+    "minePlaylistLink": "MA PLAYLIST"
   },
   "showcase": {
     "sectionLabel": "AMIS DE LA MAISON",
@@ -553,6 +554,24 @@
     "listenOn": "SOUNDCLOUD",
     "playVia": "Lire {title} via SoundCloud",
     "openTrack": "Ouvrir {title}"
+  },
+  "myPlaylist": {
+    "metaTitle": "Ma playlist — KaboomKartell",
+    "metaDescription": "Tes tracks likés sur KaboomKartell — appuie sur AURA+ pour les garder ici.",
+    "kicker": "TA RÉSERVE",
+    "title": "MY PLAYLIST",
+    "likedCount": "{count, plural, one {# TRACK LIKÉ} other {# TRACKS LIKÉS}}",
+    "emptyAnonTitle": "PAS ENCORE DE LIKES",
+    "emptyAnonBody": "appuie sur AURA+ sur un track pour le garder ici le temps de cette session. crée un compte pour conserver tes likes et configurer ta playlist.",
+    "emptyAnonCta": "REJOINS LE PACK",
+    "emptyUserTitle": "RIEN ICI POUR L'INSTANT",
+    "emptyUserBody": "appuie sur AURA+ sur un track — il atterrit juste ici.",
+    "sessionBanner": "ces likes ne vivent que dans cette session du navigateur. inscris-toi et on les garde.",
+    "fromSoundcloud": "DEPUIS SOUNDCLOUD",
+    "fromSoundcloudHint": "les likes soundcloud se jouent sur le player de l'artiste — pas dans le channel MINE.",
+    "playAll": "TOUT LIRE ({count})",
+    "importSuccess": "{count, plural, one {# like transféré} other {# likes transférés}} dans ta playlist. bienvenue dans le pack.",
+    "importSkipped": "{count, plural, one {# like ignoré} other {# likes ignorés}} — écoute encore un peu d'abord."
   },
   "about": {
     "heroKicker": "/00/ À PROPOS DE KBK",
@@ -738,7 +757,15 @@
       "auraTitle": "AURA+ — célèbre cette piste",
       "markSus": "Donner SUS",
       "susTitle": "SUS — signaler comme suspecte",
+      "auraAnonTitle": "Enregistrer dans ta playlist",
       "loginRequired": "Connecte-toi pour voter"
+    },
+    "mine": {
+      "tab": "MINE",
+      "setLabel": "MY PLAYLIST",
+      "tooltip": "MINE — tes tracks likés comme channel perso",
+      "emptyAnonToast": "Crée un compte pour garder tes likes et configurer ta playlist.",
+      "emptyUserToast": "Rien dans ta playlist pour l'instant — appuie sur AURA+ sur un track."
     },
     "sync": {
       "synced": "SYNCHRO",

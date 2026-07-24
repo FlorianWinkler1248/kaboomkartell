@@ -59,6 +59,7 @@ export default async function ShowcaseSection() {
             slug: pt.track.slug,
             trackType: pt.track.trackType,
             genre: pt.track.genre,
+            duration: pt.track.duration,
             artistLabel: formatArtistDisplay(pt.track),
             artworkUrl: pt.track.coverUrl || pt.track.soundcloudArtwork || null,
             soundcloudUrl: pt.track.soundcloudUrl,

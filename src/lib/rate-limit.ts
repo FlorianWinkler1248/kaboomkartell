@@ -161,3 +161,7 @@ export const missionLimit = rateLimit({ interval: 60_000, maxKeys: 1000 });
  *  ArtistApplication.userId (P2002 → 409), nicht dieses Limit. Großzügig genug,
  *  dass Validierungs-Korrekturen (400-Schleife) niemanden aussperren. */
 export const artistApplyLimit = rateLimit({ interval: 3_600_000, maxKeys: 500 });
+
+/** 5 Session-Like-Importe pro Stunde pro IP (ADR-041). Der Import upsertet bis
+ *  zu 100 Votes pro Call — eigener knapper Bucket statt voteLimit. */
+export const likeImportLimit = rateLimit({ interval: 3_600_000, maxKeys: 500 });

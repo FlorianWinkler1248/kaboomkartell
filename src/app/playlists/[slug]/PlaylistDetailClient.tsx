@@ -28,6 +28,7 @@ import { SOUNDCLOUD_ORANGE } from '@/lib/constants';
 import type { PlayerTrack } from '@/types';
 import { SafeImg } from '@/components/ui/SafeImg';
 import SoundCloudEmbed from '@/components/player/SoundCloudEmbed';
+import AuraLikeButton from '@/components/kbk/AuraLikeButton';
 
 // Eigenes Track-Interface (trackType als string, da aus DB)
 interface PlaylistTrackItem {
@@ -557,6 +558,22 @@ export default function PlaylistDetailClient({ playlist }: { playlist: PlaylistD
                       {isSC ? '—' : formatTime(track.duration)}
                     </span>
                   </div>
+
+                  {/* Aura+-Like (ADR-041) — speist My Playlist */}
+                  <AuraLikeButton
+                    track={{
+                      id: track.id,
+                      title: track.title,
+                      slug: track.slug,
+                      trackType: track.trackType,
+                      duration: track.duration,
+                      coverUrl: track.coverUrl || track.soundcloudArtwork,
+                      genre: track.genre,
+                      artistLabel: formatArtistDisplay(track),
+                      soundcloudUrl: track.soundcloudUrl,
+                      soundcloudEmbedUrl: track.soundcloudEmbedUrl,
+                    }}
+                  />
 
                   {/* Play-Count (ab Tablet sichtbar) */}
                   <div
