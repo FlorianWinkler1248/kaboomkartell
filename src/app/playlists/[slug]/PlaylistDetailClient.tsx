@@ -9,6 +9,7 @@
  * Vulkanglas-Card, Hex-Farben). Funktional unverändert.
  */
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
@@ -23,8 +24,10 @@ import {
 import { formatTime } from '@/lib/utils';
 import { formatArtistDisplay } from '@/lib/track-display';
 import { usePlayer } from '@/components/providers/PlayerProvider';
+import { SOUNDCLOUD_ORANGE } from '@/lib/constants';
 import type { PlayerTrack } from '@/types';
 import { SafeImg } from '@/components/ui/SafeImg';
+import SoundCloudEmbed from '@/components/player/SoundCloudEmbed';
 
 // Eigenes Track-Interface (trackType als string, da aus DB)
 interface PlaylistTrackItem {
@@ -48,6 +51,7 @@ interface PlaylistTrackItem {
   streamUrl: string;
   soundcloudUrl?: string | null;
   soundcloudEmbedUrl?: string | null;
+  soundcloudArtwork?: string | null;
 }
 
 interface PlaylistData {
@@ -84,6 +88,7 @@ function toPlayerTrack(track: PlaylistTrackItem): PlayerTrack {
 
 // Type-Badge Farbschema (Inline-Hex statt Tailwind-Tokens)
 function typeBadgeColors(type: string): { bg: string; fg: string } {
+  if (type === 'showcase') return { bg: 'rgba(255,85,0,0.18)', fg: SOUNDCLOUD_ORANGE };
   if (type === 'manual') return { bg: 'rgba(96,165,250,0.18)', fg: '#60A5FA' };
   if (type.includes('weekly')) return { bg: 'rgba(63,207,74,0.18)', fg: '#3FCF4A' };
   if (type.includes('monthly')) return { bg: 'rgba(168,85,247,0.18)', fg: '#A855F7' };
@@ -93,9 +98,24 @@ function typeBadgeColors(type: string): { bg: string; fg: string } {
 export default function PlaylistDetailClient({ playlist }: { playlist: PlaylistData }) {
   const t = useTranslations('pagesUi');
   const router = useRouter();
-  const { playTrackAtIndex, playlist: playerPlaylist, audio } = usePlayer();
+  const { playTrackAtIndex, playlist: playerPlaylist, audio, radioMode, exitRadioMode } = usePlayer();
   const currentTrack = audio.currentTrack;
   const isPlaying = audio.isPlaying;
+
+  // SC-Zeilen sind expandierbar (ADR-041): Tap klappt das SoundCloud-Widget
+  // unter der Zeile auf (autoPlay, User-Geste liegt vor). Nur EIN Embed offen.
+  const [expandedScId, setExpandedScId] = useState<string | null>(null);
+
+  const handleToggleSc = (track: PlaylistTrackItem) => {
+    if (expandedScId === track.id) {
+      setExpandedScId(null);
+      return;
+    }
+    // Eigenes Audio stoppen, bevor das SC-Widget übernimmt (Muster playTrackAtIndex).
+    if (radioMode) exitRadioMode();
+    if (audio.isPlaying) audio.pause();
+    setExpandedScId(track.id);
+  };
 
   // Gesamtdauer berechnen (nur lokale Tracks, SC-Dauer ist 0)
   const totalDuration = playlist.tracks.reduce((sum, t) => sum + t.duration, 0);
@@ -370,20 +390,23 @@ export default function PlaylistDetailClient({ playlist }: { playlist: PlaylistD
             {playlist.tracks.map((track, index) => {
               const isCurrentTrack = currentTrack?.id === track.id;
               const isSC = track.trackType === 'SOUNDCLOUD';
+              const isExpandedSc = isSC && expandedScId === track.id;
 
               // Row-Background nach Zustand (Hover-Effekt via onMouseEnter/Leave Inline)
-              const rowBg = isSC
-                ? 'transparent'
+              const rowBg = isExpandedSc
+                ? 'rgba(255,85,0,0.08)'
                 : isCurrentTrack
                 ? 'rgba(63,207,74,0.10)'
                 : 'transparent';
-              const rowBorder = isCurrentTrack
+              const rowBorder = isExpandedSc
+                ? '1px solid rgba(255,85,0,0.35)'
+                : isCurrentTrack
                 ? '1px solid rgba(63,207,74,0.35)'
                 : '1px solid transparent';
 
               return (
+                <div key={track.id}>
                 <div
-                  key={track.id}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -391,25 +414,24 @@ export default function PlaylistDetailClient({ playlist }: { playlist: PlaylistD
                     padding: '10px 14px',
                     background: rowBg,
                     border: rowBorder,
-                    opacity: isSC ? 0.5 : 1,
                     transition: 'background 0.15s ease',
                   }}
                   onMouseEnter={(e) => {
-                    if (!isSC && !isCurrentTrack) {
+                    if (!isCurrentTrack && !isExpandedSc) {
                       (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,0.04)';
                     }
                   }}
                   onMouseLeave={(e) => {
-                    if (!isSC && !isCurrentTrack) {
+                    if (!isCurrentTrack && !isExpandedSc) {
                       (e.currentTarget as HTMLDivElement).style.background = 'transparent';
                     }
                   }}
                 >
-                  {/* Nummer / Play-Button */}
+                  {/* Nummer / Play-Button — SC-Tracks togglen das Embed (ADR-041) */}
                   <button
-                    onClick={() => !isSC && handlePlayTrack(track)}
-                    disabled={isSC}
+                    onClick={() => (isSC ? handleToggleSc(track) : handlePlayTrack(track))}
                     title={isSC ? t('soundcloudPlayHint') : undefined}
+                    aria-expanded={isSC ? isExpandedSc : undefined}
                     style={{
                       width: 32,
                       height: 32,
@@ -420,18 +442,26 @@ export default function PlaylistDetailClient({ playlist }: { playlist: PlaylistD
                       background: 'transparent',
                       border: 'none',
                       padding: 0,
-                      cursor: isSC ? 'not-allowed' : 'pointer',
+                      cursor: 'pointer',
                       color: isCurrentTrack ? '#3FCF4A' : 'rgba(255,255,255,0.55)',
                       fontFamily: 'var(--font-mono)',
                       fontSize: 12,
                     }}
                   >
-                    {isCurrentTrack && isPlaying ? (
+                    {isExpandedSc ? (
+                      <Headphones
+                        size={16}
+                        color={SOUNDCLOUD_ORANGE}
+                        style={{ animation: 'pulse 1.5s ease-in-out infinite' }}
+                      />
+                    ) : isCurrentTrack && isPlaying ? (
                       <Headphones
                         size={16}
                         color="#3FCF4A"
                         style={{ animation: 'pulse 1.5s ease-in-out infinite' }}
                       />
+                    ) : isSC ? (
+                      <Play size={14} color={SOUNDCLOUD_ORANGE} />
                     ) : (
                       <span>{index + 1}</span>
                     )}
@@ -452,7 +482,7 @@ export default function PlaylistDetailClient({ playlist }: { playlist: PlaylistD
                     }}
                   >
                     <SafeImg
-                      src={track.coverUrl}
+                      src={track.coverUrl || track.soundcloudArtwork}
                       alt=""
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                       fallback={<Music2 size={14} color="rgba(255,255,255,0.3)" />}
@@ -508,8 +538,24 @@ export default function PlaylistDetailClient({ playlist }: { playlist: PlaylistD
                       letterSpacing: '0.05em',
                     }}
                   >
+                    {isSC && (
+                      <span
+                        style={{
+                          padding: '2px 6px',
+                          background: 'rgba(255,85,0,0.18)',
+                          color: SOUNDCLOUD_ORANGE,
+                          fontSize: 9,
+                          letterSpacing: '0.15em',
+                          border: '1px solid rgba(255,85,0,0.35)',
+                        }}
+                      >
+                        SC
+                      </span>
+                    )}
                     {track.bpm && <span>{track.bpm} BPM</span>}
-                    <span style={{ width: 48, textAlign: 'right' }}>{formatTime(track.duration)}</span>
+                    <span style={{ width: 48, textAlign: 'right' }}>
+                      {isSC ? '—' : formatTime(track.duration)}
+                    </span>
                   </div>
 
                   {/* Play-Count (ab Tablet sichtbar) */}
@@ -531,6 +577,19 @@ export default function PlaylistDetailClient({ playlist }: { playlist: PlaylistD
                     <Headphones size={11} />
                     {track.playCount}
                   </div>
+                </div>
+
+                {/* Expandiertes SC-Widget unter der Zeile (autoPlay — User-Geste liegt vor) */}
+                {isExpandedSc && track.soundcloudEmbedUrl && (
+                  <div style={{ padding: '6px 14px 12px' }}>
+                    <SoundCloudEmbed
+                      embedUrl={track.soundcloudEmbedUrl}
+                      trackTitle={track.title}
+                      soundcloudUrl={track.soundcloudUrl ?? undefined}
+                      autoPlay
+                    />
+                  </div>
+                )}
                 </div>
               );
             })}

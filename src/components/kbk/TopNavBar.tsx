@@ -31,9 +31,12 @@ import LocaleSwitcher from './LocaleSwitcher';
 // MISSION (ADR-039, 16.07.2026): Mission-Board — Desktop UND Mobile ziehen aus
 // derselben Konstante, ein Eintrag reicht fuer beide Breakpoints.
 // Labels kommen seit i18n (ADR-031) aus dem nav-Namespace der Message-Kataloge.
-const NAV_ITEMS: { key: 'home' | 'pack' | 'library' | 'schedule' | 'mission' | 'learn'; href: string }[] = [
+// SHOWCASE (ADR-041, 24.07.2026): kuratierte externe Künstler — zeigt auf die
+// Playlist-Übersicht mit der Showcase-Zone oben.
+const NAV_ITEMS: { key: 'home' | 'pack' | 'showcase' | 'library' | 'schedule' | 'mission' | 'learn'; href: string }[] = [
   { key: 'home', href: '/' },
   { key: 'pack', href: '/artists' },
+  { key: 'showcase', href: '/playlists' },
   { key: 'library', href: '/library' },
   { key: 'schedule', href: '/schedule' },
   { key: 'mission', href: '/mission' },

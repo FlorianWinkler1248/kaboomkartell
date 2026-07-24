@@ -88,6 +88,7 @@ export async function GET(
         streamUrl: pt.track.trackType === 'LOCAL' ? `/api/tracks/${pt.track.id}/stream` : '',
         soundcloudUrl: pt.track.trackType === 'SOUNDCLOUD' ? pt.track.soundcloudUrl : undefined,
         soundcloudEmbedUrl: pt.track.trackType === 'SOUNDCLOUD' ? pt.track.soundcloudEmbedUrl : undefined,
+        soundcloudArtwork: pt.track.trackType === 'SOUNDCLOUD' ? pt.track.soundcloudArtwork : undefined,
         position: pt.position,
       }));
 

@@ -7,6 +7,7 @@ import RecentReleasesSection from '@/components/kbk/sections/RecentReleasesSecti
 import SocialsSection from '@/components/kbk/sections/SocialsSection';
 import BoomySection from '@/components/kbk/sections/BoomySection';
 import CrowdControlSection from '@/components/kbk/sections/CrowdControlSection';
+import ShowcaseSection from '@/components/kbk/sections/ShowcaseSection';
 import DanceCrowd from '@/components/kbk/DanceCrowd';
 
 /**
@@ -63,6 +64,11 @@ export default function Home() {
       {/* HUMAN ARTISTS WANTED (ADR-039): Artist-Funnel-Ausschreibung zwischen
           Wolfpack und Recent Releases — KBK ist kein AI-Showcase. */}
       <HumanArtistsSection />
+
+      {/* Artist-Showcase (ADR-041): kuratierte externe Künstler direkt nach dem
+          „Human Artists Wanted"-Pitch — erst die Ausschreibung, dann der Beweis.
+          Blendet sich aus, solange keine Showcase-Playlist existiert. */}
+      <ShowcaseSection />
 
       <RecentReleasesSection />
       <DropsSection />

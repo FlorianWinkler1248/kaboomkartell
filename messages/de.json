@@ -28,6 +28,8 @@
     "securityBody": "2FA-Geheimnisse werden stark verschlüsselt, bevor sie die Datenbank berühren, und niemals im Klartext gespeichert. Für sicherheitsrelevante Ereignisse (Logins, Passwort-Änderungen, 2FA-Änderungen) führen wir ein kurzes Audit-Log mit IP-Adresse und Browser-Kennung — ausschließlich zur Missbrauchs-Erkennung und damit du ein gekapertes Konto zurückbekommst, nie zum Profiling.",
     "cookiesHeading": "Cookies",
     "cookiesBody": "Nur funktionale Cookies: ein Session-Token, das dich eingeloggt hält, ein kleines Cookie für deine Sprachwahl und kurzlebige State-Cookies während einer Discord- oder Twitch-Verknüpfung. Keine Werbe- oder Tracking-Cookies — deshalb gibt es auch keine Cookie-Zustimmungswand.",
+    "soundcloudHeading": "SoundCloud-Embeds",
+    "soundcloudBody": "Manche Showcase-Tracks laufen über den offiziellen SoundCloud-Player. Das Embed lädt erst nach deinem Play-Tap — vorher geht keine Anfrage an SoundCloud. Danach kann SoundCloud eigene Cookies nach seiner eigenen Datenschutzerklärung setzen.",
     "trackingHeading": "Kein Tracking, keine Analyse",
     "trackingBody": "KaboomKartell nutzt null Drittanbieter-Analyse, -Tracker oder -Werbeskripte. Nichts über deinen Besuch geht an Google, Meta oder einen Analyse-Dienst. Der einzige Zähler ist eine anonyme Pro-Link-Zählung, die weder IP noch Nutzer noch Zeitstempel speichert.",
     "emailsHeading": "E-Mails",
@@ -63,6 +65,7 @@
     "home": "HOME",
     "pack": "PACK",
     "library": "BIBLIOTHEK",
+    "showcase": "SHOWCASE",
     "schedule": "SENDEPLAN",
     "learn": "LERNEN",
     "mission": "MISSION",
@@ -538,7 +541,18 @@
     "emptyHint": "NOCH KEINE PLAYLISTS. SCHAU BALD WIEDER VORBEI.",
     "featured": "FEATURED",
     "trackCount": "{count, plural, one {# TRACK} other {# TRACKS}}",
-    "auto": "AUTO"
+    "auto": "AUTO",
+    "showcaseZone": "ARTIST SHOWCASE",
+    "showcaseHint": "kuratierte externe drops — jeder play zählt auf dem soundcloud des artists."
+  },
+  "showcase": {
+    "sectionLabel": "FREUNDE DES HAUSES",
+    "sectionTitle": "ARTIST SHOWCASE",
+    "subtitle": "handverlesene drops von freunden des hauses. jeder play läuft über den eigenen soundcloud-player des artists — und zählt dort.",
+    "openPlaylist": "PLAYLIST ÖFFNEN",
+    "listenOn": "SOUNDCLOUD",
+    "playVia": "{title} über SoundCloud abspielen",
+    "openTrack": "{title} öffnen"
   },
   "about": {
     "heroKicker": "/00/ ÜBER KBK",
