@@ -326,6 +326,7 @@ export default function AdminPlaylistsPage() {
                 className={cn(adminSelectClass, 'w-full')}
               >
                 <option value="manual">Manual</option>
+                <option value="showcase">Showcase</option>
                 <option value="weekly-rotation">Weekly Rotation</option>
                 <option value="monthly-rotation">Monthly Rotation</option>
                 <option value="genre-rotation">Genre Rotation</option>

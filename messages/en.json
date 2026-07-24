@@ -28,6 +28,8 @@
     "securityBody": "Two-factor secrets are strongly encrypted before they touch the database, never stored in plain text. For security-relevant events (logins, password changes, 2FA changes) we keep a short audit log with the IP address and browser user-agent — strictly to detect abuse and help you recover a hijacked account, never for profiling.",
     "cookiesHeading": "Cookies",
     "cookiesBody": "Only functional cookies: a session token that keeps you logged in, a small cookie remembering your language, and short-lived state cookies during a Discord or Twitch connection. No advertising or tracking cookies — which is why there is no cookie consent wall.",
+    "soundcloudHeading": "SoundCloud Embeds",
+    "soundcloudBody": "Some showcase tracks play via the official SoundCloud player. The embed only loads after you tap play — before that, no request is sent to SoundCloud. Once loaded, SoundCloud may set its own cookies under its own privacy policy.",
     "trackingHeading": "No tracking, no analytics",
     "trackingBody": "KaboomKartell runs zero third-party analytics, trackers or advertising scripts. Nothing about your visit is sent to Google, Meta or any analytics service. The only counter is an anonymous per-link tally that stores no IP, no user and no timestamp.",
     "emailsHeading": "Emails",
@@ -63,6 +65,7 @@
     "home": "HOME",
     "pack": "PACK",
     "library": "LIBRARY",
+    "showcase": "SHOWCASE",
     "schedule": "SCHEDULE",
     "learn": "LEARN",
     "mission": "MISSION",
@@ -538,7 +541,18 @@
     "emptyHint": "NO PLAYLISTS YET. CHECK BACK SOON.",
     "featured": "FEATURED",
     "trackCount": "{count, plural, one {# TRACK} other {# TRACKS}}",
-    "auto": "AUTO"
+    "auto": "AUTO",
+    "showcaseZone": "ARTIST SHOWCASE",
+    "showcaseHint": "curated external drops — every play counts on the artist's own soundcloud."
+  },
+  "showcase": {
+    "sectionLabel": "FRIENDS OF THE HOUSE",
+    "sectionTitle": "ARTIST SHOWCASE",
+    "subtitle": "handpicked drops from friends of the house. every play runs on the artist's own soundcloud — and counts there.",
+    "openPlaylist": "OPEN PLAYLIST",
+    "listenOn": "SOUNDCLOUD",
+    "playVia": "Play {title} via SoundCloud",
+    "openTrack": "Open {title}"
   },
   "about": {
     "heroKicker": "/00/ ABOUT KBK",

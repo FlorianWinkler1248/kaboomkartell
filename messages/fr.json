@@ -28,6 +28,8 @@
     "securityBody": "Les secrets 2FA sont fortement chiffrés avant même de toucher la base de données, jamais stockés en clair. Pour les événements liés à la sécurité (connexions, changements de mot de passe, changements 2FA), nous gardons un court journal d'audit incluant l'adresse IP et l'agent du navigateur — uniquement pour détecter les abus et t'aider à récupérer un compte piraté, jamais pour du profilage.",
     "cookiesHeading": "Cookies",
     "cookiesBody": "Uniquement des cookies fonctionnels : un jeton de session qui te garde connecté, un petit cookie qui retient ta langue, et des cookies d'état éphémères lors d'une connexion Discord ou Twitch. Aucun cookie publicitaire ou de pistage — c'est pourquoi il n'y a aucun mur de consentement aux cookies.",
+    "soundcloudHeading": "Embeds SoundCloud",
+    "soundcloudBody": "Certains tracks du showcase sont lus via le player officiel SoundCloud. L'embed ne se charge qu'après ton tap sur play — avant cela, aucune requête n'est envoyée à SoundCloud. Ensuite, SoundCloud peut déposer ses propres cookies selon sa propre politique de confidentialité.",
     "trackingHeading": "Aucun pistage, aucune analyse",
     "trackingBody": "KaboomKartell n'utilise aucun outil d'analyse, traceur ou script publicitaire tiers. Rien de ta visite n'est envoyé à Google, Meta ou un service d'analyse. Le seul compteur est un décompte anonyme par lien qui ne stocke ni IP, ni utilisateur, ni horodatage.",
     "emailsHeading": "E-mails",
@@ -63,6 +65,7 @@
     "home": "ACCUEIL",
     "pack": "PACK",
     "library": "BIBLIOTHÈQUE",
+    "showcase": "SHOWCASE",
     "schedule": "PROGRAMME",
     "learn": "APPRENDRE",
     "mission": "MISSION",
@@ -538,7 +541,18 @@
     "emptyHint": "AUCUNE PLAYLIST POUR L'INSTANT. REVIENS BIENTÔT.",
     "featured": "À LA UNE",
     "trackCount": "{count, plural, one {# TRACK} other {# TRACKS}}",
-    "auto": "AUTO"
+    "auto": "AUTO",
+    "showcaseZone": "ARTIST SHOWCASE",
+    "showcaseHint": "drops externes sélectionnés — chaque lecture compte sur le soundcloud de l'artiste."
+  },
+  "showcase": {
+    "sectionLabel": "AMIS DE LA MAISON",
+    "sectionTitle": "ARTIST SHOWCASE",
+    "subtitle": "des drops choisis par des amis de la maison. chaque lecture passe par le player soundcloud de l'artiste — et compte chez lui.",
+    "openPlaylist": "OUVRIR LA PLAYLIST",
+    "listenOn": "SOUNDCLOUD",
+    "playVia": "Lire {title} via SoundCloud",
+    "openTrack": "Ouvrir {title}"
   },
   "about": {
     "heroKicker": "/00/ À PROPOS DE KBK",

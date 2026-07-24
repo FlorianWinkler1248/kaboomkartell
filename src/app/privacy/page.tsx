@@ -102,6 +102,12 @@ export default async function PrivacyPage() {
         <p style={bodyText}>{t('cookiesBody')}</p>
       </section>
 
+      {/* SoundCloud-Embeds (ADR-041): laden erst nach explizitem Play-Tap */}
+      <section className="kbk-obsidian framed" style={cardStyle}>
+        <h2 style={sectionHeading}>{t('soundcloudHeading')}</h2>
+        <p style={bodyText}>{t('soundcloudBody')}</p>
+      </section>
+
       {/* Kein Tracking */}
       <section
         style={{

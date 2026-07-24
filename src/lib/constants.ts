@@ -197,8 +197,14 @@ export const APP_CONFIG = {
 export const DISCORD_INVITE_URL = 'https://discord.gg/nrvuW7aB';
 
 // === Playlist-Typen ===
+// 'showcase' (ADR-041): manuell kuratierte Schaufenster-Playlist für externe
+// Künstler — darf SOUNDCLOUD-Tracks enthalten, wird von der Auto-Rotation
+// ignoriert (rotate-playlists verarbeitet nur *-rotation-Typen) und erscheint
+// prominent auf Homepage + /playlists. Radio-Airplay bleibt davon unberührt
+// (mapPoolTracks filtert auf LOCAL).
 export const PLAYLIST_TYPES = {
   MANUAL: 'manual',
+  SHOWCASE: 'showcase',
   WEEKLY_ROTATION: 'weekly-rotation',
   MONTHLY_ROTATION: 'monthly-rotation',
   GENRE_ROTATION: 'genre-rotation',
@@ -208,10 +214,15 @@ export type PlaylistType = (typeof PLAYLIST_TYPES)[keyof typeof PLAYLIST_TYPES];
 
 export const PLAYLIST_TYPE_LABELS: Record<string, string> = {
   manual: 'Manual',
+  showcase: 'Showcase',
   'weekly-rotation': 'Weekly Rotation',
   'monthly-rotation': 'Monthly Rotation',
   'genre-rotation': 'Genre Rotation',
 };
+
+// SoundCloud-Signalfarbe — nur für Showcase-/Embed-Flächen (externe Inhalte),
+// nicht Teil der KBK-Genre-Palette.
+export const SOUNDCLOUD_ORANGE = '#FF5500';
 
 // === Repeat-Modi (für den Player) ===
 export const REPEAT_MODES = ['off', 'all', 'one'] as const;

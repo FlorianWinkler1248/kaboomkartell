@@ -14,17 +14,20 @@ interface SoundCloudEmbedProps {
   embedUrl: string;
   trackTitle: string;
   soundcloudUrl?: string;
+  /** true = Widget startet sofort (nur nach expliziter User-Geste setzen, ADR-041 Lazy-Facade). */
+  autoPlay?: boolean;
 }
 
 export default function SoundCloudEmbed({
   embedUrl,
   trackTitle,
   soundcloudUrl,
+  autoPlay = false,
 }: SoundCloudEmbedProps) {
   const t = useTranslations('playerUi');
   const iframeSrc = buildEmbedUrl(embedUrl, {
     color: '%2300b300',
-    auto_play: 'false',
+    auto_play: autoPlay ? 'true' : 'false',
     hide_related: 'true',
     show_comments: 'false',
     show_user: 'true',
