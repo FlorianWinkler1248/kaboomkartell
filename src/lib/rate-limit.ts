@@ -165,3 +165,14 @@ export const artistApplyLimit = rateLimit({ interval: 3_600_000, maxKeys: 500 })
 /** 5 Session-Like-Importe pro Stunde pro IP (ADR-041). Der Import upsertet bis
  *  zu 100 Votes pro Call — eigener knapper Bucket statt voteLimit. */
 export const likeImportLimit = rateLimit({ interval: 3_600_000, maxKeys: 500 });
+
+/** Sprite-Generierung (ADR-041): 5/h pro USER + globaler Deckel 30/h — der
+ *  MASTER_HUB rechnet ~1–2s pro Cover, mehrere Artists dürfen ihn nicht
+ *  summiert fluten. Key ist die userId, nicht die IP. */
+export const spriteLimit = rateLimit({ interval: 3_600_000, maxKeys: 300 });
+
+/** 5 Claim-Versuche pro Stunde pro IP (ADR-041) — bremst Token-Raten. */
+export const claimLimit = rateLimit({ interval: 3_600_000, maxKeys: 500 });
+
+/** 6 Studio-Track-Einreichungen pro Stunde pro User (ADR-041). */
+export const studioSubmitLimit = rateLimit({ interval: 3_600_000, maxKeys: 300 });

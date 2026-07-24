@@ -573,6 +573,16 @@
     "importSuccess": "{count, plural, one {# like transféré} other {# likes transférés}} dans ta playlist. bienvenue dans le pack.",
     "importSkipped": "{count, plural, one {# like ignoré} other {# likes ignorés}} — écoute encore un peu d'abord."
   },
+  "artistsPublic": {
+    "extendedFamilyKicker": "AMIS DE LA MAISON",
+    "extendedFamilyTitle": "EXTENDED FAMILY",
+    "extendedFamilyHint": "des artistes externes mis en avant par la maison — chaque lecture compte sur leurs propres canaux.",
+    "discography": "DISCOGRAPHIE",
+    "links": "LIENS",
+    "onKbk": "SUR KBK",
+    "fromSoundcloud": "DEPUIS SOUNDCLOUD",
+    "notFound": "Artiste introuvable."
+  },
   "about": {
     "heroKicker": "/00/ À PROPOS DE KBK",
     "heroTitle": "C'EST QUOI <brand>KABOOMKARTELL</brand><q>?</q>",

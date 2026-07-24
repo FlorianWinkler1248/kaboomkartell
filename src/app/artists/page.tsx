@@ -1,11 +1,13 @@
 import DanceSprite from '@/components/kbk/DanceSprite';
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { obsidianFrameVars } from '@/lib/obsidian-frame';
 import prisma from '@/lib/db';
 import { isBotUser, BOOMY_CONFIG } from '@/lib/constants';
 import ArtistHoverCard from '@/components/artists/ArtistHoverCard';
 import { ArtistsLiveStreamCard } from '@/components/twitch/ArtistsLiveStreamCard';
+import { SafeImg } from '@/components/ui/SafeImg';
 
 // v2.26 (07.05.2026): Page muss dynamisch gerendert werden, damit der
 // Audio-Snippet-Pfad (artistTracks-Subselect) live aus der DB kommt.
@@ -86,6 +88,22 @@ async function loadArtists() {
   );
 }
 
+// Extended Family (ADR-041): externe Künstler mit veröffentlichtem
+// ArtistProfile — kuratiert von Flow, verlinkt auf /artists/[slug].
+async function loadExtendedFamily() {
+  return prisma.artistProfile.findMany({
+    where: { isPublished: true },
+    orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      bio: true,
+      avatarUrl: true,
+    },
+  });
+}
+
 const GREEN = '#3FCF4A';
 const RED = '#E63B2E';
 const YELLOW = '#F5D02E';
@@ -129,7 +147,8 @@ function MiniHeader({ sub, label, color }: { sub: string; label: string; color: 
 
 export default async function PackPage() {
   const t = await getTranslations('artists');
-  const artists = await loadArtists();
+  const tPub = await getTranslations('artistsPublic');
+  const [artists, extendedFamily] = await Promise.all([loadArtists(), loadExtendedFamily()]);
   const founder = artists.find((a) => a.role === 'ADMIN');
   const aiResident = artists.find((a) => isBotUser(a.username));
   const externals = artists.filter((a) => a.id !== founder?.id && a.id !== aiResident?.id);
@@ -317,6 +336,118 @@ export default async function PackPage() {
                 trackCount={a.trackCount}
                 index={i + 2}
               />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Extended Family — externe Künstler mit eigenem ArtistProfile
+          (ADR-041). Nur rendern, wenn veröffentlichte Profile existieren. */}
+      {extendedFamily.length > 0 && (
+        <section style={{ marginTop: 40 }}>
+          <MiniHeader
+            sub="XF"
+            label={`${tPub('extendedFamilyKicker')} · ${tPub('extendedFamilyTitle')}`}
+            color={GREEN}
+          />
+          <p
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: 11,
+              color: 'rgba(255,255,255,0.5)',
+              letterSpacing: '0.1em',
+              marginBottom: 14,
+            }}
+          >
+            {tPub('extendedFamilyHint')}
+          </p>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+              gap: 12,
+            }}
+          >
+            {extendedFamily.map((profile) => (
+              <Link
+                key={profile.id}
+                href={`/artists/${profile.slug}`}
+                className="kbk-obsidian polished"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  padding: 14,
+                  minHeight: 72,
+                  textDecoration: 'none',
+                }}
+              >
+                <div
+                  style={{
+                    width: 48,
+                    height: 48,
+                    flexShrink: 0,
+                    borderRadius: '50%',
+                    overflow: 'hidden',
+                    border: `1px solid ${GREEN}55`,
+                    background: 'rgba(255,255,255,0.06)',
+                  }}
+                >
+                  <SafeImg
+                    src={profile.avatarUrl}
+                    alt=""
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                    fallback={
+                      <div
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontFamily: 'var(--font-display)',
+                          fontSize: 20,
+                          fontWeight: 900,
+                          color: GREEN,
+                        }}
+                      >
+                        {profile.name.charAt(0).toUpperCase()}
+                      </div>
+                    }
+                  />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
+                    style={{
+                      fontFamily: 'var(--font-display)',
+                      fontSize: 14,
+                      fontWeight: 900,
+                      color: '#fff',
+                      overflow: 'hidden',
+                      whiteSpace: 'nowrap',
+                      textOverflow: 'ellipsis',
+                    }}
+                  >
+                    {profile.name}
+                  </div>
+                  {/* Erste Bio-Zeile als Teaser */}
+                  {profile.bio && (
+                    <div
+                      style={{
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: 10,
+                        color: 'rgba(255,255,255,0.55)',
+                        overflow: 'hidden',
+                        whiteSpace: 'nowrap',
+                        textOverflow: 'ellipsis',
+                        marginTop: 3,
+                      }}
+                    >
+                      {profile.bio.split('\n')[0]}
+                    </div>
+                  )}
+                </div>
+              </Link>
             ))}
           </div>
         </section>

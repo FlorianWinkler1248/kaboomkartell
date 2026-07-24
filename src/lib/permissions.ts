@@ -79,6 +79,23 @@ export async function requireTier(userId: string, minTier: TrustTier): Promise<v
 }
 
 /**
+ * ADR-041: Das Upload-Recht ist eine Komposition — Badge `artist:upload`
+ * UND Trust-Tier T2 (2FA). Die EINE Stelle, an der die Upload-Policy lebt;
+ * verdrahtet in /api/upload (Audio-Zweig) + /api/studio/tracks. ADMIN
+ * passiert beide Checks implizit (hasBadge-Bypass; ADMIN-Konten sind T2).
+ */
+export async function requireUploadRight(userId: string): Promise<void> {
+  // ADMIN-Bypass komplett (auch fürs Tier — Flow-Konten gelten als vertraut).
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { role: true },
+  });
+  if (user?.role === 'ADMIN') return;
+  await requireBadge(userId, BADGES.ARTIST_UPLOAD);
+  await requireTier(userId, 'T2');
+}
+
+/**
  * Sync-Variante für User-Objects mit eager-loaded badges (Performance).
  * Nutze diese in Hot-Pfaden wo der User-State sowieso schon geladen ist
  * (z.B. Server-Components mit Session-User).

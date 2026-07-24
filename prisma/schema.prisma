@@ -107,6 +107,8 @@ model User {
   apiTokens         ApiToken[]          // Agenten-PATs (Phase 2, ADR-035) — an tokenVersion gekoppelt
   missionAcceptances MissionAcceptance[] // Mission-Board: angenommene Missionen (ADR-039, T2)
   artistApplication  ArtistApplication?  // Artist-Funnel: hart 1 Bewerbung pro Account (ADR-039)
+  artistProfile      ArtistProfile?      // ADR-041: geclaimtes Künstler-Profil (1:1, null = kein Artist)
+  uploadSubmissions  UploadSubmission[]  // ADR-041: Studio-Track-Einreichungen
 
   @@map("users")
 }
@@ -237,6 +239,12 @@ model Track {
   aiDisclosure String?  // "human" | "ai_assisted" | "ai_generated"
   aiSource     String?  // "suno" | "boomy" | "andere" (nur wenn nicht "human")
 
+  // DDEX-nahe Metadaten (ADR-041) — Tür zur Distributions-Welt offen halten.
+  // Alle optional; werden im Studio-Upload erfasst, nie hart erzwungen.
+  isrc         String?  // International Standard Recording Code (CCXXXYYNNNNN)
+  label        String?  // Label-Name (DDEX LabelName)
+  contributors String?  // JSON-String [{role, name}] — Konvention wie ArtistApplication.links
+
   // Voting-System (aggregierte Cache-Werte)
   auraCount     Int   @default(0)
   susCount      Int   @default(0)
@@ -258,8 +266,14 @@ model Track {
   // nicht mit-killt. Display-Logic in src/lib/track-display.ts.
   featuringArtist   User?  @relation("TrackFeaturing", fields: [featuringArtistId], references: [id], onDelete: SetNull)
   featuringArtistId String?
+  // ADR-041: externes/claimbares Künstler-Profil — Anzeige-Priorität vor
+  // artistId (Display-Logik in src/lib/track-display.ts). SetNull: Profil-
+  // Löschung killt den Track nicht.
+  artistProfile   ArtistProfile? @relation(fields: [artistProfileId], references: [id], onDelete: SetNull)
+  artistProfileId String?
   votes       Vote[]
   releaseSlot ReleaseSlot? // Verknüpfter Release-Slot (1:1)
+  uploadSubmission UploadSubmission? // ADR-041: Studio-Review-Queue (1:1)
   playlists   PlaylistTrack[]
   poolTracks  PoolTrack[]
 
@@ -269,6 +283,7 @@ model Track {
   @@index([slug])
   @@index([trackType])
   @@index([scheduledPublishAt])
+  @@index([artistProfileId])
   @@map("tracks")
 }
 
@@ -718,4 +733,70 @@ model ArtistApplication {
 
   @@index([status])
   @@map("artist_applications")
+}
+
+// ============================================================================
+// Artist-Ökosystem (ADR-041, 24.07.2026)
+// Externe Künstler: unclaimed Profile für den Outreach (Flow legt sie an,
+// Künstler claimen per Invite-Token), Selbstverwaltung im Studio (/studio),
+// Upload-Einreichungen mit Review-Pflicht — Publish bleibt IMMER bei Flow.
+// Workflow: prozesse/kbk-artist-studio.md
+// ============================================================================
+
+// ArtistProfile — Künstler-Identität, getrennt vom Account (User).
+// userId=null = unclaimed (Outreach-Phase: der Künstler ist sichtbar im KBK,
+// bevor er einen Account hat). Bewusst KEIN Platzhalter-User (Auth-Fläche).
+model ArtistProfile {
+  id        String  @id @default(cuid())
+  slug      String  @unique // /artists/[slug] — Kollision gegen User.username code-seitig prüfen
+  name      String          // Anzeige-Name (DDEX DisplayArtistName)
+  bio       String?
+  avatarUrl String?
+  headerUrl String?
+  // Links — explizite Felder analog User (UI-Konsistenz)
+  socialSoundcloud String?
+  socialInstagram  String?
+  socialTelegram   String?
+  socialWebsite    String?
+  // Claim-Mechanik: Token nur als SHA-256-Hash (Muster ApiToken.tokenHash),
+  // Klartext genau 1× bei der Erzeugung sichtbar. Ein aktiver Token pro Profil.
+  claimTokenHash   String?   @unique
+  claimTokenExpiry DateTime?
+  userId    String?   @unique // null = unclaimed
+  user      User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  claimedAt DateTime?
+  isPublished Boolean @default(false) // sichtbar auf öffentlichen Artist-Seiten
+  createdBy String?                   // Admin-UserId (Audit; SecurityEvent zusätzlich)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tracks Track[]
+
+  @@index([isPublished, sortOrder])
+  @@map("artist_profiles")
+}
+
+// UploadSubmission — Review-Queue für Studio-Einreichungen. Bewusst NICHT
+// ReleaseSlot wiederverwendet (der ist kalendergetrieben mit Pflicht-Datum):
+// Submissions sind artist-initiiert und datumslos. Track bleibt bis zum
+// APPROVE+publish auf isPublic=false und ohne Pool-Attach.
+model UploadSubmission {
+  id          String @id @default(cuid())
+  trackId     String @unique
+  track       Track  @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  submitterId String
+  submitter   User   @relation(fields: [submitterId], references: [id], onDelete: Cascade)
+  // PENDING | CHANGES_REQUESTED | APPROVED | REJECTED (String-Enum, SQLite)
+  status     String    @default("PENDING")
+  message    String?   // Nachricht des Artists an Flow
+  reviewNote String?   // Flows Feedback (CHANGES_REQUESTED/REJECTED)
+  reviewedBy String?
+  reviewedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([status, createdAt])
+  @@index([submitterId])
+  @@map("upload_submissions")
 }

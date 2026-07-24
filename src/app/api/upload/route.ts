@@ -17,6 +17,7 @@ import { APP_CONFIG } from '@/lib/constants';
 import { slugify } from '@/lib/utils';
 import { applyRateLimit, uploadLimit } from '@/lib/rate-limit';
 import { detectImageMime, looksLikeMp3 } from '@/lib/mime-detect';
+import { requireUploadRight, PermissionError } from '@/lib/permissions';
 
 export async function POST(request: NextRequest) {
   // Rate-Limit zuerst (Defense-in-Depth, vor dem teuren Multipart-Parsing).
@@ -24,9 +25,19 @@ export async function POST(request: NextRequest) {
   if (limited) return limited;
 
   try {
-    // Auth-Check
+    // Auth-Check (ADR-041): ADMIN darf alles; KUENSTLER dürfen Bilder
+    // (Avatar/Cover) hochladen, Audio nur mit Upload-Recht (Badge artist:upload
+    // + T2) — der Zweig-Check folgt unten nach der Typ-Bestimmung.
     const session = await auth();
-    if (!session?.user || session.user.role !== 'ADMIN') {
+    if (!session?.user) {
+      return NextResponse.json(
+        { success: false, error: 'Not authorized.' },
+        { status: 401 }
+      );
+    }
+    const isAdmin = session.user.role === 'ADMIN';
+    const isArtist = session.user.role === 'KUENSTLER';
+    if (!isAdmin && !isArtist) {
       return NextResponse.json(
         { success: false, error: 'Not authorized.' },
         { status: 403 }
@@ -65,6 +76,26 @@ export async function POST(request: NextRequest) {
         },
         { status: 400 }
       );
+    }
+
+    // Audio-Zweig (ADR-041): Nicht-Admins brauchen das Upload-Recht
+    // (Badge artist:upload UND T2) — die eine Policy-Stelle ist
+    // requireUploadRight in lib/permissions.ts.
+    if (isAudio && !isAdmin) {
+      try {
+        await requireUploadRight(session.user.id);
+      } catch (e) {
+        if (e instanceof PermissionError) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: 'Audio uploads need the artist:upload badge and 2FA (T2).',
+            },
+            { status: 403 }
+          );
+        }
+        throw e;
+      }
     }
 
     const subDir = isAudio ? 'tracks' : 'covers';

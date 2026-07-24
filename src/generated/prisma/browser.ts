@@ -132,3 +132,13 @@ export type SocialAccount = Prisma.SocialAccountModel
  * 
  */
 export type ArtistApplication = Prisma.ArtistApplicationModel
+/**
+ * Model ArtistProfile
+ * 
+ */
+export type ArtistProfile = Prisma.ArtistProfileModel
+/**
+ * Model UploadSubmission
+ * 
+ */
+export type UploadSubmission = Prisma.UploadSubmissionModel

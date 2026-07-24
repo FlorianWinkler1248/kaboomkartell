@@ -76,6 +76,10 @@ export default async function TrackDetailPage({ params }: PageProps) {
       featuringArtist: {
         select: { id: true, username: true, displayName: true },
       },
+      // ADR-041: externes Künstler-Profil — Anzeige-Priorität vor artist.
+      artistProfile: {
+        select: { slug: true, name: true },
+      },
     },
   });
 
@@ -109,8 +113,12 @@ export default async function TrackDetailPage({ params }: PageProps) {
     },
   });
 
-  const mainArtist = track.artist?.displayName || track.artist?.username || 'KBK';
-  const featuringArtist = track.featuringArtist?.displayName || track.featuringArtist?.username;
+  // ADR-041: Tracks externer Künstler zeigen den Profil-Namen.
+  const profileName = track.artistProfile?.name?.trim() || null;
+  const mainArtist = profileName || track.artist?.displayName || track.artist?.username || 'KBK';
+  const featuringArtist = profileName
+    ? null
+    : track.featuringArtist?.displayName || track.featuringArtist?.username;
   const artistName = featuringArtist ? `${mainArtist} feat. ${featuringArtist}` : mainArtist;
   const artwork = track.coverUrl || track.soundcloudArtwork || null;
 

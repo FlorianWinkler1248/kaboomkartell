@@ -23,6 +23,10 @@ const playlistWithTracks = {
           featuringArtist: {
             select: { id: true, username: true, displayName: true },
           },
+          // ADR-041: Profil-Name externer Künstler (formatArtistDisplay-Priorität)
+          artistProfile: {
+            select: { slug: true, name: true },
+          },
         },
       },
     },
@@ -85,6 +89,7 @@ export async function GET(
         susPercentage: pt.track.susPercentage,
         artist: pt.track.artist,
         featuringArtist: pt.track.featuringArtist,
+        artistProfile: pt.track.artistProfile,
         streamUrl: pt.track.trackType === 'LOCAL' ? `/api/tracks/${pt.track.id}/stream` : '',
         soundcloudUrl: pt.track.trackType === 'SOUNDCLOUD' ? pt.track.soundcloudUrl : undefined,
         soundcloudEmbedUrl: pt.track.trackType === 'SOUNDCLOUD' ? pt.track.soundcloudEmbedUrl : undefined,
