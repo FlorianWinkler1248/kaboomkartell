@@ -31,6 +31,8 @@ interface PlayerContextType {
   playlist: UsePlaylistReturn;
   // Convenience-Methoden
   playTrackAtIndex: (index: number) => void;
+  /** ADR-041: Playlist ERSETZEN + sofort ab Index spielen (kein Stale-Read). */
+  playTracks: (tracks: PlayerTrack[], index?: number) => void;
   handleTogglePlay: () => void;
   handleNext: () => void;
   handlePrev: () => void;
@@ -331,6 +333,46 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
     [playlist, audio, radio, analyser]
   );
 
+  // ADR-041: Playlist ersetzen + sofort abspielen — ohne Stale-Closure-Falle.
+  // setTracks + playTrackAtIndex im selben Tick liest sonst das ALTE
+  // playlist.tracks (State-Update ist async), returnt früh und lässt den
+  // Radio-Modus weiterlaufen, obwohl die UI schon umgeschaltet hat. Hier
+  // kommt der Track als Argument — kein Read aus dem State nötig.
+  const playTracks = useCallback(
+    (tracks: PlayerTrack[], index: number = 0) => {
+      const track = tracks[index];
+      if (!track) return;
+
+      if (radio.radioMode) {
+        radio.exitRadioMode();
+      }
+
+      playlist.setTracks(tracks);
+      playlist.setCurrentIndex(index);
+      playlist.markAsPlayed(track.id);
+
+      // Increment play count (fire-and-forget, debounced 30s — wie playTrackAtIndex)
+      if (!track.isLocal) {
+        const now = Date.now();
+        const last = lastPlayRef.current;
+        if (!last || last.trackId !== track.id || (now - last.time) > 30000) {
+          lastPlayRef.current = { trackId: track.id, time: now };
+          fetch(`/api/tracks/${track.id}/play`, { method: 'POST' }).catch(() => {});
+        }
+      }
+
+      if (track.isSoundcloud) {
+        audio.pause();
+      } else {
+        audio.play(track);
+        if (audio.audioRef.current) {
+          analyser.initAnalyser(audio.audioRef.current);
+        }
+      }
+    },
+    [playlist, audio, radio, analyser]
+  );
+
   // Toggle Play/Pause
   const handleTogglePlay = useCallback(() => {
     if (!audio.currentTrack && playlist.tracks.length > 0) {
@@ -449,6 +491,7 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
         audio,
         playlist,
         playTrackAtIndex,
+        playTracks,
         handleTogglePlay,
         handleNext,
         handlePrev,

@@ -46,7 +46,7 @@ export default function MyPlaylistClient() {
   const t = useTranslations('myPlaylist');
   const { status } = useSession();
   const likes = useMyPlaylist();
-  const { playTrackAtIndex, playlist: playerPlaylist, audio } = usePlayer();
+  const { playTracks, audio } = usePlayer();
   const [expandedScId, setExpandedScId] = useState<string | null>(null);
 
   const localTracks = likes.likedTracks.filter((l) => l.trackType === 'LOCAL');
@@ -55,8 +55,7 @@ export default function MyPlaylistClient() {
   const loading = status === 'loading' || !likes.ready;
 
   const playFrom = (index: number) => {
-    playerPlaylist.setTracks(localTracks.map(toPlayerTrack));
-    playTrackAtIndex(index);
+    playTracks(localTracks.map(toPlayerTrack), index);
   };
 
   return (

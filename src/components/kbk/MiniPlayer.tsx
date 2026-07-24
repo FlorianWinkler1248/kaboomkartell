@@ -90,8 +90,7 @@ export default function MiniPlayer() {
     syncStatus,
     radioCurrentSource,
     radioCurrentDecisionSeq,
-    playlist: playerPlaylist,
-    playTrackAtIndex,
+    playTracks,
   } = player;
   const { toast } = useToast();
   // Aura+-Likes (ADR-041): speist den MINE-Channel + die AURA-Pill für Anonyme.
@@ -247,9 +246,10 @@ export default function MiniPlayer() {
         coverUrl: t2.coverUrl ?? undefined,
         isLocal: false,
       }));
-      playerPlaylist.setTracks(playerTracks);
-      // exitRadioMode + Analyser-Init übernimmt playTrackAtIndex (User-Geste).
-      playTrackAtIndex(0);
+      // playTracks statt setTracks+playTrackAtIndex: der alte Zwei-Schritt las
+      // im selben Tick noch die LEERE Playlist → Early-Return, Radio lief
+      // unterm MINE-Tab weiter (Abnahme-Fund 24.07.).
+      playTracks(playerTracks, 0);
       return;
     }
     setSelectedChannel(c);

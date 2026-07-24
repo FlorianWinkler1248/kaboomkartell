@@ -101,7 +101,7 @@ function typeBadgeColors(type: string): { bg: string; fg: string } {
 export default function PlaylistDetailClient({ playlist }: { playlist: PlaylistData }) {
   const t = useTranslations('pagesUi');
   const router = useRouter();
-  const { playTrackAtIndex, playlist: playerPlaylist, audio, radioMode, exitRadioMode } = usePlayer();
+  const { playTracks, audio, radioMode, exitRadioMode } = usePlayer();
   const currentTrack = audio.currentTrack;
   const isPlaying = audio.isPlaying;
 
@@ -126,22 +126,19 @@ export default function PlaylistDetailClient({ playlist }: { playlist: PlaylistD
   // Nur lokale Tracks sind abspielbar (SoundCloud-Embeds funktionieren nicht in Playlists)
   const playableTracks = playlist.tracks.filter((t) => t.trackType !== 'SOUNDCLOUD');
 
-  // Alle abspielbaren Tracks abspielen
+  // Alle abspielbaren Tracks abspielen. playTracks (ADR-041) statt
+  // setTracks+playTrackAtIndex — der Zwei-Schritt las im selben Tick noch die
+  // alte Playlist (Stale-Closure) und spielte beim Erst-Klick nichts.
   const handlePlayAll = () => {
     if (playableTracks.length === 0) return;
-    const playerTracks = playableTracks.map(toPlayerTrack);
-    playerPlaylist.setTracks(playerTracks);
-    playTrackAtIndex(0);
+    playTracks(playableTracks.map(toPlayerTrack), 0);
   };
 
   // Einzelnen Track abspielen (nur lokale Tracks, SC wird ignoriert)
   const handlePlayTrack = (track: PlaylistTrackItem) => {
     if (track.trackType === 'SOUNDCLOUD') return;
-    const playerTracks = playableTracks.map(toPlayerTrack);
-    playerPlaylist.setTracks(playerTracks);
-    // Index im gefilterten Array finden
     const idx = playableTracks.findIndex((t) => t.id === track.id);
-    playTrackAtIndex(idx >= 0 ? idx : 0);
+    playTracks(playableTracks.map(toPlayerTrack), idx >= 0 ? idx : 0);
   };
 
   const badgeColors = typeBadgeColors(playlist.type);
