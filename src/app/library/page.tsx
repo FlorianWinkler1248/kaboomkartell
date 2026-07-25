@@ -12,6 +12,9 @@ import {
 } from '@/components/kbk/icons'
 import LibraryFilters from './LibraryFilters'
 import { SafeImg } from '@/components/ui/SafeImg'
+import { LibraryQueue, LibraryRowPlay, LibraryPlayAll } from './LibraryPlay'
+import { formatArtistDisplay } from '@/lib/track-display'
+import type { PlayerTrack } from '@/types'
 
 // next-intl-Translator-Typ für die Pagination-Sub-Component (library-Namespace).
 type LibraryT = Awaited<ReturnType<typeof getTranslations<'library'>>>;
@@ -114,6 +117,8 @@ export default async function LibraryPage({
       include: {
         artist: { select: { username: true, displayName: true } },
         featuringArtist: { select: { username: true, displayName: true } },
+        // ADR-041: Profil-Name externer Künstler (Anzeige-Priorität)
+        artistProfile: { select: { name: true } },
       },
       orderBy: buildOrderBy(sort),
       skip: (page - 1) * PAGE_SIZE,
@@ -158,6 +163,22 @@ export default async function LibraryPage({
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
   const hasActiveFilters = !!(genre || poolSlug || artistUsername || sort !== 'newest');
 
+  // Direkte Wiedergabe (ADR-041-Nachschlag): Queue = die sichtbaren LOCAL-
+  // Tracks dieser Seite, EINMAL serialisiert (LibraryQueue-Context). SC-Tracks
+  // spielen weiter über die Detail-Seite (Embed braucht eigene Fläche).
+  const playableTracks = tracks.filter((t2) => t2.trackType === 'LOCAL' && t2.duration > 0);
+  const queue: PlayerTrack[] = playableTracks.map((t2) => ({
+    id: t2.id,
+    title: t2.title,
+    artist: formatArtistDisplay(t2),
+    duration: t2.duration,
+    url: `/api/tracks/${t2.id}/stream`,
+    coverUrl: t2.coverUrl || undefined,
+    isLocal: false,
+    aiDisclosure: (t2.aiDisclosure as PlayerTrack['aiDisclosure']) ?? null,
+  }));
+  const queueIndexById = new Map(queue.map((q, i) => [q.id, i]));
+
   // Filter-Optionen für LibraryFilters formatieren
   const genreOptions = genreGroups
     .filter((g) => g.genre)
@@ -190,6 +211,7 @@ export default async function LibraryPage({
 
   return (
     <section style={{ padding: '40px 24px' }}>
+      <LibraryQueue tracks={queue}>
       <SectionTitle sub="L" label={t('sectionLabel')} title={t('sectionTitle')} accent="green" />
 
       {/* Tagline + Count */}
@@ -227,6 +249,27 @@ export default async function LibraryPage({
         >
           [{t('trackCount', { count: totalCount })}]
         </span>
+        {/* Direkte Wiedergabe der sichtbaren (gefilterten) Seite */}
+        <LibraryPlayAll label={t('playAllLabel')} />
+        <Link
+          href="/playlists"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            minHeight: 44,
+            padding: '8px 14px',
+            border: '1px solid rgba(245,208,46,0.5)',
+            color: '#F5D02E',
+            fontFamily: 'var(--font-display)',
+            fontSize: 11,
+            fontWeight: 900,
+            letterSpacing: '0.15em',
+            textDecoration: 'none',
+            textTransform: 'uppercase',
+          }}
+        >
+          {t('playlistsLink')} →
+        </Link>
         {/* PUP + GLITCH stoebern in der Leerstelle neben dem Zaehler —
             neutral, ohne Rahmen/Linien (Design-Regel 12.07.). */}
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 16, alignItems: 'flex-end' }}>
@@ -314,12 +357,12 @@ export default async function LibraryPage({
             </div>
 
             {tracks.map((track) => {
-              const main = track.artist.displayName || track.artist.username
-              const feat = track.featuringArtist?.displayName || track.featuringArtist?.username
-              const artistName = feat ? `${main} feat. ${feat}` : main
+              // ADR-041: formatArtistDisplay priorisiert den Profil-Namen externer Künstler.
+              const artistName = formatArtistDisplay(track)
               const hasSoundcloud = track.trackType === 'SOUNDCLOUD' && track.soundcloudUrl
               const c = genreColor(track.genre)
               const isAi = track.aiDisclosure && track.aiDisclosure !== 'human'
+              const qIndex = queueIndexById.get(track.id)
 
               return (
                 <div
@@ -444,34 +487,44 @@ export default async function LibraryPage({
                       justifyContent: 'flex-end',
                     }}
                   >
-                    <Link
-                      prefetch={false}
-                      href={`/tracks/${track.slug}`}
-                      title={t('playOnKbk')}
-                      style={{
-                        width: 44,
-                        height: 44,
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        border: '1px solid rgba(63,207,74,0.3)',
-                        color: '#3FCF4A',
-                        textDecoration: 'none',
-                      }}
-                    >
-                      <span
-                        aria-hidden="true"
-                        style={{
-                          width: 0,
-                          height: 0,
-                          borderLeft: '9px solid #3FCF4A',
-                          borderTop: '6px solid transparent',
-                          borderBottom: '6px solid transparent',
-                          marginLeft: 2,
-                          filter: 'drop-shadow(0 0 4px rgba(63,207,74,0.5))',
-                        }}
+                    {qIndex !== undefined ? (
+                      /* Direkter Sofort-Play (LOCAL) — Queue = sichtbare Seite */
+                      <LibraryRowPlay
+                        index={qIndex}
+                        playLabel={t('playDirect')}
+                        pauseLabel={t('pauseDirect')}
                       />
-                    </Link>
+                    ) : (
+                      /* SC-/nicht-abspielbare Tracks: weiter über die Detail-Seite */
+                      <Link
+                        prefetch={false}
+                        href={`/tracks/${track.slug}`}
+                        title={t('playOnKbk')}
+                        style={{
+                          width: 44,
+                          height: 44,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          border: '1px solid rgba(63,207,74,0.3)',
+                          color: '#3FCF4A',
+                          textDecoration: 'none',
+                        }}
+                      >
+                        <span
+                          aria-hidden="true"
+                          style={{
+                            width: 0,
+                            height: 0,
+                            borderLeft: '9px solid #3FCF4A',
+                            borderTop: '6px solid transparent',
+                            borderBottom: '6px solid transparent',
+                            marginLeft: 2,
+                            filter: 'drop-shadow(0 0 4px rgba(63,207,74,0.5))',
+                          }}
+                        />
+                      </Link>
+                    )}
 
                     {hasSoundcloud && (
                       <a
@@ -510,6 +563,7 @@ export default async function LibraryPage({
           )}
         </>
       )}
+      </LibraryQueue>
     </section>
   )
 }

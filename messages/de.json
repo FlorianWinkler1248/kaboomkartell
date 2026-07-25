@@ -500,6 +500,10 @@
     "emptyNoMatchesHint": "ANDERE FILTER PROBIEREN ODER OBEN ZURÜCKSETZEN.",
     "emptyArchiveHint": "NOCH KEINE TRACKS VERÖFFENTLICHT. SCHAU BALD WIEDER VORBEI.",
     "playOnKbk": "Auf KBK abspielen",
+    "playDirect": "Jetzt abspielen",
+    "pauseDirect": "Pause",
+    "playAllLabel": "ALLE ABSPIELEN",
+    "playlistsLink": "PLAYLISTS",
     "openOnSoundcloud": "Auf SoundCloud öffnen",
     "paginationAria": "Library-Seitennavigation",
     "paginationPrev": "Zurück",
@@ -776,6 +780,12 @@
       "tooltip": "MINE — deine gelikten Tracks als persönlicher Channel",
       "emptyAnonToast": "Leg einen Account an, um deine Likes zu speichern und deine Playlist einzurichten.",
       "emptyUserToast": "Noch nichts in deiner Playlist — drück AURA+ bei einem Track."
+    },
+    "controls": {
+      "play": "Abspielen",
+      "pause": "Pause",
+      "next": "Nächster Track",
+      "prev": "Voriger Track"
     },
     "sync": {
       "synced": "IM TAKT",
