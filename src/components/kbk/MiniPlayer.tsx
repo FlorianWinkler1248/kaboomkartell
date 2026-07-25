@@ -91,6 +91,9 @@ export default function MiniPlayer() {
     radioCurrentSource,
     radioCurrentDecisionSeq,
     playTracks,
+    handleTogglePlay,
+    handleNext,
+    handlePrev,
   } = player;
   const { toast } = useToast();
   // Aura+-Likes (ADR-041): speist den MINE-Channel + die AURA-Pill für Anonyme.
@@ -781,6 +784,88 @@ export default function MiniPlayer() {
             </>
             )}
           </div>
+
+          {/* Transport-Controls (ADR-041-Nachschlag, Flow-Feedback 25.07.):
+              NUR im User-Playback (MINE / Playlists / Track-Detail) sichtbar.
+              Im Radio-Modus bewusst unsichtbar — die Hausparty ist nicht
+              pausierbar/skippbar (Hausparty-Konzept). Prev/Next <md versteckt
+              (Platz), Play/Pause bleibt immer erreichbar. */}
+          {!radioMode && current && (
+            <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+              <button
+                type="button"
+                onClick={handlePrev}
+                aria-label={t('controls.prev')}
+                title={t('controls.prev')}
+                className="hidden md:inline-flex"
+                style={{
+                  width: 44,
+                  height: 44,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'rgba(10,11,12,0.82)',
+                  border: '1px solid rgba(255,255,255,0.18)',
+                  color: '#fff',
+                  cursor: 'pointer',
+                }}
+              >
+                <svg width={18} height={18} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <polygon points="19,4 9,12 19,20" />
+                  <rect x="5" y="4" width="3" height="16" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                onClick={handleTogglePlay}
+                aria-label={audio.isPlaying ? t('controls.pause') : t('controls.play')}
+                title={audio.isPlaying ? t('controls.pause') : t('controls.play')}
+                style={{
+                  width: 44,
+                  height: 44,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'rgba(10,11,12,0.82)',
+                  border: `1px solid ${accent}`,
+                  color: accent,
+                  cursor: 'pointer',
+                }}
+              >
+                {audio.isPlaying ? (
+                  <svg width={18} height={18} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <rect x="6" y="4" width="4" height="16" />
+                    <rect x="14" y="4" width="4" height="16" />
+                  </svg>
+                ) : (
+                  <svg width={18} height={18} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <polygon points="7,4 21,12 7,20" />
+                  </svg>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={handleNext}
+                aria-label={t('controls.next')}
+                title={t('controls.next')}
+                className="hidden md:inline-flex"
+                style={{
+                  width: 44,
+                  height: 44,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'rgba(10,11,12,0.82)',
+                  border: '1px solid rgba(255,255,255,0.18)',
+                  color: '#fff',
+                  cursor: 'pointer',
+                }}
+              >
+                <svg width={18} height={18} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <polygon points="5,4 15,12 5,20" />
+                  <rect x="16" y="4" width="3" height="16" />
+                </svg>
+              </button>
+            </div>
+          )}
 
           {/* Volume-Slider — auf <md hidden, da der Mute-Button reicht */}
           <input
