@@ -573,6 +573,7 @@
     "sessionBanner": "these likes live in this browser session only. sign up and we'll keep them.",
     "fromSoundcloud": "FROM SOUNDCLOUD",
     "fromSoundcloudHint": "soundcloud likes play on the artist's own player — they don't run in the MINE channel.",
+    "remove": "Remove from playlist",
     "playAll": "PLAY ALL ({count})",
     "importSuccess": "{count, plural, one {# like} other {# likes}} moved to your playlist. welcome to the pack.",
     "importSkipped": "{count, plural, one {# like} other {# likes}} skipped — listen a bit longer first."

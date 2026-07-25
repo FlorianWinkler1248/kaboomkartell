@@ -19,16 +19,46 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useTranslations } from 'next-intl';
-import { Play, Music2, Headphones } from 'lucide-react';
+import { Play, Music2, Headphones, X } from 'lucide-react';
 import { usePlayer } from '@/components/providers/PlayerProvider';
-import { useMyPlaylist, type LikedTrack } from '@/components/providers/LikesProvider';
-import AuraLikeButton from '@/components/kbk/AuraLikeButton';
+import { useMyPlaylist, type LikedTrack, type LikeInput } from '@/components/providers/LikesProvider';
 import SoundCloudEmbedLazy from '@/components/player/SoundCloudEmbedLazy';
 import { SafeImg } from '@/components/ui/SafeImg';
 import { formatTime } from '@/lib/utils';
 import type { PlayerTrack } from '@/types';
 
 const MINE_GREY = '#9AA0A8';
+
+/** Expliziter Entfernen-Button (Flow-Feedback 25.07.: das Aura-Icon war als
+ *  „Bearbeiten" nicht erkennbar). Gleiche Geste darunter: toggleLike. */
+function RemoveButton({ track, title }: { track: LikeInput; title: string }) {
+  const likes = useMyPlaylist();
+  return (
+    <button
+      type="button"
+      onClick={() => likes.toggleLike(track)}
+      aria-label={title}
+      title={title}
+      style={{
+        flexShrink: 0,
+        width: 36,
+        height: 36,
+        minWidth: 36,
+        minHeight: 36,
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'rgba(10,11,12,0.6)',
+        border: '1px solid rgba(230,59,46,0.45)',
+        color: '#E63B2E',
+        cursor: 'pointer',
+        padding: 0,
+      }}
+    >
+      <X size={16} />
+    </button>
+  );
+}
 
 function toPlayerTrack(t: LikedTrack): PlayerTrack {
   return {
@@ -367,8 +397,9 @@ export default function MyPlaylistClient() {
                       {formatTime(track.duration)}
                     </span>
 
-                    {/* Unlike = dieselbe Aura+-Geste */}
-                    <AuraLikeButton
+                    {/* Entfernen (= Aura+ zurücknehmen) — explizit als X */}
+                    <RemoveButton
+                      title={t('remove')}
                       track={{
                         id: track.id,
                         title: track.title,
@@ -472,7 +503,8 @@ export default function MyPlaylistClient() {
                         {track.artistLabel}
                       </p>
                     </div>
-                    <AuraLikeButton
+                    <RemoveButton
+                      title={t('remove')}
                       track={{
                         id: track.id,
                         title: track.title,

@@ -779,7 +779,22 @@ export default function MiniPlayer() {
               title={`${trackArtist}${setName ? ' · ' + setName : ''}`}
             >
               {trackArtist}
-              {setName && <span> · {setName}</span>}
+              {setName &&
+                (channelAccent.channel === 'mine' ? (
+                  /* MINE (ADR-041): „MY PLAYLIST" verlinkt auf die Bearbeiten-
+                     Seite — dort liegt das Entfernen (Flow-Feedback 25.07.). */
+                  <span>
+                    {' · '}
+                    <Link
+                      href="/playlists/mine"
+                      style={{ color: '#9AA0A8', textDecoration: 'underline', textUnderlineOffset: 2 }}
+                    >
+                      {setName}
+                    </Link>
+                  </span>
+                ) : (
+                  <span> · {setName}</span>
+                ))}
             </div>
             </>
             )}

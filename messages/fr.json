@@ -573,6 +573,7 @@
     "sessionBanner": "ces likes ne vivent que dans cette session du navigateur. inscris-toi et on les garde.",
     "fromSoundcloud": "DEPUIS SOUNDCLOUD",
     "fromSoundcloudHint": "les likes soundcloud se jouent sur le player de l'artiste — pas dans le channel MINE.",
+    "remove": "Retirer de la playlist",
     "playAll": "TOUT LIRE ({count})",
     "importSuccess": "{count, plural, one {# like transféré} other {# likes transférés}} dans ta playlist. bienvenue dans le pack.",
     "importSkipped": "{count, plural, one {# like ignoré} other {# likes ignorés}} — écoute encore un peu d'abord."
