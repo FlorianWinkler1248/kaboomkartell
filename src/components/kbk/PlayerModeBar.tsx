@@ -90,9 +90,11 @@ export default function PlayerModeBar() {
           : t('controls.repeatOne'),
   });
 
+  // 44x44 ist das Touch-Ziel der ganzen App (WCAG 2.5.5) — hier nicht
+  // unterschreiten, auch wenn die Zeile dadurch knapper wird.
   const iconButton = (active: boolean): React.CSSProperties => ({
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -272,7 +274,7 @@ export default function PlayerModeBar() {
             onClick={handleTogglePlay}
             aria-label={audio.isPlaying ? t('controls.pause') : t('controls.play')}
             title={audio.isPlaying ? t('controls.pause') : t('controls.play')}
-            style={{ ...iconButton(true), width: 46, height: 46 }}
+            style={{ ...iconButton(true), width: 48, height: 48 }}
           >
             {audio.isPlaying ? (
               <svg width={19} height={19} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -408,7 +410,7 @@ export default function PlayerModeBar() {
             display: 'inline-flex',
             alignItems: 'center',
             gap: 6,
-            minHeight: 40,
+            minHeight: 44,
             padding: '0 12px',
             background: 'rgba(10,11,12,0.9)',
             border: '1px solid rgba(255,255,255,0.35)',
