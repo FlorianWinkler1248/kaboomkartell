@@ -149,6 +149,7 @@ export default function PlayerModeBar() {
       </div>
 
       <div
+        className="kbk-playerbar-row"
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -167,6 +168,7 @@ export default function PlayerModeBar() {
           href="/player"
           aria-label={t('mode.expand')}
           title={t('mode.expand')}
+          className="kbk-playerbar-cover"
           style={{
             width: 44,
             height: 44,
@@ -190,7 +192,7 @@ export default function PlayerModeBar() {
         </Link>
 
         {/* Titel + Künstler */}
-        <div style={{ flex: '1 1 140px', minWidth: 0 }}>
+        <div className="kbk-playerbar-title" style={{ flex: '1 1 140px', minWidth: 0 }}>
           <div
             style={{
               fontFamily: 'var(--font-display)',
@@ -401,6 +403,7 @@ export default function PlayerModeBar() {
           onClick={() => { void returnToRadio(); }}
           aria-label={t('mode.backToRadio')}
           title={t('mode.backToRadio')}
+          className="kbk-playerbar-back"
           style={{
             display: 'inline-flex',
             alignItems: 'center',

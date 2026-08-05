@@ -178,6 +178,24 @@ body.kbk-has-miniplayer {
   body.kbk-has-miniplayer {
     padding-bottom: calc(96px + env(safe-area-inset-bottom, 0));
   }
+
+  /* === Player-Leiste Mobile (06.08.2026) ===
+     Die Bedienzeile des Player-Modus umbrach auf 375px in DREI Zeilen und
+     fraß ein Fünftel des Bildschirms — nicht weil zu viel drin ist, sondern
+     weil „ZURÜCK ZUM RADIO" um wenige Pixel nicht mehr in die zweite Zeile
+     passte und allein eine dritte aufmachte.
+
+     Statt die Knöpfe zu verkleinern (44px-Touch-Flächen sind hier heilig)
+     wandert der Radio-Knopf per `order` neben den Titel in Zeile 1. Zeile 2
+     trägt dann nur noch Transport + Warteschlange + Mute und passt. */
+  .kbk-playerbar-row {
+    row-gap: 6px !important;
+    padding: 8px 10px !important;
+  }
+  .kbk-playerbar-row > * { order: 4; }
+  .kbk-playerbar-row .kbk-playerbar-cover { order: 1; }
+  .kbk-playerbar-row .kbk-playerbar-title { order: 2; }
+  .kbk-playerbar-row .kbk-playerbar-back { order: 3; }
 }
 
 /* === Tablet-Forms-Centering (v2.6) ===
