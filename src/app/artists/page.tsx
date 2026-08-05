@@ -453,8 +453,11 @@ export default async function PackPage() {
         </section>
       )}
 
-      {/* Modul 6 — Live & Streaming (Twitch-Live-Status, v2.30) */}
-      <section style={{ marginTop: 56 }}>
+      {/* Modul 6 — Live & Streaming (Twitch-Live-Status).
+          Der Anker ist das Ziel des Live-Banners: seit die Leiste keinen
+          LIVE-Tab mehr trägt, ist das hier die Stelle, an der man den Stream
+          tatsächlich sieht. */}
+      <section id="live" style={{ marginTop: 56, scrollMarginTop: 96 }}>
         <MiniHeader sub="06" label={t('liveStreamsLabel')} color={RED} />
         <ArtistsLiveStreamCard />
       </section>

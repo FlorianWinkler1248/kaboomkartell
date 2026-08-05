@@ -238,6 +238,21 @@ describe('needsPlaybackKick (Mobile-Continuity v3.1)', () => {
     })
     expect(needsPlaybackKick(beforeGuard)).toBe(true)
   })
+
+  it('REGRESSION: Das Schutzfenster ist ein Fenster, kein Dauerzustand — bei '
+    + 'veralteter Zeitlinie (Poll-Ausfall) darf der Anlauf wieder greifen', () => {
+    const staleSchedule = resume({
+      isPlaying: false,
+      serverNowMs: 1_100_000 + SYNC.RESUME_STALE_AFTER_MS + 1,
+    })
+    expect(needsPlaybackKick(staleSchedule)).toBe(true)
+    // Innerhalb des Fensters bleibt der Wechsel zuständig.
+    const insideWindow = resume({
+      isPlaying: false,
+      serverNowMs: 1_100_000 + SYNC.RESUME_STALE_AFTER_MS - 1,
+    })
+    expect(needsPlaybackKick(insideWindow)).toBe(false)
+  })
 })
 
 describe('statusForAction', () => {

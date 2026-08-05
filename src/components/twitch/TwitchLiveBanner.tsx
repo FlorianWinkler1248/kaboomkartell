@@ -67,7 +67,11 @@ export function TwitchLiveBanner() {
 
   return (
     <Link
-      href="/radio"
+      // Führt dorthin, wo der Stream wirklich läuft. Vorher zeigte das Banner
+      // auf /radio — das ist seit der Player-Umstellung ein Redirect auf den
+      // Zeitplan, also eine Seite ohne Stream. Das aria-label verspricht
+      // „watch live", also muss der Klick auch zum Bild führen.
+      href="/artists#live"
       aria-label={t('watchLiveStreamAria', { channel: data.channel })}
       className="kbk-livestream-pulse kbk-livestream-bg"
       style={{

@@ -71,6 +71,12 @@ export interface UseAudioPlayerReturn {
 /** preservesPitch (+ Vendor-Prefixe) setzen: bei Tempo-Nudge bleibt die Tonhöhe
  *  gleich (Tempo-only Beatmatch). Wird bei Element-Erstellung + bei jedem play()
  *  gesetzt, da manche Browser den Wert beim src-Wechsel zurücksetzen. */
+/** So viele erfolglose Anläufe in Folge gelten als „geht nicht mehr von allein"
+ *  — danach wird der Zustand für den Hörer sichtbar (TAP TO RESUME). Drei
+ *  Versuche sind bei 1s-Takt kurz genug, um nicht zu nerven, und lang genug,
+ *  um einen einzelnen Puffer-Schluckauf nicht zu melden. */
+const KICK_FAILURES_UNTIL_BLOCKED = 3;
+
 function applyPreservesPitch(el: HTMLAudioElement): void {
   const a = el as HTMLAudioElement & { mozPreservesPitch?: boolean; webkitPreservesPitch?: boolean };
   a.preservesPitch = true;
@@ -102,6 +108,8 @@ export function useAudioPlayer(options: UseAudioPlayerOptions = {}): UseAudioPla
   // außen genommen (OS-Interruption, Audio-Fokus-Verlust, Hintergrund-Drossel).
   const intendsToPlayRef = useRef(false);
   const [playbackBlocked, setPlaybackBlocked] = useState(false);
+  /** Erfolglose Anläufe in Folge — siehe KICK_FAILURES_UNTIL_BLOCKED. */
+  const kickFailuresRef = useRef(0);
   // onTrackEnd via Ref: der Callback kommt aus dem PlayerProvider als frische
   // Closure pro Render. Als Effect-Dependency würde er die Listener bei JEDEM
   // Render ab- und neu hängen — inklusive kurzer Lücke, in der ein `ended`
@@ -302,19 +310,35 @@ export function useAudioPlayer(options: UseAudioPlayerOptions = {}): UseAudioPla
     const audio = audioRef.current;
     if (!audio || !audio.src) return;
     if (!intendsToPlayRef.current) return;
+    // Ein durchgelaufener Track wird NICHT wieder angeworfen. `play()` auf einem
+    // beendeten Element springt laut Spezifikation zwingend auf Position 0 —
+    // der fertige Titel liefe hörbar neu an, der Regelkreis würde ihn ans Ende
+    // seeken, und das Ganze begänne von vorn. Das Element weiß selbst am besten,
+    // dass es fertig ist; die Server-Zeitlinie taugt dafür nicht, weil DB-Dauer
+    // und echte MP3-Länge auseinanderlaufen (VBR) und der Tempo-Nudge das Ende
+    // zusätzlich verschiebt. Am Track-Ende ist der Wechsel zuständig, nicht der Anlauf.
+    if (audio.ended) return;
     if (!audio.paused) return;
 
     audio.play().then(() => {
+      kickFailuresRef.current = 0;
       setIsPlaying(true);
       setPlaybackBlocked(false);
     }).catch((err: unknown) => {
       if (err instanceof DOMException && err.name === 'AbortError') return;
+      // Ein abgelehntes `play()` ist sofort eine Sache für den Hörer.
       if (err instanceof DOMException && err.name === 'NotAllowedError') {
         setPlaybackBlocked(true);
         return;
       }
-      // Andere Fehler nicht pro Regelkreis-Tick spammen — der Stall-Guard
-      // und die Blob-Recovery kümmern sich um Quellen-Probleme.
+      // Alles andere (kaputte Quelle, verworfener Blob, Netzabbruch) scheiterte
+      // bisher lautlos: der Regelkreis versuchte es im Sekundentakt weiter, der
+      // Hörer sah nichts und hörte nichts. Nach ein paar Fehlversuchen ist das
+      // kein Schluckauf mehr, sondern ein Zustand — und der gehört sichtbar.
+      kickFailuresRef.current += 1;
+      if (kickFailuresRef.current >= KICK_FAILURES_UNTIL_BLOCKED) {
+        setPlaybackBlocked(true);
+      }
     });
   }, []);
 

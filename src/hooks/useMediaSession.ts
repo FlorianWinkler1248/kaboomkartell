@@ -31,10 +31,23 @@ interface MediaSessionState {
   duration: number;
 }
 
+interface MediaSessionOptions {
+  /**
+   * Dürfen Weiter/Zurück/Spulen an das OS gemeldet werden?
+   *
+   * Nur im Player-Modus. Im Radio bleibt es bei Play/Pause — Sprungtasten auf
+   * dem Sperrbildschirm würden eine Kontrolle versprechen, die die Hausparty
+   * bewusst nicht hat.
+   */
+  transportEnabled: boolean;
+}
+
 export function useMediaSession(
   state: MediaSessionState,
-  actions: MediaSessionActions
+  actions: MediaSessionActions,
+  options: MediaSessionOptions = { transportEnabled: true }
 ) {
+  const { transportEnabled } = options;
   const actionsRef = useRef(actions);
   actionsRef.current = actions;
 
@@ -109,9 +122,11 @@ export function useMediaSession(
   useEffect(() => {
     if (!('mediaSession' in navigator)) return;
 
-    const handlers: [MediaSessionAction, MediaSessionActionHandler][] = [
+    const alwaysOn: [MediaSessionAction, MediaSessionActionHandler][] = [
       ['play', () => actionsRef.current.onPlay()],
       ['pause', () => actionsRef.current.onPause()],
+    ];
+    const transportOnly: [MediaSessionAction, MediaSessionActionHandler][] = [
       ['nexttrack', () => actionsRef.current.onNext()],
       ['previoustrack', () => actionsRef.current.onPrev()],
       ['seekto', (details) => {
@@ -127,6 +142,7 @@ export function useMediaSession(
         actionsRef.current.onSeek(Math.max(positionRef.current.currentTime - 10, 0));
       }],
     ];
+    const handlers = transportEnabled ? [...alwaysOn, ...transportOnly] : alwaysOn;
 
     for (const [action, handler] of handlers) {
       try {
@@ -146,5 +162,6 @@ export function useMediaSession(
         }
       }
     };
-  }, []);
+    // Nur der Modus-Wechsel darf neu registrieren — nicht jeder Positions-Tick.
+  }, [transportEnabled]);
 }

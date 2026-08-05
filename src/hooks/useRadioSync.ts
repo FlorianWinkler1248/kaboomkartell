@@ -147,6 +147,8 @@ export function useRadioSync(
   // Mobile-Continuity (v3.1): Absicht („soll Ton kommen?") + Wiederanwerfen.
   audioGetIntendsToPlay: () => boolean,
   audioEnsurePlaying: () => void,
+  /** Wiedergabe steht fest und lässt sich nicht von allein anwerfen. */
+  audioPlaybackBlocked: boolean,
 ): UseRadioSyncReturn {
   const [radioMode, setRadioMode] = useState(false)
   const [radioSlot, setRadioSlot] = useState<RadioSlotInfo | null>(null)
@@ -181,6 +183,9 @@ export function useRadioSync(
   const audioIsStalledRef = useRef(audioIsStalled)
   useEffect(() => { audioIsStalledRef.current = audioIsStalled }, [audioIsStalled])
 
+  const audioPlaybackBlockedRef = useRef(audioPlaybackBlocked)
+  useEffect(() => { audioPlaybackBlockedRef.current = audioPlaybackBlocked }, [audioPlaybackBlocked])
+
   const channelRef = useRef<string | null>(channel)
   useEffect(() => { channelRef.current = channel }, [channel])
 
@@ -211,9 +216,15 @@ export function useRadioSync(
   // Tab bei gesperrtem Handy verdeckt ist, schalteten sich damit Poll UND
   // Regelkreis dauerhaft ab. Der Radio konnte sich nicht mehr selbst erholen —
   // genau das erzwang das manuelle Neu-Einwählen.
+  //
+  // Gegenprobe: Steht die Wiedergabe endgültig (`playbackBlocked` — mehrere
+  // Anläufe erfolglos), zählt der verdeckte Tab wieder als idle. Sonst pollte
+  // ein totes Radio bei gesperrtem Handy unbegrenzt weiter und fräße Akku und
+  // Daten für nichts. Der Hörer sieht dann die TAP-TO-RESUME-Pille.
   const isHiddenIdle = useCallback(() =>
     typeof document !== 'undefined' && document.hidden &&
-    !(audioGetIntendsToPlay() && audioVolumeRef.current > 0), [audioGetIntendsToPlay])
+    !(audioGetIntendsToPlay() && audioVolumeRef.current > 0 && !audioPlaybackBlockedRef.current),
+  [audioGetIntendsToPlay])
 
   // Preload des nächsten Tracks. Radio Sync v3 (ADR-040): Voll-Blob-Download nach
   // preloadDelayMs (Join-Bandbreiten-Kollision vermeiden) — der Track-Übergang wird

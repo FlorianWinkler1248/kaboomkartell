@@ -34,11 +34,32 @@ interface KeyboardShortcutActions {
   toggleMute: () => void;
 }
 
-export function useKeyboardShortcuts(actions: KeyboardShortcutActions) {
+interface KeyboardShortcutOptions {
+  /**
+   * Sind die Sprung-Tasten erlaubt (Pfeil links/rechts, N, P, S, R)?
+   *
+   * Im Radio-Modus bewusst `false`: die Hausparty lässt sich nicht spulen oder
+   * überspringen. Lautstärke und Mute bleiben immer erreichbar, weil das die
+   * einzige legitime Hörer-Kontrolle im Radio ist.
+   *
+   * Die Leertaste ist NICHT hier drin: sie ruft in beiden Modi `togglePlay`,
+   * und was das bedeutet, entscheidet der Aufrufer — im Player pausieren,
+   * im Radio nur wieder anwerfen. Sie komplett zu sperren nahm dem Radio die
+   * letzte Rettung am Gerät, wenn die Wiedergabe stillstand.
+   */
+  transportEnabled: boolean;
+}
+
+export function useKeyboardShortcuts(
+  actions: KeyboardShortcutActions,
+  options: KeyboardShortcutOptions = { transportEnabled: true },
+) {
   // Refs verwenden damit wir immer die aktuellsten Callbacks haben
   // (vermeidet Stale-Closure-Probleme)
   const actionsRef = useRef(actions);
   actionsRef.current = actions;
+  const transportRef = useRef(options.transportEnabled);
+  transportRef.current = options.transportEnabled;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -60,6 +81,7 @@ export function useKeyboardShortcuts(actions: KeyboardShortcutActions) {
       }
 
       const a = actionsRef.current;
+      const transport = transportRef.current;
 
       switch (e.key) {
         case ' ':
@@ -68,11 +90,13 @@ export function useKeyboardShortcuts(actions: KeyboardShortcutActions) {
           break;
 
         case 'ArrowLeft':
+          if (!transport) return;
           e.preventDefault();
           a.seekBackward();
           break;
 
         case 'ArrowRight':
+          if (!transport) return;
           e.preventDefault();
           a.seekForward();
           break;
@@ -89,21 +113,25 @@ export function useKeyboardShortcuts(actions: KeyboardShortcutActions) {
 
         case 'n':
         case 'N':
+          if (!transport) return;
           a.nextTrack();
           break;
 
         case 'p':
         case 'P':
+          if (!transport) return;
           a.prevTrack();
           break;
 
         case 's':
         case 'S':
+          if (!transport) return;
           a.toggleShuffle();
           break;
 
         case 'r':
         case 'R':
+          if (!transport) return;
           a.cycleRepeat();
           break;
 

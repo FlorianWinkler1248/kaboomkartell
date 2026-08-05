@@ -16,12 +16,11 @@
  * ├── PlayerStats (Gesamt, Gespielt, Dauer)
  * └── Playlist (Track-Liste + Drag & Drop)
  *
- * Zwei Modi:
- * 1. Server-Tracks (via API-Streaming) - werden via initialTracks geladen
- * 2. Lokale Dateien (Drag & Drop) - werden in die Playlist eingefügt
+ * Die Warteschlange kommt ausschliesslich aus dem Context — die Seite befuellt
+ * sie nicht von selbst. Lokale Dateien lassen sich per Drag & Drop anhaengen.
  */
 
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { usePlayer } from '@/components/providers/PlayerProvider';
 import NowPlaying from './NowPlaying';
 import ProgressBar from './ProgressBar';
@@ -33,12 +32,7 @@ import SoundCloudEmbed from './SoundCloudEmbed';
 import VotingDialog from './VotingDialog';
 import type { PlayerTrack } from '@/types';
 
-interface MusicPlayerProps {
-  /** Initiale Tracks (z.B. vom Server geladen) */
-  initialTracks?: PlayerTrack[];
-}
-
-export default function MusicPlayer({ initialTracks }: MusicPlayerProps) {
+export default function MusicPlayer() {
   // === Globaler Player-Context ===
   const {
     audio,
@@ -48,19 +42,11 @@ export default function MusicPlayer({ initialTracks }: MusicPlayerProps) {
     handleNext,
     handlePrev,
     activeSoundcloudTrack,
+    removeFromQueue,
     showVotingDialog,
     dismissVotingDialog,
     onVoteSubmitted,
   } = usePlayer();
-
-  // === Initiale Tracks in den globalen Context laden ===
-  useEffect(() => {
-    if (initialTracks && initialTracks.length > 0 && playlist.tracks.length === 0) {
-      playlist.setTracks(initialTracks);
-    }
-    // Nur beim ersten Render, wenn initialTracks vorhanden
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialTracks]);
 
   // === Playlist-Track anklicken ===
   const handlePlaylistTrackClick = useCallback(
@@ -172,7 +158,7 @@ export default function MusicPlayer({ initialTracks }: MusicPlayerProps) {
         playedTrackIds={playlist.playedTrackIds}
         onPlayTrack={handlePlaylistTrackClick}
         onAddTracks={handleAddTracks}
-        onRemoveTrack={playlist.removeTrack}
+        onRemoveTrack={removeFromQueue}
         onClearPlaylist={playlist.clearPlaylist}
       />
     </div>

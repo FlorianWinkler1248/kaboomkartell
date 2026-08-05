@@ -26,9 +26,32 @@ import { VOTING_CONFIG } from '@/lib/constants';
 import type { SyncStatus } from '@/lib/radio-sync-control';
 import type { PlayerTrack } from '@/types';
 
+/**
+ * Wiedergabe-Modus (05.08.2026). KBK hat zwei getrennte Wiedergabe-Welten, und
+ * die untere Leiste zeigt immer genau eine davon:
+ *
+ *  - `radio`  — die Hausparty. Zwei Channel, kein Transport, nicht pausierbar.
+ *  - `player` — der klassische MP3-Player über eine eigene Warteschlange.
+ *
+ * Der Modus wird ABGELEITET statt separat gehalten: es gibt nur ein
+ * `<audio>`-Element, also kann immer nur eine Welt klingen. Ein zweiter,
+ * unabhängiger State könnte auseinanderlaufen und die Leiste etwas anderes
+ * anzeigen lassen, als tatsächlich läuft.
+ */
+export type PlaybackMode = 'radio' | 'player';
+
 interface PlayerContextType {
   audio: UseAudioPlayerReturn;
   playlist: UsePlaylistReturn;
+  /** Welche Wiedergabe-Welt läuft gerade — steuert das Gesicht der Leiste. */
+  playbackMode: PlaybackMode;
+  /** Aus dem Player zurück in die Hausparty (stellt auch den Channel gerade). */
+  returnToRadio: () => Promise<void>;
+  /** Liegt eine Warteschlange bereit, in die man zurückkehren kann? */
+  hasQueue: boolean;
+  /** Titel aus der Warteschlange nehmen — inklusive Umzug der Wiedergabe,
+   *  falls es der gerade laufende war. */
+  removeFromQueue: (trackId: string) => void;
   // Convenience-Methoden
   playTrackAtIndex: (index: number) => void;
   /** ADR-041: Playlist ERSETZEN + sofort ab Index spielen (kein Stale-Read). */
@@ -36,7 +59,6 @@ interface PlayerContextType {
   handleTogglePlay: () => void;
   handleNext: () => void;
   handlePrev: () => void;
-  loadServerTracks: () => Promise<void>;
   activeSoundcloudTrack: PlayerTrack | null;
   // Hörzeit-Tracking & Voting
   listenedSeconds: number;
@@ -72,6 +94,12 @@ interface PlayerContextType {
 const VOLUME_STORAGE_KEY = 'kbk_volume';
 const CHANNEL_STORAGE_KEY = 'kbk_channel';
 const DEFAULT_CHANNEL = 'phonk';
+/** Die einzigen echten Sender. Alles andere gehört nicht in die Channel-Auswahl. */
+const RADIO_CHANNELS: readonly string[] = ['phonk', 'hardtek'];
+const QUEUE_STORAGE_KEY = 'kbk_queue';
+/** Deckel gegen aufgeblähten localStorage — 200 Titel sind mehr als jede
+ *  realistische Warteschlange und bleiben weit unter dem 5-MB-Limit. */
+const QUEUE_STORAGE_MAX = 200;
 
 const PlayerContext = createContext<PlayerContextType | null>(null);
 
@@ -119,17 +147,17 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
   const [selectedChannel, setSelectedChannelState] = useState<string>(() => {
     if (typeof window === 'undefined') return DEFAULT_CHANNEL;
     const stored = window.localStorage.getItem(CHANNEL_STORAGE_KEY);
-    // 'mine' (ADR-041) wird nie persistiert/restauriert — der persönliche
-    // Channel braucht eine User-Geste (Autoplay-Policy) und darf den
-    // Radio-Boot (now-playing?channel=…) nicht mit einem Nicht-Radio-Channel
-    // füttern. Defensiv trotzdem abfangen, falls ein alter Wert drinsteht.
-    if (stored === 'mine') return DEFAULT_CHANNEL;
-    return stored || DEFAULT_CHANNEL;
+    // Whitelist statt Blacklist (05.08.2026): Es gibt genau zwei Sender. Alles
+    // andere im Speicher ist eine Altlast — 'mine' (der frühere persönliche
+    // Channel, heute der Player-Modus), 'live' (Event-Tab), 'raggatek' aus der
+    // Zeit vor der Subgenre-Logik. Ein solcher Wert würde den Radio-Boot mit
+    // einem Channel füttern, den der Server gar nicht sendet.
+    return RADIO_CHANNELS.includes(stored ?? '') ? (stored as string) : DEFAULT_CHANNEL;
   });
 
   const setSelectedChannel = useCallback((c: string) => {
     setSelectedChannelState(c);
-    if (typeof window !== 'undefined' && c !== 'mine') {
+    if (typeof window !== 'undefined' && RADIO_CHANNELS.includes(c)) {
       window.localStorage.setItem(CHANNEL_STORAGE_KEY, c);
     }
   }, []);
@@ -152,6 +180,7 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
     // eine vom Browser/OS gestoppte Wiedergabe selbst wieder aufnimmt.
     audio.getIntendsToPlay,
     audio.ensurePlaying,
+    audio.playbackBlocked,
   );
 
   // Radio-Refs synchronisieren (werden im onTrackEnd-Callback gelesen)
@@ -185,6 +214,79 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // === Warteschlangen-Persistenz (05.08.2026) ===
+  // Ohne sie wäre nach jedem Reload die eigene Auswahl weg und „ZURÜCK ZUM
+  // PLAYER" führte ins Leere. Bewusst NUR die Warteschlange, keine Wiedergabe:
+  // die Seite bootet weiterhin ins (stumme) Radio, der Hörer entscheidet.
+  const didRestoreQueueRef = useRef(false);
+  // Der Wiederherstell-Effekt setzt State, der erst im NÄCHSTEN Durchgang
+  // sichtbar wird — der Speicher-Effekt läuft aber schon in diesem, sieht eine
+  // leere Liste und hätte den Eintrag gelöscht. Diese Marke lässt ihn genau
+  // einen Durchgang aussetzen.
+  const restorePendingRef = useRef(false);
+  useEffect(() => {
+    if (didRestoreQueueRef.current) return;
+    if (typeof window === 'undefined') return;
+    didRestoreQueueRef.current = true;
+    try {
+      const raw = window.localStorage.getItem(QUEUE_STORAGE_KEY);
+      if (!raw) return;
+      const stored = JSON.parse(raw) as {
+        tracks?: PlayerTrack[];
+        currentIndex?: number;
+        shuffleEnabled?: boolean;
+        repeatMode?: 'off' | 'all' | 'one';
+      };
+      if (!Array.isArray(stored.tracks) || stored.tracks.length === 0) return;
+      restorePendingRef.current = true;
+      playlist.restoreQueue({
+        tracks: stored.tracks.slice(0, QUEUE_STORAGE_MAX),
+        currentIndex: stored.currentIndex ?? 0,
+        shuffleEnabled: stored.shuffleEnabled ?? false,
+        repeatMode: stored.repeatMode ?? 'off',
+      });
+    } catch {
+      // Kaputter Eintrag (Format-Wechsel, manuell editiert) — verwerfen statt
+      // den Player-Start daran scheitern zu lassen.
+      window.localStorage.removeItem(QUEUE_STORAGE_KEY);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!didRestoreQueueRef.current) return;
+    if (restorePendingRef.current) {
+      // Die wiederhergestellte Liste ist noch unterwegs — diesen Durchgang
+      // auslassen, statt den Eintrag versehentlich zu löschen.
+      restorePendingRef.current = false;
+      return;
+    }
+    try {
+      // Lokal per Drag & Drop hinzugefügte Dateien fliegen raus: ihre
+      // `blob:`-Adresse ist nach einem Reload ungültig, der Titel stünde als
+      // stummer Eintrag in der Warteschlange.
+      const persistable = playlist.tracks.filter((t) => !t.isLocal).slice(0, QUEUE_STORAGE_MAX);
+      if (persistable.length === 0) {
+        window.localStorage.removeItem(QUEUE_STORAGE_KEY);
+        return;
+      }
+      // Der Zeiger muss auf denselben Titel zeigen wie vor dem Filtern —
+      // sonst landet der Hörer nach dem Reload bei einem anderen Stück.
+      const currentTrackId = playlist.tracks[playlist.currentIndex]?.id;
+      const currentIndex = Math.max(0, persistable.findIndex((t) => t.id === currentTrackId));
+      window.localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify({
+        tracks: persistable,
+        currentIndex,
+        shuffleEnabled: playlist.shuffleEnabled,
+        repeatMode: playlist.repeatMode,
+      }));
+    } catch {
+      // Speicher voll oder gesperrt (Privat-Modus) — kein Grund, irgendetwas
+      // abzubrechen; die Warteschlange lebt dann nur für diese Sitzung.
+    }
+  }, [playlist.tracks, playlist.currentIndex, playlist.shuffleEnabled, playlist.repeatMode]);
 
   // Volume-Persistenz: jede Änderung in localStorage speichern (debounce-frei,
   // setItem ist billig). Beim nächsten Reload bleibt der Wert erhalten — auch
@@ -406,54 +508,56 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
     }
   }, [audio, playlist, playTrackAtIndex]);
 
-  // Server-Tracks laden
-  const loadServerTracks = useCallback(async () => {
-    try {
-      const res = await fetch('/api/tracks?pageSize=100');
-      const json = await res.json();
-      if (json.success && json.data && json.data.length > 0) {
-        const tracks: PlayerTrack[] = json.data.map((track: {
-          id: string;
-          title: string;
-          trackType?: string;
-          duration: number;
-          coverUrl: string | null;
-          streamUrl: string;
-          soundcloudUrl?: string;
-          soundcloudEmbedUrl?: string;
-          artist: { displayName: string | null; username: string };
-          featuringArtist?: { displayName: string | null; username: string } | null;
-          aiDisclosure?: 'human' | 'ai_assisted' | 'ai_generated' | null;
-        }) => {
-          const main = track.artist?.displayName || track.artist?.username || 'KBK';
-          const feat = track.featuringArtist?.displayName || track.featuringArtist?.username;
-          return {
-            id: track.id,
-            title: track.title,
-            // v2.8: "4Flow feat. Boomy" wenn Featuring-Artist gesetzt.
-            artist: feat ? `${main} feat. ${feat}` : main,
-            duration: track.duration || 0,
-            url: track.trackType === 'SOUNDCLOUD' ? (track.soundcloudUrl || '') : track.streamUrl,
-            coverUrl: track.coverUrl || undefined,
-            isLocal: false,
-            isSoundcloud: track.trackType === 'SOUNDCLOUD',
-            soundcloudEmbedUrl: track.soundcloudEmbedUrl || undefined,
-            aiDisclosure: track.aiDisclosure ?? null,
-          };
-        });
-        // Nur setzen wenn Playlist leer ist
-        if (playlist.tracks.length === 0) {
-          playlist.setTracks(tracks);
-        }
-      }
-    } catch (err) {
-      console.error('Failed to load server tracks:', err);
+  // === Wiedergabe-Modus ===
+  // Der Player zeigt sich nur, wenn es wirklich etwas Eigenes zu bedienen gibt:
+  // Radio aus UND eine Warteschlange UND ein geladener Titel.
+  //
+  // Alle drei Bedingungen sind nötig:
+  //  - Das Radio zu verlassen ist nicht dasselbe wie den Player zu benutzen.
+  //    Ein SoundCloud-Embed etwa steigt nur aus dem Radio aus und pausiert.
+  //    Ohne die Warteschlangen-Bedingung zeigte die Player-Leiste dann den
+  //    zuletzt gelaufenen RADIO-Titel samt Fortschrittsbalken — und ein Druck
+  //    auf Play hätte ihn über das laufende Embed gelegt.
+  //  - `currentTrack` fängt den Seiten-Start ab: eine wiederhergestellte
+  //    Warteschlange existiert schon, bevor der Radio-Boot durch ist — sonst
+  //    blitzte die Player-Leiste kurz auf.
+  const hasQueue = playlist.tracks.length > 0;
+  const playbackMode: PlaybackMode =
+    !radio.radioMode && hasQueue && audio.currentTrack ? 'player' : 'radio';
+
+  // Titel aus der Warteschlange nehmen. Trifft es den laufenden Titel, zieht die
+  // Wiedergabe sofort auf den Nachfolger um — sonst spielte das entfernte Stück
+  // zu Ende und die Warteschlangen-Anzeige widerspräche dem, was zu hören ist.
+  const removeFromQueue = useCallback((trackId: string) => {
+    const { removedWasCurrent, nowPlaying } = playlist.removeTrack(trackId);
+    if (!removedWasCurrent) return;
+    if (nowPlaying) {
+      playlist.markAsPlayed(nowPlaying.id);
+      audio.play(nowPlaying);
+    } else {
+      // Letzter Titel raus — nichts mehr zu spielen.
+      audio.pause();
     }
-  }, [playlist]);
+  }, [playlist, audio]);
+
+  // Zurück in die Hausparty. Der Channel wird dabei geradegestellt: der
+  // Sync-Loop darf nie einen Nicht-Radio-Channel pollen.
+  const returnToRadio = useCallback(async () => {
+    if (!RADIO_CHANNELS.includes(selectedChannel)) {
+      setSelectedChannel(DEFAULT_CHANNEL);
+    }
+    if (!analyser.isReady && audio.audioRef.current) {
+      analyser.initAnalyser(audio.audioRef.current);
+    }
+    await radio.enterRadioMode();
+  }, [selectedChannel, setSelectedChannel, analyser, audio.audioRef, radio]);
 
   // === Keyboard-Shortcuts ===
+  // Leertaste ist modus-abhängig: im Player pausiert sie, im Radio wirft sie die
+  // Wiedergabe nur wieder an (nie anhalten — Hausparty). Damit bleibt im Radio
+  // eine Rettung am Gerät, wenn der Ton weg ist, ohne das Konzept aufzuweichen.
   useKeyboardShortcuts({
-    togglePlay: handleTogglePlay,
+    togglePlay: playbackMode === 'player' ? handleTogglePlay : audio.ensurePlaying,
     seekForward: () => audio.seek(Math.min(audio.currentTime + 5, audio.duration)),
     seekBackward: () => audio.seek(Math.max(audio.currentTime - 5, 0)),
     volumeUp: () => audio.setVolume(Math.min(audio.volume + 0.05, 1)),
@@ -470,9 +574,11 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
         audio.setVolume(prevVolumeRef.current || 0.7);
       }
     },
-  });
+  }, { transportEnabled: playbackMode === 'player' });
 
   // === MediaSession API ===
+  // Im Radio-Modus bekommt das OS bewusst nur Play/Pause: Weiter/Zurück auf dem
+  // Sperrbildschirm würde eine Hausparty suggerieren, die man durchskippen kann.
   useMediaSession(
     {
       currentTrack: audio.currentTrack,
@@ -486,7 +592,8 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
       onNext: handleNext,
       onPrev: handlePrev,
       onSeek: (time) => audio.seek(time),
-    }
+    },
+    { transportEnabled: playbackMode === 'player' }
   );
 
   return (
@@ -494,12 +601,15 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
       value={{
         audio,
         playlist,
+        playbackMode,
+        returnToRadio,
+        hasQueue,
+        removeFromQueue,
         playTrackAtIndex,
         playTracks,
         handleTogglePlay,
         handleNext,
         handlePrev,
-        loadServerTracks,
         activeSoundcloudTrack,
         listenedSeconds,
         showVotingDialog,

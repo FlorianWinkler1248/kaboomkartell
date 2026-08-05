@@ -703,7 +703,6 @@
       "play": "Reproducir",
       "pause": "Pausa",
       "next": "Siguiente track",
-      "prev": "Track anterior",
       "previous": "Pista anterior",
       "shuffleOn": "Aleatorio activado",
       "shuffleOff": "Aleatorio desactivado",
@@ -777,9 +776,6 @@
       "loginRequired": "Inicia sesión para votar"
     },
     "mine": {
-      "tab": "MINE",
-      "setLabel": "MY PLAYLIST",
-      "tooltip": "MINE — tus tracks con like como canal personal",
       "emptyAnonToast": "Crea una cuenta para guardar tus likes y configurar tu playlist.",
       "emptyUserToast": "Nada en tu playlist todavía — pulsa AURA+ en un track."
     },
@@ -796,6 +792,28 @@
     "resume": {
       "label": "TOCA PARA REANUDAR",
       "aria": "Tu navegador detuvo la reproducción — toca para reanudar la radio"
+    },
+    "mode": {
+      "regionLabel": "Controles del reproductor",
+      "backToRadio": "VOLVER A LA RADIO",
+      "backToPlayer": "VOLVER AL REPRODUCTOR",
+      "myPlaylist": "MI PLAYLIST",
+      "expand": "Abrir el reproductor completo",
+      "nothingLoaded": "Nada cargado",
+      "emptyHint": "Tu cola está vacía. Elige un track o una playlist en cualquier parte de KBK — o empieza con todo.",
+      "loadLibrary": "REPRODUCIR TODO",
+      "loadingLibrary": "CARGANDO…"
+    },
+    "queue": {
+      "title": "COLA",
+      "open": "Mostrar la cola",
+      "close": "Ocultar la cola",
+      "empty": "La cola está vacía — elige un track o una playlist.",
+      "nowPlaying": "Sonando ahora",
+      "upNext": "A CONTINUACIÓN · {title}",
+      "moveUp": "Subir {title}",
+      "moveDown": "Bajar {title}",
+      "remove": "Quitar {title} de la cola"
     }
   },
   "schedule": {
@@ -1250,9 +1268,7 @@
     "skipToContent": "Saltar al contenido principal"
   },
   "pagesUi": {
-    "playerIntro": "Tu reproductor de música KBK personal.",
     "playerTracksAvailable": "{count, plural, one {# pista disponible.} other {# pistas disponibles.}}",
-    "playerDragHint": "Arrastra archivos MP3 a la lista o carga pistas del servidor.",
     "playerLoadingTracks": "Cargando pistas…",
     "playerLoadFailed": "No se pudieron cargar las pistas.",
     "back": "ATRÁS",

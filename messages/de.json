@@ -703,7 +703,6 @@
       "play": "Abspielen",
       "pause": "Pause",
       "next": "Nächster Track",
-      "prev": "Voriger Track",
       "previous": "Vorheriger Track",
       "shuffleOn": "Zufall an",
       "shuffleOff": "Zufall aus",
@@ -777,9 +776,6 @@
       "loginRequired": "Login zum Abstimmen nötig"
     },
     "mine": {
-      "tab": "MINE",
-      "setLabel": "MY PLAYLIST",
-      "tooltip": "MINE — deine gelikten Tracks als persönlicher Channel",
       "emptyAnonToast": "Leg einen Account an, um deine Likes zu speichern und deine Playlist einzurichten.",
       "emptyUserToast": "Noch nichts in deiner Playlist — drück AURA+ bei einem Track."
     },
@@ -796,6 +792,28 @@
     "resume": {
       "label": "ZUM FORTSETZEN TIPPEN",
       "aria": "Dein Browser hat die Wiedergabe gestoppt — tippen, um das Radio fortzusetzen"
+    },
+    "mode": {
+      "regionLabel": "Player-Steuerung",
+      "backToRadio": "ZURÜCK ZUM RADIO",
+      "backToPlayer": "ZURÜCK ZUM PLAYER",
+      "myPlaylist": "MEINE PLAYLIST",
+      "expand": "Vollbild-Player öffnen",
+      "nothingLoaded": "Nichts geladen",
+      "emptyHint": "Deine Warteschlange ist leer. Wähl irgendwo auf KBK einen Titel oder eine Playlist — oder fang mit allem an.",
+      "loadLibrary": "ALLES ABSPIELEN",
+      "loadingLibrary": "LÄDT…"
+    },
+    "queue": {
+      "title": "WARTESCHLANGE",
+      "open": "Warteschlange zeigen",
+      "close": "Warteschlange ausblenden",
+      "empty": "Die Warteschlange ist leer — wähl einen Titel oder eine Playlist.",
+      "nowPlaying": "Läuft gerade",
+      "upNext": "ALS NÄCHSTES · {title}",
+      "moveUp": "{title} nach oben schieben",
+      "moveDown": "{title} nach unten schieben",
+      "remove": "{title} aus der Warteschlange entfernen"
     }
   },
   "schedule": {
@@ -1250,9 +1268,7 @@
     "skipToContent": "Zum Hauptinhalt springen"
   },
   "pagesUi": {
-    "playerIntro": "Dein persönlicher KBK Music Player.",
     "playerTracksAvailable": "{count, plural, one {# Track verfügbar.} other {# Tracks verfügbar.}}",
-    "playerDragHint": "Zieh MP3-Dateien in die Playlist oder lade Server-Tracks.",
     "playerLoadingTracks": "Tracks werden geladen…",
     "playerLoadFailed": "Tracks konnten nicht geladen werden.",
     "back": "ZURÜCK",

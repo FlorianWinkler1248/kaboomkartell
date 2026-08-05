@@ -86,6 +86,11 @@ export const SYNC = {
    *  mehr angeworfen — dort gehört die Bühne dem Wechsel, sonst startet ein
    *  bereits beendeter Track für Sekundenbruchteile erneut. */
   RESUME_END_GUARD_MS: 500,
+  /** ... aber nur so lange, wie die Zeitlinie noch frisch sein kann. Steht
+   *  `serverNow` weit hinter `endsAt`, ist die Schedule veraltet (Poll-Ausfall,
+   *  eingefrorener Tab) — dann darf der Schutz die Wiedergabe nicht länger
+   *  aussperren, sonst hängt ein stehendes Element für immer fest. */
+  RESUME_STALE_AFTER_MS: 10_000,
 } as const
 
 function clamp(x: number, lo: number, hi: number): number {
@@ -216,8 +221,15 @@ export function needsPlaybackKick(input: ResumeInput): boolean {
   if (!input.intendsToPlay) return false
   if (input.isPlaying) return false
   if (!input.hasLoadedTrack) return false
-  // Am Track-Ende übernimmt der Wechsel (siehe computeSyncAction Fall 1).
-  if (input.serverNowMs >= input.endsAtMs - SYNC.RESUME_END_GUARD_MS) return false
+  // Am Track-Ende übernimmt der Wechsel (siehe computeSyncAction Fall 1) —
+  // aber nur, solange die Zeitlinie überhaupt noch aktuell sein kann. Ohne die
+  // obere Grenze wäre der Schutz nicht ein Fenster, sondern ein Dauerzustand:
+  // jede veraltete Schedule (Poll-Ausfall) hätte den Anlauf für immer
+  // abgeschaltet, und ein stehendes Element käme nie wieder in Gang.
+  const atTrackEnd =
+    input.serverNowMs >= input.endsAtMs - SYNC.RESUME_END_GUARD_MS &&
+    input.serverNowMs < input.endsAtMs + SYNC.RESUME_STALE_AFTER_MS
+  if (atTrackEnd) return false
   return true
 }
 
