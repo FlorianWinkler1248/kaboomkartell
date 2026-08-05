@@ -684,6 +684,34 @@ export default function MiniPlayer() {
                     {aiTag.label}
                   </span>
                 )}
+                {/* Mobile-Continuity (v3.1): Letzte Instanz, wenn der Browser das
+                    Wiederanwerfen im Hintergrund hart abgelehnt hat. Der Regelkreis
+                    versucht es weiter, aber manche Wiedergabe braucht zwingend eine
+                    echte Fingerberührung — dann sagen wir das, statt still zu bleiben. */}
+                {radioMode && !isOffAir && audio.playbackBlocked && (
+                  <button
+                    type="button"
+                    onClick={() => audio.ensurePlaying()}
+                    aria-label={t('resume.aria')}
+                    style={{
+                      padding: '2px 7px',
+                      borderRadius: 999,
+                      border: 'none',
+                      background: accent,
+                      color: '#0B0B0F',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 9,
+                      fontWeight: 700,
+                      letterSpacing: '0.14em',
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0,
+                      animation: 'kk-pulse 1.2s infinite',
+                    }}
+                  >
+                    {t('resume.label')}
+                  </button>
+                )}
                 {/* Radio Sync v2: stiller Sync-Punkt. Text + ⓘ bewusst entfernt — nur ein
                     dezenter Status-Dot (grün=in sync, pulsierender Akzent=beatmatching).
                     Bleibt klickbar/hoverbar fürs Info-Modal, damit der Punkt erklärbar ist. */}

@@ -32,6 +32,10 @@ export interface UseAudioPlayerReturn {
   /** Radio Sync v3 (ADR-040): Element meldet Puffer-Stall (waiting/stalled/error);
    *  playing/canplay setzen zurück. Speist den Stall-Guard im Regelgesetz. */
   isStalled: boolean;
+  /** Mobile-Continuity (v3.1): Der Browser hat ein `play()` abgelehnt (typisch
+   *  `NotAllowedError` im Hintergrund-Tab). Die Wiedergabe steht dann still und
+   *  braucht eine echte User-Geste — die UI kann das als Hinweis anzeigen. */
+  playbackBlocked: boolean;
 
   // Refs
   audioRef: React.RefObject<HTMLAudioElement | null>;
@@ -52,6 +56,16 @@ export interface UseAudioPlayerReturn {
   /** Radio Sync v3: Callback für `error` bei blob:-Quelle registrieren
    *  (useRadioSync macht daraus die Netz-URL-Recovery). */
   setOnBlobError: (cb: (() => void) | null) => void;
+  /** Mobile-Continuity (v3.1): Soll gerade Ton kommen? Das ist die ABSICHT
+   *  (play/resume gerufen, kein pause), nicht der beobachtete Element-Zustand.
+   *  Der Regelkreis unterscheidet damit „User hat pausiert" von „das OS hat uns
+   *  die Wiedergabe weggenommen". */
+  getIntendsToPlay: () => boolean;
+  /** Mobile-Continuity (v3.1): Element wieder anwerfen, wenn es entgegen der
+   *  Absicht steht (OS-Interruption, abgelehntes Hintergrund-`play()`).
+   *  Erhöht bewusst NICHT den Play-Token — ein noch ausstehender
+   *  `loadedmetadata`-Seek des laufenden Wechsels bleibt gültig. */
+  ensurePlaying: () => void;
 }
 
 /** preservesPitch (+ Vendor-Prefixe) setzen: bei Tempo-Nudge bleibt die Tonhöhe
@@ -80,6 +94,20 @@ export function useAudioPlayer(options: UseAudioPlayerOptions = {}): UseAudioPla
   const [isStalled, setIsStalled] = useState(false);
   // Callback für Blob-Playback-Fehler (Registrierung via setOnBlobError).
   const onBlobErrorRef = useRef<(() => void) | null>(null);
+
+  // === Mobile-Continuity (v3.1) ===
+  // Absicht vs. Beobachtung: `intendsToPlayRef` sagt, ob Ton kommen SOLL.
+  // Gesetzt von play()/resume(), gelöscht von pause(). Ein `pause`-Event des
+  // Elements OHNE gelöschte Absicht bedeutet: uns wurde die Wiedergabe von
+  // außen genommen (OS-Interruption, Audio-Fokus-Verlust, Hintergrund-Drossel).
+  const intendsToPlayRef = useRef(false);
+  const [playbackBlocked, setPlaybackBlocked] = useState(false);
+  // onTrackEnd via Ref: der Callback kommt aus dem PlayerProvider als frische
+  // Closure pro Render. Als Effect-Dependency würde er die Listener bei JEDEM
+  // Render ab- und neu hängen — inklusive kurzer Lücke, in der ein `ended`
+  // ins Leere läuft und die Radio-Übergabe still ausfällt.
+  const onTrackEndRef = useRef(onTrackEnd);
+  onTrackEndRef.current = onTrackEnd;
 
   // Play-Generation-Token: schützt vor AbortError-Races bei schnellem Track-Wechsel.
   // Jeder play()/resume()-Aufruf erhöht den Token; eine von einem neuen Aufruf
@@ -115,8 +143,18 @@ export function useAudioPlayer(options: UseAudioPlayerOptions = {}): UseAudioPla
     // ended -> handleSongEnd()
     const handleEnded = () => {
       setIsPlaying(false);
-      onTrackEnd?.();
+      onTrackEndRef.current?.();
     };
+
+    // Mobile-Continuity (v3.1): `isPlaying` folgt jetzt dem ELEMENT, nicht nur
+    // unseren eigenen Aufrufen. Ohne diese beiden Listener blieb der React-State
+    // auf `true` stehen, wenn das OS die Wiedergabe wegnahm — der Radio galt als
+    // laufend, klang aber nicht, und niemand fühlte sich zuständig.
+    const handlePlayEvent = () => {
+      setIsPlaying(true);
+      setPlaybackBlocked(false);
+    };
+    const handlePauseEvent = () => setIsPlaying(false);
 
     // Radio Sync v3 (ADR-040): Stall-Erkennung. waiting/stalled = Puffer leer,
     // playing/canplay = wieder Daten da. `error` zählt ebenfalls als Stall; bei
@@ -136,6 +174,8 @@ export function useAudioPlayer(options: UseAudioPlayerOptions = {}): UseAudioPla
     audio.addEventListener('error', handleError);
     audio.addEventListener('playing', handleUnstall);
     audio.addEventListener('canplay', handleUnstall);
+    audio.addEventListener('play', handlePlayEvent);
+    audio.addEventListener('pause', handlePauseEvent);
 
     // Cleanup (wichtig: Blob-URLs freigeben)
     return () => {
@@ -147,8 +187,12 @@ export function useAudioPlayer(options: UseAudioPlayerOptions = {}): UseAudioPla
       audio.removeEventListener('error', handleError);
       audio.removeEventListener('playing', handleUnstall);
       audio.removeEventListener('canplay', handleUnstall);
+      audio.removeEventListener('play', handlePlayEvent);
+      audio.removeEventListener('pause', handlePauseEvent);
     };
-  }, [onTrackEnd]);
+    // Bewusst leer: die Listener hängen an einem stabilen Element und lesen
+    // veränderliche Callbacks über Refs (siehe onTrackEndRef).
+  }, []);
 
   // === Aktionen (migriert von MP3Player-Methoden) ===
 
@@ -166,6 +210,7 @@ export function useAudioPlayer(options: UseAudioPlayerOptions = {}): UseAudioPla
     if (!audio) return;
 
     const token = ++playTokenRef.current;
+    intendsToPlayRef.current = true;
     audio.src = track.url;
     setIsStalled(false);
     // Frischer Track startet immer mit Normaltempo; preservesPitch nach src-Wechsel
@@ -186,11 +231,22 @@ export function useAudioPlayer(options: UseAudioPlayerOptions = {}): UseAudioPla
       audio.addEventListener('loadedmetadata', onMeta, { once: true });
     }
     audio.play().then(() => {
-      if (token === playTokenRef.current) setIsPlaying(true);
+      if (token === playTokenRef.current) {
+        setIsPlaying(true);
+        setPlaybackBlocked(false);
+      }
     }).catch((err: unknown) => {
       // AbortError = play() wurde von einem neuen load()/Track-Wechsel überholt
       // (bei schnellem Radio-Sync / Channel-Wechsel erwartbar) — nicht als Fehler loggen.
       if (err instanceof DOMException && err.name === 'AbortError') return;
+      // Mobile-Continuity (v3.1): Chrome lehnt `play()` nach einem src-Wechsel im
+      // Hintergrund-Tab mit NotAllowedError ab. Das ist der Moment, in dem der
+      // Radio früher still starb — jetzt markiert und vom Regelkreis erneut
+      // versucht (bzw. per Lockscreen-Play durch den Hörer erlösbar).
+      if (err instanceof DOMException && err.name === 'NotAllowedError') {
+        setPlaybackBlocked(true);
+        return;
+      }
       console.error('Fehler beim Abspielen:', err);
     });
 
@@ -206,6 +262,8 @@ export function useAudioPlayer(options: UseAudioPlayerOptions = {}): UseAudioPla
     const audio = audioRef.current;
     if (!audio) return;
 
+    intendsToPlayRef.current = false;
+    setPlaybackBlocked(false);
     audio.pause();
     setIsPlaying(false);
   }, []);
@@ -218,13 +276,49 @@ export function useAudioPlayer(options: UseAudioPlayerOptions = {}): UseAudioPla
     if (!audio || !audio.src) return;
 
     const token = ++playTokenRef.current;
+    intendsToPlayRef.current = true;
     audio.play().then(() => {
-      if (token === playTokenRef.current) setIsPlaying(true);
+      if (token === playTokenRef.current) {
+        setIsPlaying(true);
+        setPlaybackBlocked(false);
+      }
     }).catch((err: unknown) => {
       if (err instanceof DOMException && err.name === 'AbortError') return;
+      if (err instanceof DOMException && err.name === 'NotAllowedError') {
+        setPlaybackBlocked(true);
+        return;
+      }
       console.error('Fehler beim Fortsetzen:', err);
     });
   }, []);
+
+  /**
+   * Mobile-Continuity (v3.1): Element wieder anwerfen, wenn es entgegen der
+   * Absicht still steht. Bewusst OHNE Play-Token-Inkrement — ein noch
+   * ausstehender `loadedmetadata`-Seek des laufenden Track-Wechsels würde sonst
+   * verworfen und der Track liefe ab Sekunde 0 statt an der Live-Position.
+   */
+  const ensurePlaying = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio || !audio.src) return;
+    if (!intendsToPlayRef.current) return;
+    if (!audio.paused) return;
+
+    audio.play().then(() => {
+      setIsPlaying(true);
+      setPlaybackBlocked(false);
+    }).catch((err: unknown) => {
+      if (err instanceof DOMException && err.name === 'AbortError') return;
+      if (err instanceof DOMException && err.name === 'NotAllowedError') {
+        setPlaybackBlocked(true);
+        return;
+      }
+      // Andere Fehler nicht pro Regelkreis-Tick spammen — der Stall-Guard
+      // und die Blob-Recovery kümmern sich um Quellen-Probleme.
+    });
+  }, []);
+
+  const getIntendsToPlay = useCallback(() => intendsToPlayRef.current, []);
 
   /**
    * Wechselt zwischen Play und Pause.
@@ -310,6 +404,7 @@ export function useAudioPlayer(options: UseAudioPlayerOptions = {}): UseAudioPla
     volume,
     currentTrack,
     isStalled,
+    playbackBlocked,
     audioRef,
     play,
     pause,
@@ -320,5 +415,7 @@ export function useAudioPlayer(options: UseAudioPlayerOptions = {}): UseAudioPla
     setVolume,
     setPlaybackRate,
     setOnBlobError,
+    getIntendsToPlay,
+    ensurePlaying,
   };
 }

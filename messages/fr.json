@@ -700,12 +700,13 @@
   },
   "player": {
     "controls": {
+      "play": "Lire",
+      "pause": "Pause",
+      "next": "Track suivant",
+      "prev": "Track précédent",
+      "previous": "Piste précédente",
       "shuffleOn": "Lecture aléatoire activée",
       "shuffleOff": "Lecture aléatoire désactivée",
-      "previous": "Piste précédente",
-      "next": "Piste suivante",
-      "play": "Lecture",
-      "pause": "Pause",
       "repeat": "Répéter : {mode}",
       "repeatOff": "Non",
       "repeatAll": "Tout",
@@ -782,12 +783,6 @@
       "emptyAnonToast": "Crée un compte pour garder tes likes et configurer ta playlist.",
       "emptyUserToast": "Rien dans ta playlist pour l'instant — appuie sur AURA+ sur un track."
     },
-    "controls": {
-      "play": "Lire",
-      "pause": "Pause",
-      "next": "Track suivant",
-      "prev": "Track précédent"
-    },
     "sync": {
       "synced": "SYNCHRO",
       "beatmatching": "CALAGE",
@@ -797,6 +792,10 @@
       "modalTagline": "Radio en direct · toujours synchro",
       "modalBody": "La radio KBK est en direct — chaque loup entend le même morceau au même instant. Ton lecteur cale discrètement son tempo sur l’horloge maîtresse de la meute, comme un DJ qui synchronise deux platines, pour que tu ne dérives jamais. Le petit point ici clignote pendant qu’il rattrape et passe au vert une fois calé.",
       "modalClose": "Compris"
+    },
+    "resume": {
+      "label": "TOUCHER POUR REPRENDRE",
+      "aria": "Ton navigateur a arrêté la lecture — touche pour reprendre la radio"
     }
   },
   "schedule": {

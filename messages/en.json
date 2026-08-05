@@ -700,12 +700,13 @@
   },
   "player": {
     "controls": {
-      "shuffleOn": "Shuffle on",
-      "shuffleOff": "Shuffle off",
-      "previous": "Previous track",
-      "next": "Next track",
       "play": "Play",
       "pause": "Pause",
+      "next": "Next track",
+      "prev": "Previous track",
+      "previous": "Previous track",
+      "shuffleOn": "Shuffle on",
+      "shuffleOff": "Shuffle off",
       "repeat": "Repeat: {mode}",
       "repeatOff": "Off",
       "repeatAll": "All",
@@ -782,12 +783,6 @@
       "emptyAnonToast": "Create an account to save your likes and set up your playlist.",
       "emptyUserToast": "Nothing in your playlist yet — hit AURA+ on any track."
     },
-    "controls": {
-      "play": "Play",
-      "pause": "Pause",
-      "next": "Next track",
-      "prev": "Previous track"
-    },
     "sync": {
       "synced": "IN SYNC",
       "beatmatching": "BEATMATCHING",
@@ -797,6 +792,10 @@
       "modalTagline": "Live radio · always in sync",
       "modalBody": "KBK radio is live — every wolf hears the same track at the same moment. Your player quietly matches its tempo to the pack’s master clock, like a DJ beatmatching two decks, so you never drift out of time. The little dot here pulses while it catches up and glows green once you’re locked in.",
       "modalClose": "Got it"
+    },
+    "resume": {
+      "label": "TAP TO RESUME",
+      "aria": "Playback was stopped by your browser — tap to resume the radio"
     }
   },
   "schedule": {
