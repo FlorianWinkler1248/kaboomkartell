@@ -1,24 +1,27 @@
 'use client';
 
 /**
- * usePlaylist Hook
+ * usePlaylist Hook — die Warteschlange des Player-Modus.
  *
- * Verwaltet die Playlist-Logik: Tracks, Shuffle, Repeat, Statistiken.
- * Migriert von der bestehenden MP3Player-Klasse.
+ * Der Hook hält den React-State (Titel-Liste, laufender Titel, Shuffle, Repeat);
+ * die eigentliche Mechanik — wie sich die Abspiel-Reihenfolge daraus ergibt und
+ * wohin „vor"/„zurück" führt — liegt als reine, getestete Funktionen in
+ * `@/lib/player-queue`.
  *
- * Originale Methoden-Zuordnung:
- * - MP3Player.songs[]              -> tracks[]
- * - MP3Player.currentSongIndex     -> currentIndex
- * - MP3Player.isShuffled           -> shuffleEnabled
- * - MP3Player.repeatMode           -> repeatMode
- * - MP3Player.playedSongs (Set)    -> playedTrackIds (Set)
- * - MP3Player.totalSongs           -> stats.total
- * - MP3Player.getNextSongIndex()   -> getNextIndex()
- * - MP3Player.getPrevSongIndex()   -> getPrevIndex()
- * - MP3Player.getRandomUnplayed()  -> getRandomUnplayedIndex()
+ * Zwei Sichten auf dieselben Titel (Details dort):
+ *  - `tracks` — was der Hörer sieht und umsortiert
+ *  - `order`  — in welcher Folge gespielt wird (ohne Shuffle identisch)
+ *
+ * `currentIndex` bleibt bewusst der Index in `tracks` (nicht in `order`), damit
+ * alle bestehenden Aufrufer unverändert weiterlaufen.
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
+import {
+  identityOrder, shuffledOrder, nextCursor, prevCursor, upNextIndices,
+  withShuffle, withRemovedTrack, withReorderedTracks, withAppendedTracks,
+  type QueueState,
+} from '@/lib/player-queue';
 import type { PlayerTrack, PlayerStats } from '@/types';
 import type { RepeatMode } from '@/lib/constants';
 
@@ -30,11 +33,37 @@ export interface UsePlaylistReturn {
   repeatMode: RepeatMode;
   playedTrackIds: Set<string>;
   stats: PlayerStats;
+  /** Die kommenden Titel in Abspiel-Reihenfolge (speist „ALS NÄCHSTES"). */
+  upNext: PlayerTrack[];
 
   // Actions
   setTracks: (tracks: PlayerTrack[]) => void;
+  /**
+   * Warteschlange samt Einstellungen wiederherstellen (Reload).
+   *
+   * Bewusst getrennt von `setTracks`: das hier startet KEINE Wiedergabe und
+   * setzt den Cursor auf die gemerkte Stelle statt auf den Anfang. Der Hörer
+   * findet seine Auswahl wieder, hört aber erst wieder Ton, wenn er es will.
+   */
+  restoreQueue: (state: {
+    tracks: PlayerTrack[];
+    currentIndex: number;
+    shuffleEnabled: boolean;
+    repeatMode: RepeatMode;
+  }) => void;
   addTracks: (newTracks: PlayerTrack[]) => void;
-  removeTrack: (trackId: string) => void;
+  /**
+   * Titel aus der Warteschlange nehmen.
+   *
+   * Meldet zurück, ob dabei der LAUFENDE Titel entfernt wurde und welcher jetzt
+   * an der Reihe ist — denn dann muss die Wiedergabe umziehen. Ohne diese
+   * Rückmeldung lief das entfernte Stück weiter zu Ende, und weil der Cursor
+   * schon auf dem Nachfolger stand, sprang die Wiedergabe danach auf den
+   * ÜBERnächsten: ein Titel wurde stillschweigend übersprungen.
+   */
+  removeTrack: (trackId: string) => { removedWasCurrent: boolean; nowPlaying: PlayerTrack | null };
+  /** Titel in der sichtbaren Liste verschieben (Queue umsortieren). */
+  moveTrack: (from: number, to: number) => void;
   clearPlaylist: () => void;
   setCurrentIndex: (index: number) => void;
   markAsPlayed: (trackId: string) => void;
@@ -46,173 +75,166 @@ export interface UsePlaylistReturn {
 
 export function usePlaylist(): UsePlaylistReturn {
   const [tracks, setTracksState] = useState<PlayerTrack[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(-1);
+  const [currentIndex, setCurrentIndexState] = useState(-1);
+  const [order, setOrder] = useState<number[]>([]);
   const [shuffleEnabled, setShuffleEnabled] = useState(false);
   const [repeatMode, setRepeatMode] = useState<RepeatMode>('off');
   const [playedTrackIds, setPlayedTrackIds] = useState<Set<string>>(new Set());
 
-  // === Statistiken (berechnet, wie im Original) ===
+  // Refs für die Callbacks, die aus fremden Closures gerufen werden
+  // (onTrackEnd im PlayerProvider läuft aus einem Audio-Event-Listener).
+  const stateRef = useRef<QueueState>({ order: [], cursor: -1, shuffle: false, repeat: 'off' });
+  stateRef.current = {
+    order,
+    cursor: order.indexOf(currentIndex),
+    shuffle: shuffleEnabled,
+    repeat: repeatMode,
+  };
+
+  // === Statistiken ===
   const stats: PlayerStats = useMemo(() => {
     const totalDuration = tracks.reduce((sum, t) => sum + (t.duration || 0), 0);
-    return {
-      total: tracks.length,
-      played: playedTrackIds.size,
-      totalDuration,
-    };
+    return { total: tracks.length, played: playedTrackIds.size, totalDuration };
   }, [tracks, playedTrackIds]);
 
-  // === Track als gespielt markieren ===
+  // === „Als Nächstes" — max. 20 Einträge, mehr braucht keine Anzeige ===
+  const upNext = useMemo(() => {
+    const state: QueueState = {
+      order,
+      cursor: order.indexOf(currentIndex),
+      shuffle: shuffleEnabled,
+      repeat: repeatMode,
+    };
+    return upNextIndices(state, 20).map((i) => tracks[i]).filter(Boolean);
+  }, [order, currentIndex, shuffleEnabled, repeatMode, tracks]);
+
   const markAsPlayed = useCallback((trackId: string) => {
     setPlayedTrackIds((prev) => {
+      if (prev.has(trackId)) return prev;
       const next = new Set(prev);
       next.add(trackId);
       return next;
     });
   }, []);
 
-  // === Tracks setzen (ersetzt die gesamte Playlist) ===
+  // === Tracks setzen (ersetzt die gesamte Warteschlange) ===
   const setTracks = useCallback((newTracks: PlayerTrack[]) => {
     setTracksState(newTracks);
-    setCurrentIndex(newTracks.length > 0 ? 0 : -1);
+    setCurrentIndexState(newTracks.length > 0 ? 0 : -1);
     setPlayedTrackIds(new Set());
+    // Bei aktivem Shuffle wird die neue Warteschlange sofort gemischt — sonst
+    // liefe die erste Runde geordnet, obwohl der Knopf leuchtet.
+    setOrder(
+      shuffleEnabled && newTracks.length > 0
+        ? shuffledOrder(newTracks.length, Date.now(), 0)
+        : identityOrder(newTracks.length),
+    );
+  }, [shuffleEnabled]);
+
+  const restoreQueue = useCallback((state: {
+    tracks: PlayerTrack[];
+    currentIndex: number;
+    shuffleEnabled: boolean;
+    repeatMode: RepeatMode;
+  }) => {
+    if (state.tracks.length === 0) return;
+    const index = Math.min(Math.max(state.currentIndex, 0), state.tracks.length - 1);
+    setTracksState(state.tracks);
+    setRepeatMode(state.repeatMode);
+    setShuffleEnabled(state.shuffleEnabled);
+    setPlayedTrackIds(new Set());
+    // Die gemischte Reihenfolge selbst wird NICHT gespeichert — sie neu zu
+    // würfeln ist beim Wiederaufnehmen erwartbar. Der aktuelle Titel bleibt
+    // vorn, damit „weiter" nicht mitten in die Vergangenheit springt.
+    setOrder(
+      state.shuffleEnabled
+        ? shuffledOrder(state.tracks.length, Date.now(), index)
+        : identityOrder(state.tracks.length),
+    );
+    setCurrentIndexState(index);
   }, []);
 
-  // === Tracks hinzufügen (z.B. Drag & Drop) ===
+  // === Tracks anhängen (z.B. Drag & Drop) ===
   const addTracks = useCallback((newTracks: PlayerTrack[]) => {
+    if (newTracks.length === 0) return;
+    setOrder(withAppendedTracks(stateRef.current, newTracks.length).order);
     setTracksState((prev) => [...prev, ...newTracks]);
   }, []);
 
   // === Track entfernen ===
   const removeTrack = useCallback((trackId: string) => {
-    setTracksState((prev) => {
-      const newTracks = prev.filter((t) => t.id !== trackId);
-      return newTracks;
-    });
-    setPlayedTrackIds((prev) => {
-      const next = new Set(prev);
-      next.delete(trackId);
-      return next;
-    });
-  }, []);
+    const trackIndex = tracks.findIndex((t) => t.id === trackId);
+    if (trackIndex < 0) return { removedWasCurrent: false, nowPlaying: null };
 
-  // === Playlist leeren ===
+    const removedWasCurrent = trackIndex === currentIndex;
+    const next = withRemovedTrack(stateRef.current, trackIndex);
+    // Genau EINEN Eintrag entfernen — nicht alle mit dieser Id. Die Engine
+    // rechnet mit einer Position; würde die Liste zwei Einträge verlieren,
+    // zeigte die Reihenfolge danach an der Liste vorbei.
+    const newTracks = tracks.filter((_, i) => i !== trackIndex);
+    const newCurrentIndex = next.cursor >= 0 ? next.order[next.cursor] ?? -1 : -1;
+
+    setOrder(next.order);
+    setCurrentIndexState(newCurrentIndex);
+    setTracksState(newTracks);
+    setPlayedTrackIds((prev) => {
+      const set = new Set(prev);
+      set.delete(trackId);
+      return set;
+    });
+
+    return { removedWasCurrent, nowPlaying: newTracks[newCurrentIndex] ?? null };
+  }, [tracks, currentIndex]);
+
+  // === Queue umsortieren ===
+  const moveTrack = useCallback((from: number, to: number) => {
+    if (from < 0 || from >= tracks.length || to < 0 || to >= tracks.length || from === to) return;
+
+    // mapping[neuePosition] = altePosition — genau das erwartet die Engine.
+    const mapping = identityOrder(tracks.length);
+    const [movedIndex] = mapping.splice(from, 1);
+    mapping.splice(to, 0, movedIndex);
+
+    const next = withReorderedTracks(stateRef.current, mapping);
+    const reordered = [...tracks];
+    const [track] = reordered.splice(from, 1);
+    reordered.splice(to, 0, track);
+
+    setTracksState(reordered);
+    setOrder(next.order);
+    setCurrentIndexState(next.cursor >= 0 ? next.order[next.cursor] ?? -1 : -1);
+  }, [tracks]);
+
   const clearPlaylist = useCallback(() => {
     setTracksState([]);
-    setCurrentIndex(-1);
+    setCurrentIndexState(-1);
+    setOrder([]);
     setPlayedTrackIds(new Set());
   }, []);
 
-  // === Shuffle umschalten ===
-  // Migriert von: MP3Player.toggleShuffle()
+  // === Shuffle umschalten — mischt die Reihenfolge EINMAL, statt bei jedem
+  //     Schritt neu zu würfeln. Der laufende Titel bleibt der laufende Titel. ===
   const toggleShuffle = useCallback(() => {
-    setShuffleEnabled((prev) => !prev);
+    const next = withShuffle(stateRef.current, !stateRef.current.shuffle, Date.now());
+    setShuffleEnabled(next.shuffle);
+    setOrder(next.order);
   }, []);
 
-  // === Repeat-Modus durchschalten: off -> all -> one -> off ===
-  // Migriert von: MP3Player.cycleRepeatMode()
   const cycleRepeatMode = useCallback(() => {
-    setRepeatMode((prev) => {
-      if (prev === 'off') return 'all';
-      if (prev === 'all') return 'one';
-      return 'off';
-    });
+    setRepeatMode((prev) => (prev === 'off' ? 'all' : prev === 'all' ? 'one' : 'off'));
   }, []);
 
-  /**
-   * Gibt einen zufälligen Index zurück, der noch nicht gespielt wurde.
-   * Migriert von: MP3Player.getRandomUnplayed()
-   *
-   * Wenn alle gespielt: Reset und neuer Zufallstrack (nicht der aktuelle).
-   */
-  const getRandomUnplayedIndex = useCallback((): number | null => {
-    if (tracks.length === 0) return null;
-    if (tracks.length === 1) return 0;
-
-    // Finde ungeplayed Tracks (nicht den aktuellen)
-    const unplayed = tracks
-      .map((t, i) => ({ id: t.id, index: i }))
-      .filter((item) => !playedTrackIds.has(item.id) && item.index !== currentIndex);
-
-    if (unplayed.length > 0) {
-      // Zufällig aus den ungespielten wählen
-      const random = Math.floor(Math.random() * unplayed.length);
-      return unplayed[random].index;
-    }
-
-    // Alle gespielt -> Reset (wie im Original)
-    // Aber nicht den aktuellen Track nochmal
-    setPlayedTrackIds(new Set());
-    const available = tracks
-      .map((_, i) => i)
-      .filter((i) => i !== currentIndex);
-
-    if (available.length === 0) return 0;
-    return available[Math.floor(Math.random() * available.length)];
-  }, [tracks, playedTrackIds, currentIndex]);
-
-  /**
-   * Nächster Track-Index basierend auf Repeat/Shuffle-Modus.
-   * Migriert von: MP3Player.getNextSongIndex()
-   *
-   * Logik:
-   * - repeat='one': gleicher Index
-   * - shuffle=true: zufälliger unplayed
-   * - repeat='all': wrap around
-   * - repeat='off': null wenn am Ende
-   */
   const getNextIndex = useCallback((): number | null => {
-    if (tracks.length === 0) return null;
+    const cursor = nextCursor(stateRef.current);
+    if (cursor === null) return null;
+    return stateRef.current.order[cursor] ?? null;
+  }, []);
 
-    // Repeat One -> gleicher Track
-    if (repeatMode === 'one') {
-      return currentIndex;
-    }
-
-    // Shuffle -> zufällig
-    if (shuffleEnabled) {
-      return getRandomUnplayedIndex();
-    }
-
-    // Normaler nächster Track
-    const nextIndex = currentIndex + 1;
-
-    if (nextIndex < tracks.length) {
-      return nextIndex;
-    }
-
-    // Am Ende der Playlist
-    if (repeatMode === 'all') {
-      return 0; // Zurück zum Anfang
-    }
-
-    return null; // Playlist zu Ende
-  }, [tracks.length, repeatMode, currentIndex, shuffleEnabled, getRandomUnplayedIndex]);
-
-  /**
-   * Vorheriger Track-Index.
-   * Migriert von: MP3Player.getPrevSongIndex()
-   */
   const getPrevIndex = useCallback((): number | null => {
-    if (tracks.length === 0) return null;
-
-    // Shuffle -> zufällig
-    if (shuffleEnabled) {
-      return getRandomUnplayedIndex();
-    }
-
-    const prevIndex = currentIndex - 1;
-
-    if (prevIndex >= 0) {
-      return prevIndex;
-    }
-
-    // Am Anfang der Playlist
-    if (repeatMode === 'all') {
-      return tracks.length - 1; // Zum Ende springen
-    }
-
-    return 0; // Bleibe beim ersten Track
-  }, [tracks.length, currentIndex, shuffleEnabled, repeatMode, getRandomUnplayedIndex]);
+    const cursor = prevCursor(stateRef.current);
+    if (cursor === null) return null;
+    return stateRef.current.order[cursor] ?? null;
+  }, []);
 
   return {
     tracks,
@@ -221,11 +243,14 @@ export function usePlaylist(): UsePlaylistReturn {
     repeatMode,
     playedTrackIds,
     stats,
+    upNext,
     setTracks,
+    restoreQueue,
     addTracks,
     removeTrack,
+    moveTrack,
     clearPlaylist,
-    setCurrentIndex,
+    setCurrentIndex: setCurrentIndexState,
     markAsPlayed,
     toggleShuffle,
     cycleRepeatMode,

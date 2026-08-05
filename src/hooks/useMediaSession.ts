@@ -31,12 +31,30 @@ interface MediaSessionState {
   duration: number;
 }
 
+interface MediaSessionOptions {
+  /**
+   * Dürfen Weiter/Zurück/Spulen an das OS gemeldet werden?
+   *
+   * Nur im Player-Modus. Im Radio bleibt es bei Play/Pause — Sprungtasten auf
+   * dem Sperrbildschirm würden eine Kontrolle versprechen, die die Hausparty
+   * bewusst nicht hat.
+   */
+  transportEnabled: boolean;
+}
+
 export function useMediaSession(
   state: MediaSessionState,
-  actions: MediaSessionActions
+  actions: MediaSessionActions,
+  options: MediaSessionOptions = { transportEnabled: true }
 ) {
+  const { transportEnabled } = options;
   const actionsRef = useRef(actions);
   actionsRef.current = actions;
+
+  // Mobile-Continuity (v3.1): Position ebenfalls über Refs, damit die
+  // Action-Handler an einem STABILEN Effect hängen können (siehe unten).
+  const positionRef = useRef({ currentTime: state.currentTime, duration: state.duration });
+  positionRef.current = { currentTime: state.currentTime, duration: state.duration };
 
   // Metadata aktualisieren wenn sich der Track ändert
   useEffect(() => {
@@ -92,13 +110,23 @@ export function useMediaSession(
     }
   }, [state.currentTime, state.duration]);
 
-  // Action-Handler registrieren
+  // Action-Handler registrieren.
+  //
+  // Mobile-Continuity (v3.1): Dieser Effect hängt bewusst an KEINER
+  // veränderlichen Größe. Vorher standen `currentTime`/`duration` in den
+  // Dependencies — bei ~4 timeupdate-Events pro Sekunde wurden damit alle
+  // OS-Media-Handler viermal je Sekunde abgemeldet und neu gesetzt. Auf dem
+  // Sperrbildschirm ist genau das der Unterschied zwischen „Play-Taste tut
+  // etwas" und „Play-Taste tut nichts" — und die Play-Taste ist der Rettungs-
+  // anker, wenn der Browser die Wiedergabe im Hintergrund abgelehnt hat.
   useEffect(() => {
     if (!('mediaSession' in navigator)) return;
 
-    const handlers: [MediaSessionAction, MediaSessionActionHandler][] = [
+    const alwaysOn: [MediaSessionAction, MediaSessionActionHandler][] = [
       ['play', () => actionsRef.current.onPlay()],
       ['pause', () => actionsRef.current.onPause()],
+    ];
+    const transportOnly: [MediaSessionAction, MediaSessionActionHandler][] = [
       ['nexttrack', () => actionsRef.current.onNext()],
       ['previoustrack', () => actionsRef.current.onPrev()],
       ['seekto', (details) => {
@@ -107,14 +135,14 @@ export function useMediaSession(
         }
       }],
       ['seekforward', () => {
-        actionsRef.current.onSeek(
-          Math.min(state.currentTime + 10, state.duration)
-        );
+        const { currentTime, duration } = positionRef.current;
+        actionsRef.current.onSeek(Math.min(currentTime + 10, duration));
       }],
       ['seekbackward', () => {
-        actionsRef.current.onSeek(Math.max(state.currentTime - 10, 0));
+        actionsRef.current.onSeek(Math.max(positionRef.current.currentTime - 10, 0));
       }],
     ];
+    const handlers = transportEnabled ? [...alwaysOn, ...transportOnly] : alwaysOn;
 
     for (const [action, handler] of handlers) {
       try {
@@ -134,5 +162,6 @@ export function useMediaSession(
         }
       }
     };
-  }, [state.currentTime, state.duration]);
+    // Nur der Modus-Wechsel darf neu registrieren — nicht jeder Positions-Tick.
+  }, [transportEnabled]);
 }

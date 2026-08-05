@@ -700,12 +700,12 @@
   },
   "player": {
     "controls": {
-      "shuffleOn": "Shuffle on",
-      "shuffleOff": "Shuffle off",
-      "previous": "Previous track",
-      "next": "Next track",
       "play": "Play",
       "pause": "Pause",
+      "next": "Next track",
+      "previous": "Previous track",
+      "shuffleOn": "Shuffle on",
+      "shuffleOff": "Shuffle off",
       "repeat": "Repeat: {mode}",
       "repeatOff": "Off",
       "repeatAll": "All",
@@ -776,17 +776,8 @@
       "loginRequired": "Login required to vote"
     },
     "mine": {
-      "tab": "MINE",
-      "setLabel": "MY PLAYLIST",
-      "tooltip": "MINE — your liked tracks as your personal channel",
       "emptyAnonToast": "Create an account to save your likes and set up your playlist.",
       "emptyUserToast": "Nothing in your playlist yet — hit AURA+ on any track."
-    },
-    "controls": {
-      "play": "Play",
-      "pause": "Pause",
-      "next": "Next track",
-      "prev": "Previous track"
     },
     "sync": {
       "synced": "IN SYNC",
@@ -797,6 +788,32 @@
       "modalTagline": "Live radio · always in sync",
       "modalBody": "KBK radio is live — every wolf hears the same track at the same moment. Your player quietly matches its tempo to the pack’s master clock, like a DJ beatmatching two decks, so you never drift out of time. The little dot here pulses while it catches up and glows green once you’re locked in.",
       "modalClose": "Got it"
+    },
+    "resume": {
+      "label": "TAP TO RESUME",
+      "aria": "Playback was stopped by your browser — tap to resume the radio"
+    },
+    "mode": {
+      "regionLabel": "Player controls",
+      "backToRadio": "BACK TO RADIO",
+      "backToPlayer": "BACK TO PLAYER",
+      "myPlaylist": "MY PLAYLIST",
+      "expand": "Open the full player",
+      "nothingLoaded": "Nothing loaded",
+      "emptyHint": "Your queue is empty. Pick a track or a playlist anywhere on KBK — or start with everything.",
+      "loadLibrary": "PLAY EVERYTHING",
+      "loadingLibrary": "LOADING…"
+    },
+    "queue": {
+      "title": "QUEUE",
+      "open": "Show queue",
+      "close": "Hide queue",
+      "empty": "The queue is empty — pick a track or a playlist.",
+      "nowPlaying": "Now playing",
+      "upNext": "UP NEXT · {title}",
+      "moveUp": "Move {title} up",
+      "moveDown": "Move {title} down",
+      "remove": "Remove {title} from the queue"
     }
   },
   "schedule": {
@@ -1251,9 +1268,7 @@
     "skipToContent": "Skip to main content"
   },
   "pagesUi": {
-    "playerIntro": "Your personal KBK Music Player.",
     "playerTracksAvailable": "{count, plural, one {# track available.} other {# tracks available.}}",
-    "playerDragHint": "Drag MP3 files into the playlist or load server tracks.",
     "playerLoadingTracks": "Loading tracks…",
     "playerLoadFailed": "Failed to load tracks.",
     "back": "BACK",

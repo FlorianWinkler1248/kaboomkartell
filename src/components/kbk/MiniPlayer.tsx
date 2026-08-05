@@ -1,23 +1,26 @@
 'use client';
 
 /**
- * KBK Mini-Player — Sticky-Bottom-Bar auf allen Pages außer /admin.
+ * KBK Mini-Player — die untere Leiste auf allen Seiten außer /admin und /studio.
  *
- * Konzept (Hausparty + Channel-Modell, 26.04.2026, Tab-Update 02.05.2026):
- *  - Zwei Sender-Tabs: PHONK / HARDTEK (Raggatek raus, läuft als Subgenre
- *    im Hardtek-Channel).
- *  - User wählt aktiven Sender per Tab-Klick (persistiert in localStorage)
- *  - Wenn der gewählte Channel gerade nicht sendet → Stille, "OFF AIR"-Anzeige
- *  - Pulse-Animation auf den Tabs deren Channel JETZT live ist
- *  - Auto-Start: Player läuft beim Page-Load automatisch (muted, Browser-erlaubt),
- *    bei Slot-Beginn (z.B. 20:00) springt er sofort an. User unmutet via Slider.
- *  - Equalizer-Hintergrund: Vollbild-Visualisierung im Hintergrund der Bar
- *    (PlayerBackgroundEqualizer), Buttons + Labels haben relative z-10.
- *  - AI-Tag-Pill: Boomy-Purple-Badge oben rechts wenn aktueller Track ein
- *    AI-Tag traegt (Stub bis Subagent-A-Schema live ist).
+ * Diese Datei ist das RADIO-Gesicht der Leiste. Läuft stattdessen der
+ * Player-Modus (eigene Warteschlange), delegiert sie vollständig an
+ * `PlayerModeBar` — gleicher Platz, anderes Gesicht. Den gemeinsamen Rahmen
+ * (Vulkanglas, Equalizer-Hintergrund, Akzent-Kante) liefert `PlayerBarShell`.
+ *
+ * Konzept (Hausparty + Channel-Modell):
+ *  - Zwei Sender-Tabs: PHONK / HARDTEK (Raggatek läuft als Subgenre im
+ *    Hardtek-Channel, Brazilian Phonk im Phonk-Channel).
+ *  - Sender per Tab-Klick wählen (persistiert in localStorage).
+ *  - Sendet der gewählte Channel nicht → Stille, "OFF AIR"-Anzeige.
+ *  - Pulse-Animation auf den Tabs, deren Channel JETZT sendet.
+ *  - Auto-Start: die Leiste läuft beim Seiten-Start automatisch an (stumm, vom
+ *    Browser erlaubt); bei Slot-Beginn springt sie an, der Hörer dreht auf.
+ *  - KEIN Transport: die Hausparty lässt sich nicht pausieren oder überspringen.
+ *  - AI-Tag-Pill: lila Badge, wenn der laufende Titel eine KI-Kennzeichnung trägt.
  *
  * Layout (links nach rechts):
- *  [Logo] [PHONK | HARDTEK] [Track-Info] [Vol-Slider] [Mute] [AURA+] [SUS]
+ *  [Logo] [PHONK | HARDTEK] [Track-Info] [MY PLAYLIST] [Vol] [Mute] [AURA+] [SUS]
  */
 
 import { useEffect, useRef, useState } from 'react';
@@ -30,28 +33,28 @@ import { useToast } from '@/components/providers/ToastProvider';
 import { useMyPlaylist } from '@/components/providers/LikesProvider';
 import { consumePickIfMatches } from '@/lib/agency-picks';
 import type { PlayerTrack } from '@/types';
-import PlayerBackgroundEqualizer from '@/components/player/PlayerBackgroundEqualizer';
 import { useTrackAiTag } from '@/hooks/useTrackAiTag';
 import { useChannelAccent, CHANNEL_COLORS } from '@/hooks/useChannelAccent';
 import { extractTwitchChannelFromUrl } from '@/lib/twitch-url';
 import Link from 'next/link';
 import { obsidianFrameVars } from '@/lib/obsidian-frame';
+import PlayerModeBar from './PlayerModeBar';
+import PlayerBarShell from './PlayerBarShell';
 
-// Channel-Tabs: Phonk + Hardtek (Raggatek raus aus Direkt-Auswahl, läuft als
-// Subgenre-Override im Hardtek-Channel). Seit 08.06.2026 (ADR-028) zusätzlich
-// LIVE für Twitch/YouTube-Stream-Events — dieser Tab erscheint NUR, während ein
-// Live-Event läuft (activeChannels enthält dann 'live').
-// Seit 24.07.2026 (ADR-041) MINE: der persönliche Channel — spielt die eigenen
-// Aura+-Likes als User-Playback (KEIN Radio-Sync), dunkelgrau, immer sichtbar.
-// MINE wird bewusst nicht persistiert (PlayerProvider) — Reload bootet muted
-// ins Radio, weil Personal-Playback eine User-Geste braucht.
-type Channel = 'phonk' | 'hardtek' | 'live' | 'mine';
+// Channel-Tabs: GENAU zwei Sender — Phonk + Hardtek (Raggatek läuft als
+// Subgenre-Override im Hardtek-Channel, Brazilian Phonk im Phonk-Channel).
+//
+// 05.08.2026 — Modus-Trennung: Die Radio-Leiste zeigt nur noch Sender. Was kein
+// Sender ist, gehört nicht in diese Reihe:
+//  - MINE (die persönlichen Aura+-Likes) war nie ein Sender, sondern eine eigene
+//    Warteschlange → wandert in den Player-Modus (Knopf „MY PLAYLIST").
+//  - LIVE (Twitch/YouTube-Events) ist ein Ereignis, kein Dauersender →
+//    erreichbar über das Live-Banner und /radio, nicht mehr über die Leiste.
+type Channel = 'phonk' | 'hardtek';
 
 const CHANNELS: ReadonlyArray<{ id: Channel; label: string; color: string }> = [
   { id: 'phonk', label: 'PHONK', color: CHANNEL_COLORS.phonk },
   { id: 'hardtek', label: 'HARDTEK', color: CHANNEL_COLORS.hardtek },
-  { id: 'live', label: 'LIVE', color: CHANNEL_COLORS.live },
-  { id: 'mine', label: 'MINE', color: CHANNEL_COLORS.mine },
 ];
 
 // Pulse-Animation: Live-Channel-Tabs (v2.9 transform+opacity statt box-shadow).
@@ -91,9 +94,11 @@ export default function MiniPlayer() {
     radioCurrentSource,
     radioCurrentDecisionSeq,
     playTracks,
-    handleTogglePlay,
-    handleNext,
-    handlePrev,
+    playTrackAtIndex,
+    playlist,
+    playbackMode,
+    hasQueue,
+    returnToRadio,
   } = player;
   const { toast } = useToast();
   // Aura+-Likes (ADR-041): speist den MINE-Channel + die AURA-Pill für Anonyme.
@@ -137,25 +142,6 @@ export default function MiniPlayer() {
   const accent = channelAccent.color;
   // v2.10 02.05.: Equalizer auch bei manueller Wiedergabe aktiv (nicht nur Radio-Modus).
   const isPlayingAudible = audio.isPlaying && audio.volume > 0;
-
-  // Falls ein User noch 'raggatek' im localStorage hat (Pre-02.05.2026):
-  // einmalig auf 'phonk' korrigieren, sonst bleibt der Channel-Tab unsichtbar
-  // und der Player rendert "OFF AIR — pick a channel" obwohl ein Klick reicht.
-  useEffect(() => {
-    if (selectedChannel !== 'phonk' && selectedChannel !== 'hardtek') {
-      setSelectedChannel('phonk');
-    }
-    // Nur einmal beim Mount evaluieren — spätere Änderungen sind valide.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // LIVE-Channel (ADR-028) verschwindet, sobald kein Live-Event mehr läuft →
-  // den User zurück auf phonk holen, sonst bliebe er auf einem toten Tab hängen.
-  useEffect(() => {
-    if (selectedChannel === 'live' && !activeChannels.includes('live')) {
-      setSelectedChannel('phonk');
-    }
-  }, [selectedChannel, activeChannels, setSelectedChannel]);
 
   // Vote-State: lokale Track-ID-Map, damit nach Vote die Pills gefüllt bleiben
   // bis zum nächsten Track-Wechsel. Server kennt's persistent, Client visualisiert.
@@ -225,45 +211,49 @@ export default function MiniPlayer() {
     audio.setVolume(newVol);
   };
 
-  // MINE-Channel (ADR-041): nur LOCAL-Likes laufen über die eigene Audio-Pipeline
-  // (Auto-Advance). SC-Likes erscheinen auf /playlists/mine als Embed-Sektion.
+  // Aura+-Likes als eigene Warteschlange. Nur LOCAL-Titel laufen über die eigene
+  // Audio-Pipeline; SoundCloud-Likes erscheinen auf /playlists/mine als Embeds.
   const mineTracks = likes.likedTracks.filter((t2) => t2.trackType === 'LOCAL');
 
   const handleChannelClick = (c: Channel) => {
-    if (c === 'mine') {
-      if (mineTracks.length === 0) {
-        // Leerer Zustand: Channel NICHT wechseln, Radio läuft weiter.
-        toast({
-          type: 'info',
-          message: likes.isAnon ? t('mine.emptyAnonToast') : t('mine.emptyUserToast'),
-        });
-        return;
-      }
-      setSelectedChannel('mine');
-      const playerTracks: PlayerTrack[] = mineTracks.map((t2) => ({
-        id: t2.id,
-        title: t2.title,
-        artist: t2.artistLabel,
-        duration: t2.duration,
-        url: t2.streamUrl,
-        coverUrl: t2.coverUrl ?? undefined,
-        isLocal: false,
-      }));
-      // playTracks statt setTracks+playTrackAtIndex: der alte Zwei-Schritt las
-      // im selben Tick noch die LEERE Playlist → Early-Return, Radio lief
-      // unterm MINE-Tab weiter (Abnahme-Fund 24.07.).
-      playTracks(playerTracks, 0);
-      return;
-    }
     setSelectedChannel(c);
-    // Wenn der User aus dem Single-Track-Modus kommt (z.B. nach Klick auf
-    // "Play Track" auf einer Track-Detail-Page), bringen wir ihn per
-    // Channel-Klick wieder ins Radio — sonst bliebe der Tab kosmetisch.
+    // Wenn der User aus dem Player-Modus kommt, bringt ihn der Channel-Klick
+    // zurück ins Radio — sonst bliebe der Tab kosmetisch.
     if (!radioMode) {
       enterRadioMode().catch((err) => {
         console.error('Re-Enter Radio fehlgeschlagen:', err);
       });
     }
+  };
+
+  // Einstieg in den Player-Modus aus der Radio-Leiste (05.08.2026).
+  // Liegt schon eine Warteschlange bereit, kehren wir dorthin zurück; sonst
+  // werden die eigenen Aura+-Likes geladen. Das ersetzt den alten MINE-Tab.
+  const handleOpenPlayer = () => {
+    if (hasQueue) {
+      playTrackAtIndex(Math.max(0, playlist.currentIndex));
+      return;
+    }
+    if (mineTracks.length === 0) {
+      toast({
+        type: 'info',
+        message: likes.isAnon ? t('mine.emptyAnonToast') : t('mine.emptyUserToast'),
+      });
+      return;
+    }
+    const playerTracks: PlayerTrack[] = mineTracks.map((t2) => ({
+      id: t2.id,
+      title: t2.title,
+      artist: t2.artistLabel,
+      duration: t2.duration,
+      url: t2.streamUrl,
+      coverUrl: t2.coverUrl ?? undefined,
+      isLocal: false,
+    }));
+    // playTracks statt setTracks+playTrackAtIndex: der alte Zwei-Schritt las
+    // im selben Tick noch die LEERE Playlist → Early-Return, Radio lief
+    // unter dem Wechsel weiter (Abnahme-Fund 24.07.).
+    playTracks(playerTracks, 0);
   };
 
   // Vote-Submit. Optimistic-UI: lokal sofort setzen, bei Fehler revert.
@@ -315,19 +305,27 @@ export default function MiniPlayer() {
 
   if (hide) return null;
 
+  // Modus-Trennung (05.08.2026): Sobald der Hörer eine eigene Auswahl abspielt,
+  // überschreibt die Player-Leiste die Radio-Leiste vollständig — gleicher
+  // Platz, anderes Gesicht, keine Mischform.
+  if (playbackMode === 'player') return <PlayerModeBar />;
+
   // Bei OFF AIR pressen wir Hint + Status auf eine Zeile und lassen die
   // zweite Zeile leer — auf Mobile passt sonst weder „OFF AIR" noch
   // „pick a channel" sauber rein.
-  const trackTitle =
-    current?.title ?? (radioSlot ? t('mini.loading') : t('mini.offAir'));
-  const trackArtist = current?.artist ?? '';
+  // Off-Air schlägt den Titel — auch wenn noch ein Titel im Element hängt.
+  // Nach „ZURÜCK ZUM RADIO" auf einen Channel, der gerade nicht sendet, stand
+  // sonst der zuletzt gespielte PLAYER-Titel in der Radio-Leiste, und AURA+/SUS
+  // hätten sich auf ihn bezogen.
+  const trackTitle = !radioSlot
+    ? t('mini.offAir')
+    : current?.title ?? t('mini.loading');
+  const trackArtist = radioSlot ? current?.artist ?? '' : '';
   // Wenn ein Subgenre-Override aktiv ist (z.B. Hardtek-Slot mit Raggatek-Set),
   // zeigen wir das Override-Label ('RAGGATEK SET'). Sonst das Original-Label.
-  const setName = channelAccent.channel === 'mine'
-    ? channelAccent.label // 'MY PLAYLIST' (ADR-041)
-    : channelAccent.isSubgenreOverride
-      ? channelAccent.label
-      : radioSlot?.label ?? null;
+  const setName = channelAccent.isSubgenreOverride
+    ? channelAccent.label
+    : radioSlot?.label ?? null;
   const isOffAir = !radioSlot;
   const canVote = !!session?.user && !!current?.id;
   // AURA+ ist auch anonym klickbar (Session-Like, ADR-041); Anzeige-Zustand
@@ -340,59 +338,13 @@ export default function MiniPlayer() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: PULSE_KEYFRAMES }} />
-      <div
-        role="region"
-        aria-label={t('mini.regionLabel')}
-        style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          zIndex: 40,
-          // Subtiler Vulkanglas-Touch: nur die diagonalen Schliff-Linien
-          // über dem schwarzen Grund. Kein Korn + keine Pseudo-Layer,
-          // damit der Equalizer im Hintergrund unverfaelscht durchscheint.
-          background: `
-            linear-gradient(118deg, transparent 28%, rgba(255,255,255,0.04) 28.3%, transparent 28.6%),
-            linear-gradient(142deg, transparent 64%, rgba(255,255,255,0.05) 64.2%, transparent 64.5%),
-            linear-gradient(95deg, transparent 41%, rgba(63,207,74,0.04) 41.2%, transparent 41.4%),
-            rgba(10,11,12,0.85)
-          `,
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-          borderTop: `1px solid ${accent}40`,
-          boxShadow: `0 -4px 24px rgba(0,0,0,0.6), 0 -1px 0 ${accent}20`,
-          paddingBottom: 'env(safe-area-inset-bottom, 0)',
-          // overflow:hidden, damit der absolut positionierte Equalizer-Canvas
-          // nicht über die Bar hinaus läuft.
-          overflow: 'hidden',
-        }}
+      <PlayerBarShell
+        accent={accent}
+        equalizerColor={channelAccent.equalizerColor}
+        getFrequencyData={analyser.getFrequencyData}
+        isActive={isPlayingAudible}
+        regionLabel={t('mini.regionLabel')}
       >
-        {/* === Equalizer-Hintergrund — auf die Content-Breite begrenzt ===
-            Radio Sync v2 Fix: vorher füllte der Equalizer die volle Viewport-Breite,
-            während der Player-Inhalt auf maxWidth 1400 zentriert ist → auf breiten
-            Screens quollen die grünen Balken links/rechts aus dem Inhalt heraus.
-            Jetzt deckt der Equalizer exakt die zentrierte Content-Box ab. */}
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            top: 0,
-            bottom: 0,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: '100%',
-            maxWidth: 1400,
-            pointerEvents: 'none',
-          }}
-        >
-          <PlayerBackgroundEqualizer
-            getFrequencyData={analyser.getFrequencyData}
-            isActive={isPlayingAudible}
-            accentColor={channelAccent.equalizerColor}
-            barCount={56}
-          />
-        </div>
 
         {/* AI-Tag-Pill ist jetzt INLINE zwischen den Channel-Tabs platziert
             (siehe channels-div) — vorheriger absolute-Block ragte aus dem
@@ -422,10 +374,9 @@ export default function MiniPlayer() {
               if (audio.volume === 0) {
                 audio.setVolume(prevVolumeRef.current || 0.7);
               } else if (!radioMode) {
-                // Aus dem MINE-Modus zurück ins Radio: erst den Channel
-                // korrigieren, sonst pollt der Sync einen Nicht-Radio-Channel.
-                if (selectedChannel === 'mine') setSelectedChannel('phonk');
-                enterRadioMode().catch(() => {});
+                // returnToRadio stellt den Channel gerade, bevor der Sync-Loop
+                // startet — sonst pollt er einen Nicht-Radio-Channel.
+                void returnToRadio();
               }
             }}
             aria-label={t('mini.tuneIn')}
@@ -463,8 +414,7 @@ export default function MiniPlayer() {
             style={{ display: 'flex', gap: 0, flexShrink: 0, alignItems: 'center' }}
             aria-label={t('mini.chooseChannel')}
           >
-            {/* LIVE-Tab nur zeigen, während ein Live-Event läuft (ADR-028). */}
-            {CHANNELS.filter((c) => c.id !== 'live' || activeChannels.includes('live')).map((c) => {
+            {CHANNELS.map((c) => {
               const isActive = activeChannel === c.id;
               const isLive = activeChannels.includes(c.id);
               // v2.26 (07.05.2026): Wenn dieser Tab dem aktiven Channel
@@ -479,9 +429,7 @@ export default function MiniPlayer() {
                   ? ' kbk-frame-green'
                   : c.id === 'phonk'
                     ? ' kbk-frame-red'
-                    : c.id === 'hardtek'
-                      ? ' kbk-frame-yellow'
-                      : ''; // live: Magenta kommt über obsidianFrameVars(tabColor)
+                    : ' kbk-frame-yellow';
               return (
                 <button
                   key={c.id}
@@ -489,15 +437,9 @@ export default function MiniPlayer() {
                   onClick={() => handleChannelClick(c.id)}
                   aria-pressed={isActive}
                   aria-label={c.label}
-                  title={
-                    c.id === 'mine'
-                      ? t('mine.tooltip')
-                      : `${c.label} ${isLive ? t('mini.channelLive') : t('mini.channelOffAir')}${
-                          isActive && channelAccent.isSubgenreOverride
-                            ? ` — ${channelAccent.label}`
-                            : ''
-                        }`
-                  }
+                  title={`${c.label} ${isLive ? t('mini.channelLive') : t('mini.channelOffAir')}${
+                    isActive && channelAccent.isSubgenreOverride ? ` — ${channelAccent.label}` : ''
+                  }`}
                   // v2.18 (re-apply v2.14): Channel-Tabs auf Obsidian +
                   // framed mit Pulse-Speed-Signal — Active=1s, Live=1.5s,
                   // Off-Air=4s. Color folgt dem Channel.
@@ -507,11 +449,7 @@ export default function MiniPlayer() {
                   style={{
                     ...obsidianFrameVars(tabColor),
                     background: isActive ? tabColor : undefined,
-                    // MINE: weiße Schrift auf Anthrazit — die dunkle Standard-
-                    // Schrift (#0A0B0C) wäre auf #4A4E55 unlesbar (Kontrast).
-                    color: isActive
-                      ? (c.id === 'mine' ? '#fff' : '#0A0B0C')
-                      : isLive ? tabColor : 'rgba(255,255,255,0.7)',
+                    color: isActive ? '#0A0B0C' : isLive ? tabColor : 'rgba(255,255,255,0.7)',
                     padding: '8px 14px',
                     fontFamily: 'var(--font-display)',
                     fontSize: 11,
@@ -684,6 +622,34 @@ export default function MiniPlayer() {
                     {aiTag.label}
                   </span>
                 )}
+                {/* Mobile-Continuity (v3.1): Letzte Instanz, wenn der Browser das
+                    Wiederanwerfen im Hintergrund hart abgelehnt hat. Der Regelkreis
+                    versucht es weiter, aber manche Wiedergabe braucht zwingend eine
+                    echte Fingerberührung — dann sagen wir das, statt still zu bleiben. */}
+                {radioMode && !isOffAir && audio.playbackBlocked && (
+                  <button
+                    type="button"
+                    onClick={() => audio.ensurePlaying()}
+                    aria-label={t('resume.aria')}
+                    style={{
+                      padding: '2px 7px',
+                      borderRadius: 999,
+                      border: 'none',
+                      background: accent,
+                      color: '#0B0B0F',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 9,
+                      fontWeight: 700,
+                      letterSpacing: '0.14em',
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0,
+                      animation: 'kk-pulse 1.2s infinite',
+                    }}
+                  >
+                    {t('resume.label')}
+                  </button>
+                )}
                 {/* Radio Sync v2: stiller Sync-Punkt. Text + ⓘ bewusst entfernt — nur ein
                     dezenter Status-Dot (grün=in sync, pulsierender Akzent=beatmatching).
                     Bleibt klickbar/hoverbar fürs Info-Modal, damit der Punkt erklärbar ist. */}
@@ -780,107 +746,48 @@ export default function MiniPlayer() {
             >
               {trackArtist}
               {setName &&
-                (channelAccent.channel === 'mine' ? (
-                  /* MINE (ADR-041): „MY PLAYLIST" verlinkt auf die Bearbeiten-
-                     Seite — dort liegt das Entfernen (Flow-Feedback 25.07.). */
-                  <span>
-                    {' · '}
-                    <Link
-                      href="/playlists/mine"
-                      style={{ color: '#9AA0A8', textDecoration: 'underline', textUnderlineOffset: 2 }}
-                    >
-                      {setName}
-                    </Link>
-                  </span>
-                ) : (
-                  <span> · {setName}</span>
-                ))}
+                <span> · {setName}</span>}
             </div>
             </>
             )}
           </div>
 
-          {/* Transport-Controls (ADR-041-Nachschlag, Flow-Feedback 25.07.):
-              NUR im User-Playback (MINE / Playlists / Track-Detail) sichtbar.
-              Im Radio-Modus bewusst unsichtbar — die Hausparty ist nicht
-              pausierbar/skippbar (Hausparty-Konzept). Prev/Next <md versteckt
-              (Platz), Play/Pause bleibt immer erreichbar. */}
-          {!radioMode && current && (
-            <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-              <button
-                type="button"
-                onClick={handlePrev}
-                aria-label={t('controls.prev')}
-                title={t('controls.prev')}
-                className="hidden md:inline-flex"
-                style={{
-                  width: 44,
-                  height: 44,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  background: 'rgba(10,11,12,0.82)',
-                  border: '1px solid rgba(255,255,255,0.18)',
-                  color: '#fff',
-                  cursor: 'pointer',
-                }}
-              >
-                <svg width={18} height={18} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <polygon points="19,4 9,12 19,20" />
-                  <rect x="5" y="4" width="3" height="16" />
-                </svg>
-              </button>
-              <button
-                type="button"
-                onClick={handleTogglePlay}
-                aria-label={audio.isPlaying ? t('controls.pause') : t('controls.play')}
-                title={audio.isPlaying ? t('controls.pause') : t('controls.play')}
-                style={{
-                  width: 44,
-                  height: 44,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  background: 'rgba(10,11,12,0.82)',
-                  border: `1px solid ${accent}`,
-                  color: accent,
-                  cursor: 'pointer',
-                }}
-              >
-                {audio.isPlaying ? (
-                  <svg width={18} height={18} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <rect x="6" y="4" width="4" height="16" />
-                    <rect x="14" y="4" width="4" height="16" />
-                  </svg>
-                ) : (
-                  <svg width={18} height={18} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <polygon points="7,4 21,12 7,20" />
-                  </svg>
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={handleNext}
-                aria-label={t('controls.next')}
-                title={t('controls.next')}
-                className="hidden md:inline-flex"
-                style={{
-                  width: 44,
-                  height: 44,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  background: 'rgba(10,11,12,0.82)',
-                  border: '1px solid rgba(255,255,255,0.18)',
-                  color: '#fff',
-                  cursor: 'pointer',
-                }}
-              >
-                <svg width={18} height={18} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <polygon points="5,4 15,12 5,20" />
-                  <rect x="16" y="4" width="3" height="16" />
-                </svg>
-              </button>
-            </div>
-          )}
+          {/* Einstieg in den Player-Modus (05.08.2026) — ersetzt den früheren
+              MINE-Tab. Kein Sender, deshalb bewusst NICHT in der Tab-Reihe,
+              sondern als eigener Knopf mit Player-Lila. Liegt eine
+              Warteschlange bereit, führt er dorthin zurück; sonst lädt er die
+              eigenen Aura+-Likes. Transport-Knöpfe gibt es hier keine — die
+              Hausparty ist nicht pausierbar. */}
+          <button
+            type="button"
+            onClick={handleOpenPlayer}
+            aria-label={hasQueue ? t('mode.backToPlayer') : t('mode.myPlaylist')}
+            title={hasQueue ? t('mode.backToPlayer') : t('mode.myPlaylist')}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              minHeight: 44,
+              padding: '0 10px',
+              background: 'rgba(10,11,12,0.82)',
+              border: '1px solid #8B5CF6',
+              color: '#8B5CF6',
+              fontFamily: 'var(--font-display)',
+              fontSize: 10,
+              fontWeight: 900,
+              letterSpacing: '0.12em',
+              cursor: 'pointer',
+              flexShrink: 0,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            <svg width={16} height={16} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z" />
+            </svg>
+            <span className="hidden lg:inline">
+              {hasQueue ? t('mode.backToPlayer') : t('mode.myPlaylist')}
+            </span>
+          </button>
 
           {/* Volume-Slider — auf <md hidden, da der Mute-Button reicht */}
           <input
@@ -1008,7 +915,7 @@ export default function MiniPlayer() {
             <span className="kbk-sus-label" style={{ fontSize: 10 }}> SUS</span>
           </button>
         </div>
-      </div>
+      </PlayerBarShell>
 
       {/* Radio Sync v2: Info-Modal — erklärt den „Conductor"/Beatmatch in
           Plain-Language. Technik bleibt hinter dem (i)-Button versteckt. */}

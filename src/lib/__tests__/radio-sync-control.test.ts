@@ -4,7 +4,10 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { computeSyncAction, statusForAction, SYNC, type SyncInput } from '../radio-sync-control'
+import {
+  computeSyncAction, needsPlaybackKick, statusForAction, SYNC,
+  type SyncInput, type ResumeInput,
+} from '../radio-sync-control'
 
 /** Basis: Track läuft seit 100s, dauert 200s, Audio exakt auf Position. */
 function base(overrides: Partial<SyncInput> = {}): SyncInput {
@@ -179,6 +182,76 @@ describe('computeSyncAction — v3 (ADR-040)', () => {
     expect(local.kind).toBe('seek')
     const network = computeSyncAction(base({ audioTimeSec: 92, srcIsLocal: false }))
     expect(network.kind).toBe('slew')
+  })
+})
+
+describe('needsPlaybackKick (Mobile-Continuity v3.1)', () => {
+  /** Basis: Radio läuft, Absicht „spielen", Track endet in 100s. */
+  function resume(overrides: Partial<ResumeInput> = {}): ResumeInput {
+    return {
+      radioMode: true,
+      intendsToPlay: true,
+      isPlaying: true,
+      hasLoadedTrack: true,
+      serverNowMs: 1_000_000,
+      endsAtMs: 1_100_000,
+      ...overrides,
+    }
+  }
+
+  it('kein Anlauf, solange das Element tatsächlich spielt', () => {
+    expect(needsPlaybackKick(resume())).toBe(false)
+  })
+
+  it('Anlauf, wenn Ton kommen soll, das Element aber steht (Regressionsfall: vom '
+    + 'Browser abgelehntes Hintergrund-play() bei gesperrtem Handy)', () => {
+    expect(needsPlaybackKick(resume({ isPlaying: false }))).toBe(true)
+  })
+
+  it('kein Anlauf, wenn der Hörer selbst pausiert hat', () => {
+    expect(needsPlaybackKick(resume({ isPlaying: false, intendsToPlay: false }))).toBe(false)
+  })
+
+  it('kein Anlauf außerhalb des Radio-Modus (dort entscheidet der Hörer allein)', () => {
+    expect(needsPlaybackKick(resume({ isPlaying: false, radioMode: false }))).toBe(false)
+  })
+
+  it('kein Anlauf ohne geladene Quelle', () => {
+    expect(needsPlaybackKick(resume({ isPlaying: false, hasLoadedTrack: false }))).toBe(false)
+  })
+
+  it('kein Anlauf am Track-Ende — dort gehört die Bühne dem Wechsel', () => {
+    const atEnd = resume({ isPlaying: false, serverNowMs: 1_100_000 })
+    expect(needsPlaybackKick(atEnd)).toBe(false)
+    // Auch innerhalb des Schutzfensters davor.
+    const justBefore = resume({
+      isPlaying: false,
+      serverNowMs: 1_100_000 - SYNC.RESUME_END_GUARD_MS + 1,
+    })
+    expect(needsPlaybackKick(justBefore)).toBe(false)
+  })
+
+  it('Anlauf noch knapp vor dem Schutzfenster', () => {
+    const beforeGuard = resume({
+      isPlaying: false,
+      serverNowMs: 1_100_000 - SYNC.RESUME_END_GUARD_MS - 1,
+    })
+    expect(needsPlaybackKick(beforeGuard)).toBe(true)
+  })
+
+  it('REGRESSION: Das Schutzfenster ist ein Fenster, kein Dauerzustand — bei '
+    + 'veralteter Zeitlinie (Poll-Ausfall) darf der Anlauf wieder greifen', () => {
+    const staleSchedule = resume({
+      isPlaying: false,
+      serverNowMs: 1_100_000 + SYNC.RESUME_STALE_AFTER_MS + 1,
+    })
+    expect(needsPlaybackKick(staleSchedule)).toBe(true)
+    // Innerhalb des Fensters bleibt der Wechsel zuständig.
+    const insideWindow = resume({
+      isPlaying: false,
+      serverNowMs: 1_100_000 + SYNC.RESUME_STALE_AFTER_MS - 1,
+    })
+    expect(needsPlaybackKick(insideWindow)).toBe(false)
   })
 })
 

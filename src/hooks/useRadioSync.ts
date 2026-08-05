@@ -20,7 +20,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { RADIO_CONFIG } from '@/lib/constants'
-import { computeSyncAction, statusForAction, type SyncStatus } from '@/lib/radio-sync-control'
+import { computeSyncAction, needsPlaybackKick, statusForAction, type SyncStatus } from '@/lib/radio-sync-control'
 import { radioPreloader, shouldPreload } from '@/lib/radio-preload'
 import type { PlayerTrack } from '@/types'
 
@@ -144,6 +144,11 @@ export function useRadioSync(
   // Radio Sync v3 (ADR-040): Stall-Signal des Elements + Blob-Error-Registrierung.
   audioIsStalled: boolean,
   audioSetOnBlobError: (cb: (() => void) | null) => void,
+  // Mobile-Continuity (v3.1): Absicht („soll Ton kommen?") + Wiederanwerfen.
+  audioGetIntendsToPlay: () => boolean,
+  audioEnsurePlaying: () => void,
+  /** Wiedergabe steht fest und lässt sich nicht von allein anwerfen. */
+  audioPlaybackBlocked: boolean,
 ): UseRadioSyncReturn {
   const [radioMode, setRadioMode] = useState(false)
   const [radioSlot, setRadioSlot] = useState<RadioSlotInfo | null>(null)
@@ -178,6 +183,9 @@ export function useRadioSync(
   const audioIsStalledRef = useRef(audioIsStalled)
   useEffect(() => { audioIsStalledRef.current = audioIsStalled }, [audioIsStalled])
 
+  const audioPlaybackBlockedRef = useRef(audioPlaybackBlocked)
+  useEffect(() => { audioPlaybackBlockedRef.current = audioPlaybackBlocked }, [audioPlaybackBlocked])
+
   const channelRef = useRef<string | null>(channel)
   useEffect(() => { channelRef.current = channel }, [channel])
 
@@ -201,9 +209,22 @@ export function useRadioSync(
   // idle — Chrome/Windows meldet auch ein komplett verdecktes Fenster als
   // hidden, und ohne Poll kennt der Client den Folge-Track nicht → Wiedergabe
   // riss am Track-Ende ab, bis der Tab wieder sichtbar wurde.
+  //
+  // Mobile-Continuity (v3.1): Maßstab ist die ABSICHT, nicht der beobachtete
+  // Element-Zustand. Vorher hing hier `audioIsPlayingRef` — ein einziges vom
+  // Browser abgelehntes Hintergrund-`play()` setzte das auf false, und weil der
+  // Tab bei gesperrtem Handy verdeckt ist, schalteten sich damit Poll UND
+  // Regelkreis dauerhaft ab. Der Radio konnte sich nicht mehr selbst erholen —
+  // genau das erzwang das manuelle Neu-Einwählen.
+  //
+  // Gegenprobe: Steht die Wiedergabe endgültig (`playbackBlocked` — mehrere
+  // Anläufe erfolglos), zählt der verdeckte Tab wieder als idle. Sonst pollte
+  // ein totes Radio bei gesperrtem Handy unbegrenzt weiter und fräße Akku und
+  // Daten für nichts. Der Hörer sieht dann die TAP-TO-RESUME-Pille.
   const isHiddenIdle = useCallback(() =>
     typeof document !== 'undefined' && document.hidden &&
-    !(audioIsPlayingRef.current && audioVolumeRef.current > 0), [])
+    !(audioGetIntendsToPlay() && audioVolumeRef.current > 0 && !audioPlaybackBlockedRef.current),
+  [audioGetIntendsToPlay])
 
   // Preload des nächsten Tracks. Radio Sync v3 (ADR-040): Voll-Blob-Download nach
   // preloadDelayMs (Join-Bandbreiten-Kollision vermeiden) — der Track-Übergang wird
@@ -312,6 +333,22 @@ export function useRadioSync(
     if (!sched) { setSyncStatus('idle'); return }
     if (Date.now() < suppressUntilRef.current) return
 
+    // Mobile-Continuity (v3.1): erst „dreht sich der Teller?", dann „steht die
+    // Nadel richtig?". Ein pausiertes Element lässt sich nicht durch Seeken
+    // heilen — ohne diesen Anlauf blieb der Radio nach einem abgelehnten
+    // Hintergrund-`play()` still, während der Regelkreis munter weiter die
+    // Position korrigierte.
+    if (needsPlaybackKick({
+      radioMode: radioModeRef.current,
+      intendsToPlay: audioGetIntendsToPlay(),
+      isPlaying: audioIsPlayingRef.current,
+      hasLoadedTrack: currentTrackIdRef.current !== null,
+      serverNowMs: getServerNow(),
+      endsAtMs: sched.endsAtMs,
+    })) {
+      audioEnsurePlaying()
+    }
+
     // v3-Inputs (ADR-040): Stall-Guard + Hysterese + quellenabhängige Seek-Schwelle.
     // Kill-Switch (localStorage kbk_radio_v3='off') → Felder weglassen = exaktes v2.
     const v3Active = !isV3Off()
@@ -367,7 +404,8 @@ export function useRadioSync(
       }
     }
     setSyncStatus(statusForAction(action))
-  }, [audioPlay, audioSeek, audioSetPlaybackRate, getServerNow, switchToNext, resolveTrack])
+  }, [audioPlay, audioSeek, audioSetPlaybackRate, getServerNow, switchToNext, resolveTrack,
+      audioGetIntendsToPlay, audioEnsurePlaying])
 
   // --- Now-Playing holen + Clock-Offset messen (NTP-Mittelpunkt + Median) ---
   const fetchNowPlaying = useCallback(async (): Promise<NowPlayingEnvelope | null> => {
@@ -506,7 +544,12 @@ export function useRadioSync(
   useEffect(() => {
     if (!radioMode) return
     const onVis = () => {
-      if (!document.hidden) fetchNowPlaying().then((envelope) => { if (envelope) ingest(envelope) })
+      if (document.hidden) return
+      // Mobile-Continuity (v3.1): Beim Zurückkommen zuerst den Teller wieder
+      // andrehen, dann die Zeitlinie nachziehen. Nach dem Entsperren zählt
+      // jede Sekunde — ein `ingest` allein hätte nur die Position korrigiert.
+      audioEnsurePlaying()
+      fetchNowPlaying().then((envelope) => { if (envelope) ingest(envelope) })
     }
     document.addEventListener('visibilitychange', onVis)
     return () => document.removeEventListener('visibilitychange', onVis)

@@ -82,6 +82,15 @@ export const SYNC = {
   /** v3 Stall-Escape: nach so vielen gestallten Ticks hold verlassen und einmalig
    *  normal korrigieren (nie ewig einfrieren). */
   MAX_STALLED_TICKS: 10,
+  /** v3.1 Mobile-Continuity: So kurz vor dem Track-Ende wird die Wiedergabe NICHT
+   *  mehr angeworfen — dort gehört die Bühne dem Wechsel, sonst startet ein
+   *  bereits beendeter Track für Sekundenbruchteile erneut. */
+  RESUME_END_GUARD_MS: 500,
+  /** ... aber nur so lange, wie die Zeitlinie noch frisch sein kann. Steht
+   *  `serverNow` weit hinter `endsAt`, ist die Schedule veraltet (Poll-Ausfall,
+   *  eingefrorener Tab) — dann darf der Schutz die Wiedergabe nicht länger
+   *  aussperren, sonst hängt ein stehendes Element für immer fest. */
+  RESUME_STALE_AFTER_MS: 10_000,
 } as const
 
 function clamp(x: number, lo: number, hi: number): number {
@@ -176,6 +185,52 @@ export function computeSyncAction(input: SyncInput): SyncAction {
     1 + SYNC.MAX_RATE_DELTA,
   )
   return { kind: 'slew', playbackRate: rate }
+}
+
+/**
+ * Mobile-Continuity (v3.1) — die zweite Frage des Regelkreises.
+ *
+ * `computeSyncAction` beantwortet „steht die Nadel an der richtigen Stelle?".
+ * Es beantwortet NICHT „dreht sich der Teller überhaupt?". Genau daran ist die
+ * Wiedergabe auf gesperrten Smartphones gestorben: Chrome lehnt im Hintergrund
+ * das `play()` nach einem Track-Wechsel ab, das Element bleibt mit korrekt
+ * geladener Quelle stehen — und der Regelkreis war zufrieden, weil er danach nur
+ * noch die Position korrigierte (ein `seek` auf einem pausierten Element bringt
+ * keinen Ton). Der Hörer musste manuell neu einwählen.
+ *
+ * Diese Regel vergleicht ABSICHT mit BEOBACHTUNG und verlangt einen erneuten
+ * Anlauf, sobald beide auseinanderlaufen.
+ */
+export interface ResumeInput {
+  /** Radio-Modus aktiv (im Direkt-Abspiel-Modus entscheidet der Hörer allein). */
+  radioMode: boolean
+  /** Absicht: es SOLL Ton kommen (play/resume gerufen, kein pause). */
+  intendsToPlay: boolean
+  /** Beobachtung: das Element spielt tatsächlich. */
+  isPlaying: boolean
+  /** Eine Quelle ist geladen — ohne Track gibt es nichts anzuwerfen. */
+  hasLoadedTrack: boolean
+  /** Geschätzte Server-Zeit JETZT (ms). */
+  serverNowMs: number
+  /** Absolutes Ende der laufenden Track-Instanz (ms, Server-Zeit). */
+  endsAtMs: number
+}
+
+export function needsPlaybackKick(input: ResumeInput): boolean {
+  if (!input.radioMode) return false
+  if (!input.intendsToPlay) return false
+  if (input.isPlaying) return false
+  if (!input.hasLoadedTrack) return false
+  // Am Track-Ende übernimmt der Wechsel (siehe computeSyncAction Fall 1) —
+  // aber nur, solange die Zeitlinie überhaupt noch aktuell sein kann. Ohne die
+  // obere Grenze wäre der Schutz nicht ein Fenster, sondern ein Dauerzustand:
+  // jede veraltete Schedule (Poll-Ausfall) hätte den Anlauf für immer
+  // abgeschaltet, und ein stehendes Element käme nie wieder in Gang.
+  const atTrackEnd =
+    input.serverNowMs >= input.endsAtMs - SYNC.RESUME_END_GUARD_MS &&
+    input.serverNowMs < input.endsAtMs + SYNC.RESUME_STALE_AFTER_MS
+  if (atTrackEnd) return false
+  return true
 }
 
 /** UI-Status für den „Beatmatch"-Indikator, abgeleitet aus der Aktion. */
