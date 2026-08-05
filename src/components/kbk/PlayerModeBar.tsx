@@ -411,6 +411,10 @@ export default function PlayerModeBar() {
             alignItems: 'center',
             gap: 6,
             minHeight: 44,
+            // Auf schmalen Bildschirmen faellt die Beschriftung weg und es
+            // bleibt nur das Icon — ohne Mindestbreite waere die Flaeche dann
+            // schmaler als das Touch-Ziel.
+            minWidth: 44,
             padding: '0 12px',
             background: 'rgba(10,11,12,0.9)',
             border: '1px solid rgba(255,255,255,0.35)',
