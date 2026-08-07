@@ -1014,6 +1014,11 @@ img[src*="/icons/pixel/"],
   .kbk-library-row {
     grid-template-columns: 1fr 5rem !important;
   }
+  /* „Keep digging"-Zeile: auf schmalen Viewports bekommt die Beschriftung
+     eine eigene Zeile, damit die drei Genre-Ausgaenge zusammen bleiben. */
+  .kbk-dig-label {
+    flex-basis: 100% !important;
+  }
 }
 
 /* === Subpage-Helper: Subpage-Grid responsive ===

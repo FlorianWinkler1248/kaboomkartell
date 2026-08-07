@@ -600,6 +600,7 @@ function DigDeeper({ genre, t }: { genre: string | null; t: LibraryT }) {
       }}
     >
       <span
+        className="kbk-dig-label"
         style={{
           fontFamily: 'var(--font-mono)',
           fontSize: 10,
@@ -620,8 +621,9 @@ function DigDeeper({ genre, t }: { genre: string | null; t: LibraryT }) {
           style={{
             display: 'inline-flex',
             alignItems: 'center',
-            minHeight: 34,
-            padding: '6px 12px',
+            // 44px = Finger-Ziel, wie bei den uebrigen Aktions-Links der Seite.
+            minHeight: 44,
+            padding: '8px 14px',
             border: '1px solid rgba(255,85,0,0.45)',
             color: '#FF5500',
             fontFamily: 'var(--font-mono)',
