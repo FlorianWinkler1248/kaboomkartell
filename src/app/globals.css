@@ -183,11 +183,15 @@ body.kbk-has-miniplayer {
      quadratischen Knöpfen (MY PLAYLIST, Mute, AURA+, SUS) und behielt keine
      120px — „SAY IT LIKE SHE SAID IT" wurde dadurch auf zwei Buchstaben-Reste
      zusammengestaucht. Als eigene Zeile hat er die volle Breite, und die
-     Knöpfe rücken darunter. */
+     Knöpfe rücken darunter.
+
+     Die `!important` sind nötig, weil die Komponente `flex: 1` inline setzt —
+     ein Inline-Stil schlägt jede Klassen-Regel. Ohne sie blieb der Titel bei
+     124px stehen, obwohl die Regel dem Namen nach griff. */
   .kbk-miniplayer-row .kbk-miniplayer-track {
-    order: 50;
-    flex: 1 1 100%;
-    min-width: 0;
+    order: 50 !important;
+    flex: 1 1 100% !important;
+    min-width: 0 !important;
   }
   body.kbk-has-miniplayer {
     padding-bottom: calc(96px + env(safe-area-inset-bottom, 0));
