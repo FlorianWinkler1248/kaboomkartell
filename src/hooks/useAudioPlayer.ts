@@ -56,6 +56,14 @@ export interface UseAudioPlayerReturn {
   /** Radio Sync v3: Callback für `error` bei blob:-Quelle registrieren
    *  (useRadioSync macht daraus die Netz-URL-Recovery). */
   setOnBlobError: (cb: (() => void) | null) => void;
+  /**
+   * Dauerstream: Titel-Angaben austauschen, OHNE das Element anzufassen.
+   *
+   * Im Stream-Modus läuft eine einzige endlose Quelle; der Titel wechselt darin,
+   * ohne dass sich die Quelle ändert. `play()` aufzurufen würde den Strom
+   * abreißen lassen — hier wird deshalb nur die Anzeige nachgeführt.
+   */
+  setCurrentTrackMeta: (track: PlayerTrack) => void;
   /** Mobile-Continuity (v3.1): Soll gerade Ton kommen? Das ist die ABSICHT
    *  (play/resume gerufen, kein pause), nicht der beobachtete Element-Zustand.
    *  Der Regelkreis unterscheidet damit „User hat pausiert" von „das OS hat uns
@@ -344,6 +352,10 @@ export function useAudioPlayer(options: UseAudioPlayerOptions = {}): UseAudioPla
 
   const getIntendsToPlay = useCallback(() => intendsToPlayRef.current, []);
 
+  const setCurrentTrackMeta = useCallback((track: PlayerTrack) => {
+    setCurrentTrack((prev) => (prev && prev.id === track.id ? prev : track));
+  }, []);
+
   /**
    * Wechselt zwischen Play und Pause.
    * Migriert von: MP3Player.togglePlay()
@@ -439,6 +451,7 @@ export function useAudioPlayer(options: UseAudioPlayerOptions = {}): UseAudioPla
     setVolume,
     setPlaybackRate,
     setOnBlobError,
+    setCurrentTrackMeta,
     getIntendsToPlay,
     ensurePlaying,
   };

@@ -181,6 +181,8 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
     audio.getIntendsToPlay,
     audio.ensurePlaying,
     audio.playbackBlocked,
+    // Dauerstream: Titel-Anzeige nachführen, ohne die endlose Quelle anzufassen.
+    audio.setCurrentTrackMeta,
   );
 
   // Radio-Refs synchronisieren (werden im onTrackEnd-Callback gelesen)

@@ -266,6 +266,14 @@ export const RADIO_CONFIG = {
   // laufenden Tracks nicht mit dem N+1-Voll-Download überlappen lassen).
   preloadDelayMs: 10_000,
   minPoolDurationMinutes: 30,   // Warnung wenn Pool kürzer als 30 Minuten
+  // Dauerstream (07.08.2026): EINE endlose Quelle pro Channel statt einzelner
+  // Dateien. Der Browser braucht dann kein JavaScript mehr, um Titel
+  // aneinanderzuhängen — genau daran starb die Wiedergabe auf gesperrten Handys.
+  // Damit entfällt im Radio auch die Tempo-Regelung: alle bekommen dieselben
+  // Bytes und sind synchron per Konstruktion, nicht per Nachregeln.
+  // Schalter Stufe 1: hier auf false → alter Datei-Weg (im Code erhalten).
+  // Stufe 2 pro Gerät: localStorage `kbk_radio_stream` = 'on' | 'off'.
+  streamEnabled: true,
 } as const;
 
 export const EVENT_TYPES = {

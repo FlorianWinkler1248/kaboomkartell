@@ -35,6 +35,28 @@ function isV3Off(): boolean {
   }
 }
 
+/** Dauerstream (07.08.2026) — läuft dieses Gerät auf der endlosen Quelle?
+ *
+ *  Stufe 1 ist `RADIO_CONFIG.streamEnabled`, Stufe 2 der Eintrag
+ *  `kbk_radio_stream` im localStorage ('on' erzwingt, 'off' verbietet). So lässt
+ *  sich am Handy direkt zwischen altem und neuem Weg vergleichen, ohne Deploy. */
+function useStreamMode(): boolean {
+  try {
+    if (typeof window === 'undefined') return false
+    const override = window.localStorage.getItem('kbk_radio_stream')
+    if (override === 'off') return false
+    if (override === 'on') return true
+    return RADIO_CONFIG.streamEnabled
+  } catch {
+    return RADIO_CONFIG.streamEnabled
+  }
+}
+
+/** Die endlose Quelle eines Channels. */
+function streamUrl(channel: string): string {
+  return `/api/radio/stream?channel=${encodeURIComponent(channel)}`
+}
+
 interface RadioSlotInfo {
   id: string
   label: string
@@ -149,7 +171,17 @@ export function useRadioSync(
   audioEnsurePlaying: () => void,
   /** Wiedergabe steht fest und lässt sich nicht von allein anwerfen. */
   audioPlaybackBlocked: boolean,
+  /** Dauerstream: Titel-Anzeige nachführen, ohne die Quelle anzufassen. */
+  audioSetCurrentTrackMeta: (track: PlayerTrack) => void,
 ): UseRadioSyncReturn {
+  // Dauerstream-Modus: EINE endlose Quelle statt Datei-für-Datei. Der ganze
+  // Regelkreis (Tempo-Nudge, Seek, Track-Wechsel) entfällt dann — er ist die
+  // Antwort auf ein Problem, das es im Strom nicht mehr gibt.
+  const streamMode = useStreamMode()
+  const streamModeRef = useRef(streamMode)
+  useEffect(() => { streamModeRef.current = streamMode }, [streamMode])
+  /** Für welchen Channel läuft die endlose Quelle gerade? null = keine. */
+  const streamingChannelRef = useRef<string | null>(null)
   const [radioMode, setRadioMode] = useState(false)
   const [radioSlot, setRadioSlot] = useState<RadioSlotInfo | null>(null)
   const [radioNextTrack, setRadioNextTrack] = useState<PlayerTrack | null>(null)
@@ -275,6 +307,9 @@ export function useRadioSync(
     setRadioCurrentSource(null)
     setRadioCurrentDecisionSeq(null)
     cleanupPreload()
+    // Dauerstream: Anker loesen, damit der naechste Poll mit Inhalt die Quelle
+    // neu anwirft. Ohne das bliebe der Channel nach einer Sendepause stumm.
+    streamingChannelRef.current = null
     audioPause()
   }, [audioPause, cleanupPreload])
 
@@ -329,6 +364,24 @@ export function useRadioSync(
   // --- Der Regelkreis: EINE Iteration ---
   const runControlTick = useCallback(() => {
     if (!radioModeRef.current) return
+
+    // Dauerstream: nichts zu regeln. Alle Hörer bekommen dieselben Bytes und
+    // sind damit synchron per Konstruktion — kein Tempo-Nudge, kein Seek, kein
+    // Track-Wechsel im Client. Genau diese Eingriffe waren als „komische
+    // Geschwindigkeits-Veränderungen" hörbar; im Strom entfallen sie ersatzlos.
+    // Einzige Aufgabe bleibt: eine abgerissene Verbindung wieder aufnehmen.
+    if (streamModeRef.current) {
+      if (
+        streamingChannelRef.current &&
+        audioGetIntendsToPlay() &&
+        !audioIsPlayingRef.current
+      ) {
+        audioEnsurePlaying()
+      }
+      setSyncStatus('synced')
+      return
+    }
+
     const sched = scheduleRef.current
     if (!sched) { setSyncStatus('idle'); return }
     if (Date.now() < suppressUntilRef.current) return
@@ -474,7 +527,29 @@ export function useRadioSync(
     const nextTrack = toPlayerTrack(data.nextTrack)
     setRadioNextTrack(nextTrack)
 
-    if (!currentTrack || !data.startedAt || !data.endsAt) return
+    if (!currentTrack) return
+
+    // === Dauerstream ===
+    // Läuft die endlose Quelle für diesen Channel schon, bleibt sie unangetastet
+    // — nur die Anzeige zieht nach. Ein `audioPlay` würde den Strom abreißen.
+    // Läuft sie noch nicht (erster Poll, Channel-Wechsel, Rückkehr aus Off-Air),
+    // wird sie hier angeworfen. Dieser Pfad ist damit selbstheilend: jeder Poll
+    // stellt den Soll-Zustand her, statt sich auf einen einmaligen Start zu verlassen.
+    if (streamModeRef.current) {
+      const ch = channelRef.current
+      if (ch) {
+        if (streamingChannelRef.current === ch) {
+          audioSetCurrentTrackMeta(currentTrack)
+        } else {
+          streamingChannelRef.current = ch
+          audioPlay({ ...currentTrack, url: streamUrl(ch) })
+        }
+      }
+      setSyncStatus('synced')
+      return
+    }
+
+    if (!data.startedAt || !data.endsAt) return
 
     scheduleRef.current = {
       serverTrackId: currentTrack.id,
@@ -485,7 +560,7 @@ export function useRadioSync(
     }
     // Sofort einmal regeln statt auf den nächsten 1s-Tick zu warten (snappy Einstieg).
     runControlTick()
-  }, [handleOffAir, audioPause, runControlTick])
+  }, [handleOffAir, audioPause, runControlTick, audioPlay, audioSetCurrentTrackMeta])
 
   // --- Vom PlayerProvider beim `ended`-Event ---
   const handleTrackEnded = useCallback(() => {
@@ -504,6 +579,7 @@ export function useRadioSync(
       const envelope = await fetchNowPlaying()
       setRadioMode(true)
       radioModeRef.current = true
+
       if (envelope) ingest(envelope)
 
       if (pollRef.current) clearInterval(pollRef.current)
@@ -532,6 +608,8 @@ export function useRadioSync(
     if (!radioMode) return
     currentTrackIdRef.current = null
     scheduleRef.current = null
+    // Anderer Sender = andere endlose Quelle.
+    streamingChannelRef.current = null
     // v3: In-Flight-Fetch + Blobs des alten Channels aufräumen (3. Cleanup-Anker).
     cleanupPreload()
     fetchNowPlaying().then((envelope) => { if (envelope) ingest(envelope) })
@@ -569,6 +647,7 @@ export function useRadioSync(
     setRadioCurrentDecisionSeq(null)
     scheduleRef.current = null
     currentTrackIdRef.current = null
+    streamingChannelRef.current = null
     cleanupPreload()
     if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null }
     if (controlRef.current) { clearInterval(controlRef.current); controlRef.current = null }

@@ -241,7 +241,10 @@ export default function PlayerModeBar() {
         </div>
 
         {/* Transport */}
-        <div style={{ display: 'flex', gap: 6, flexShrink: 0, alignItems: 'center' }}>
+        <div
+          className="kbk-playerbar-transport"
+          style={{ display: 'flex', gap: 6, flexShrink: 0, alignItems: 'center' }}
+        >
           <button
             type="button"
             onClick={playlist.toggleShuffle}
@@ -330,7 +333,9 @@ export default function PlayerModeBar() {
           </button>
         </div>
 
-        {/* Warteschlange */}
+        {/* Neben-Funktionen: Warteschlange + Ton. Als eigene Gruppe, damit sie
+            sich auf schmalen Geraeten sichtbar vom Transport absetzen. */}
+        <div className="kbk-playerbar-aside" style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
         <button
           type="button"
           onClick={() => setQueueOpen((v) => !v)}
@@ -347,8 +352,8 @@ export default function PlayerModeBar() {
               aria-hidden="true"
               style={{
                 position: 'absolute',
-                top: -6,
-                right: -6,
+                top: -4,
+                right: -2,
                 minWidth: 16,
                 height: 16,
                 padding: '0 3px',
@@ -398,6 +403,8 @@ export default function PlayerModeBar() {
             </svg>
           )}
         </button>
+
+        </div>
 
         {/* Zurück in die Hausparty */}
         <button

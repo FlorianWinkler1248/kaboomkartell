@@ -175,6 +175,17 @@ body.kbk-has-miniplayer {
     flex: 1 1 0;
     min-width: 0;
   }
+  /* === Track-Info bekommt eine eigene Zeile (07.08.2026) ===
+     Auf schmalen Geräten teilte sich der Titel die erste Zeile mit vier
+     quadratischen Knöpfen (MY PLAYLIST, Mute, AURA+, SUS) und behielt keine
+     120px — „SAY IT LIKE SHE SAID IT" wurde dadurch auf zwei Buchstaben-Reste
+     zusammengestaucht. Als eigene Zeile hat er die volle Breite, und die
+     Knöpfe rücken darunter. */
+  .kbk-miniplayer-row .kbk-miniplayer-track {
+    order: 50;
+    flex: 1 1 100%;
+    min-width: 0;
+  }
   body.kbk-has-miniplayer {
     padding-bottom: calc(96px + env(safe-area-inset-bottom, 0));
   }
@@ -196,6 +207,22 @@ body.kbk-has-miniplayer {
   .kbk-playerbar-row .kbk-playerbar-cover { order: 1; }
   .kbk-playerbar-row .kbk-playerbar-title { order: 2; }
   .kbk-playerbar-row .kbk-playerbar-back { order: 3; }
+
+  /* === Gruppierung der Bedienzeile (07.08.2026) ===
+     Vorher standen Transport, Warteschlange und Lautstärke als eine
+     gleichförmige Knopf-Reihe nebeneinander — das Auge fand keinen Anker und
+     es wirkte unaufgeräumt. Der Transport rückt jetzt zusammen in die Mitte,
+     die Neben-Funktionen setzen sich rechts mit sichtbarem Abstand ab. */
+  .kbk-playerbar-row .kbk-playerbar-transport {
+    flex: 1 1 auto;
+    justify-content: center;
+    gap: 4px !important;
+  }
+  .kbk-playerbar-row .kbk-playerbar-aside {
+    margin-left: auto;
+    padding-left: 8px;
+    border-left: 1px solid rgba(255, 255, 255, 0.12);
+  }
 }
 
 /* === Tablet-Forms-Centering (v2.6) ===
@@ -882,11 +909,30 @@ img[src*="/icons/pixel/"],
   .kbk-cta-short { display: inline !important; }
 }
 
+@media (max-width: 768px) {
+  /* === Brand darf nicht unter den Sprach-Knopf laufen (07.08.2026) ===
+     Der Brand-Name steht auf `white-space: nowrap` und hatte kein `overflow`.
+     Damit konnte der Flex-Container ihn nicht kürzen: statt zu clippen lief er
+     einfach weiter und der Sprach-Knopf legte sich darüber (gemessen auf 412px:
+     Brand endet bei 184, Knopf beginnt bei 179 — fünf Pixel Überlappung, mit
+     eingeloggtem „PROFILE"-CTA noch mehr). `overflow: hidden` macht den Block
+     erst schrumpffähig und ist gleichzeitig das Sicherheitsnetz: im Zweifel
+     kürzt der Name mit Auslassungspunkten, statt etwas zu überdecken. */
+  .kbk-navbar-brand {
+    overflow: hidden;
+  }
+  .kbk-navbar-brand-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
 @media (max-width: 420px) {
   /* Auf sehr schmalen Phones (Pixel 7 = 412px) muss der Brand-Name kompakter werden,
-     damit der CTA + Hamburger ohne Overflow passen. */
+     damit der CTA + Hamburger ohne Overflow passen. 12px statt 13px schafft die
+     fehlenden Pixel, damit oben gar nicht erst gekürzt werden muss. */
   .kbk-navbar-brand-name {
-    font-size: 13px !important;
+    font-size: 12px !important;
   }
 }
 

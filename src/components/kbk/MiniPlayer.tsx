@@ -450,6 +450,12 @@ export default function MiniPlayer() {
                     ...obsidianFrameVars(tabColor),
                     background: isActive ? tabColor : undefined,
                     color: isActive ? '#0A0B0C' : isLive ? tabColor : 'rgba(255,255,255,0.7)',
+                    // Der aktive Tab trägt dunkle Schrift auf gesättigter
+                    // Sender-Farbe — auf dem Handy (11px, dazu die Equalizer-
+                    // Balken dahinter) verschwimmt das zu einem Farbblock.
+                    // Ein heller Schlagschatten hebt die Buchstaben ab, ohne
+                    // die Farbgebung anzufassen.
+                    textShadow: isActive ? '0 1px 0 rgba(255,255,255,0.45)' : undefined,
                     padding: '8px 14px',
                     fontFamily: 'var(--font-display)',
                     fontSize: 11,
