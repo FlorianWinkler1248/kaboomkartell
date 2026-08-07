@@ -90,7 +90,6 @@ export default function MiniPlayer() {
     analyser,
     isLiveEvent,
     liveStreamUrl,
-    syncStatus,
     radioCurrentSource,
     radioCurrentDecisionSeq,
     playTracks,
@@ -165,9 +164,6 @@ export default function MiniPlayer() {
     // current.title ist an current.id gekoppelt — id reicht als Wechsel-Signal.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [current?.id, radioCurrentSource, radioCurrentDecisionSeq, selectedChannel]);
-
-  // Radio Sync v2: Info-Modal („wie bleibt das Rudel im Takt?").
-  const [showSyncInfo, setShowSyncInfo] = useState(false);
 
   // === Marquee-Effekt für den Track-Titel (v2.23, 02.05.2026 nacht) ===
   // Wenn der Titel breiter ist als die Track-Info-Box, scrollt er wie auf
@@ -665,48 +661,6 @@ export default function MiniPlayer() {
                     {t('resume.label')}
                   </button>
                 )}
-                {/* Radio Sync v2: stiller Sync-Punkt. Text + ⓘ bewusst entfernt — nur ein
-                    dezenter Status-Dot (grün=in sync, pulsierender Akzent=beatmatching).
-                    Bleibt klickbar/hoverbar fürs Info-Modal, damit der Punkt erklärbar ist. */}
-                {radioMode && !isOffAir && syncStatus !== 'idle' && (
-                  <button
-                    type="button"
-                    onClick={() => setShowSyncInfo(true)}
-                    aria-label={`${t(`sync.${syncStatus}`)} — ${t('sync.infoAria')}`}
-                    title={t(`sync.${syncStatus}`)}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      // Schmal halten: Der Punkt sitzt in einer Zeile mit
-                      // ON AIR und der KI-Kennzeichnung und darf sie nicht sprengen.
-                      padding: '6px 2px',
-                      background: 'transparent',
-                      border: 'none',
-                      cursor: 'pointer',
-                      flexShrink: 0,
-                      lineHeight: 0,
-                    }}
-                  >
-                    <span
-                      aria-hidden="true"
-                      style={{
-                        width: 7,
-                        height: 7,
-                        borderRadius: '50%',
-                        background:
-                          syncStatus === 'synced'
-                            ? '#3FCF4A'
-                            : syncStatus === 'beatmatching'
-                              ? accent
-                              : 'rgba(255,255,255,0.6)',
-                        boxShadow: syncStatus === 'synced' ? '0 0 6px #3FCF4A' : undefined,
-                        animation: syncStatus !== 'synced' ? 'kk-pulse 1s infinite' : undefined,
-                        flexShrink: 0,
-                      }}
-                    />
-                  </button>
-                )}
               </div>
             )}
             <div
@@ -934,87 +888,6 @@ export default function MiniPlayer() {
         </div>
       </PlayerBarShell>
 
-      {/* Radio Sync v2: Info-Modal — erklärt den „Conductor"/Beatmatch in
-          Plain-Language. Technik bleibt hinter dem (i)-Button versteckt. */}
-      {showSyncInfo && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label={t('sync.modalTitle')}
-          onClick={() => setShowSyncInfo(false)}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 60,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'rgba(0,0,0,0.7)',
-            backdropFilter: 'blur(4px)',
-            WebkitBackdropFilter: 'blur(4px)',
-            padding: 16,
-          }}
-        >
-          <div
-            className="kbk-obsidian framed"
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              ...obsidianFrameVars(accent),
-              maxWidth: 460,
-              width: '100%',
-              padding: 24,
-              borderRadius: 14,
-              color: '#fff',
-            }}
-          >
-            <h3
-              style={{
-                fontFamily: 'var(--font-display)',
-                fontSize: 18,
-                fontWeight: 900,
-                letterSpacing: '0.02em',
-                margin: '0 0 6px',
-              }}
-            >
-              {t('sync.modalTitle')}
-            </h3>
-            <p
-              style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: 10,
-                letterSpacing: '0.16em',
-                textTransform: 'uppercase',
-                color: accent,
-                margin: '0 0 14px',
-              }}
-            >
-              {t('sync.modalTagline')}
-            </p>
-            <p style={{ fontSize: 14, lineHeight: 1.6, color: 'rgba(255,255,255,0.82)', margin: 0 }}>
-              {t('sync.modalBody')}
-            </p>
-            <button
-              type="button"
-              onClick={() => setShowSyncInfo(false)}
-              style={{
-                marginTop: 18,
-                padding: '8px 16px',
-                borderRadius: 8,
-                cursor: 'pointer',
-                background: accent,
-                color: '#0A0B0C',
-                border: 'none',
-                fontFamily: 'var(--font-display)',
-                fontWeight: 900,
-                letterSpacing: '0.08em',
-                fontSize: 12,
-              }}
-            >
-              {t('sync.modalClose')}
-            </button>
-          </div>
-        </div>
-      )}
     </>
   );
 }

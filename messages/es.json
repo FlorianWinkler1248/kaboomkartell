@@ -779,16 +779,6 @@
       "emptyAnonToast": "Crea una cuenta para guardar tus likes y configurar tu playlist.",
       "emptyUserToast": "Nada en tu playlist todavía — pulsa AURA+ en un track."
     },
-    "sync": {
-      "synced": "EN SINCRONÍA",
-      "beatmatching": "AJUSTANDO",
-      "seeking": "SINCRONIZANDO",
-      "infoAria": "Cómo KBK mantiene a la manada sincronizada",
-      "modalTitle": "Una manada, un ritmo",
-      "modalTagline": "Radio en vivo · siempre sincronizada",
-      "modalBody": "La radio de KBK es en vivo — cada lobo escucha el mismo track en el mismo momento. Tu reproductor ajusta en silencio su tempo al reloj maestro de la manada, como un DJ sincronizando dos platos, para que nunca te salgas del ritmo. El puntito de aquí parpadea mientras se ajusta y se pone verde una vez fijado.",
-      "modalClose": "Entendido"
-    },
     "resume": {
       "label": "TOCA PARA REANUDAR",
       "aria": "Tu navegador detuvo la reproducción — toca para reanudar la radio"

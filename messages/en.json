@@ -779,16 +779,6 @@
       "emptyAnonToast": "Create an account to save your likes and set up your playlist.",
       "emptyUserToast": "Nothing in your playlist yet — hit AURA+ on any track."
     },
-    "sync": {
-      "synced": "IN SYNC",
-      "beatmatching": "BEATMATCHING",
-      "seeking": "SYNCING",
-      "infoAria": "How KBK keeps the pack in sync",
-      "modalTitle": "One pack, one beat",
-      "modalTagline": "Live radio · always in sync",
-      "modalBody": "KBK radio is live — every wolf hears the same track at the same moment. Your player quietly matches its tempo to the pack’s master clock, like a DJ beatmatching two decks, so you never drift out of time. The little dot here pulses while it catches up and glows green once you’re locked in.",
-      "modalClose": "Got it"
-    },
     "resume": {
       "label": "TAP TO RESUME",
       "aria": "Playback was stopped by your browser — tap to resume the radio"

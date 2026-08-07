@@ -178,21 +178,7 @@ body.kbk-has-miniplayer {
        für eine Schriftgröße, die man ohne Zusammenkneifen liest. */
     font-size: 12px !important;
   }
-  /* === Track-Info bekommt eine eigene Zeile (07.08.2026) ===
-     Auf schmalen Geräten teilte sich der Titel die erste Zeile mit vier
-     quadratischen Knöpfen (MY PLAYLIST, Mute, AURA+, SUS) und behielt keine
-     120px — „SAY IT LIKE SHE SAID IT" wurde dadurch auf zwei Buchstaben-Reste
-     zusammengestaucht. Als eigene Zeile hat er die volle Breite, und die
-     Knöpfe rücken darunter.
 
-     Die `!important` sind nötig, weil die Komponente `flex: 1` inline setzt —
-     ein Inline-Stil schlägt jede Klassen-Regel. Ohne sie blieb der Titel bei
-     124px stehen, obwohl die Regel dem Namen nach griff. */
-  .kbk-miniplayer-row .kbk-miniplayer-track {
-    order: 50 !important;
-    flex: 1 1 100% !important;
-    min-width: 0 !important;
-  }
   body.kbk-has-miniplayer {
     padding-bottom: calc(96px + env(safe-area-inset-bottom, 0));
   }
