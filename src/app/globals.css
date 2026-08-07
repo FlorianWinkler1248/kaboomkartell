@@ -174,6 +174,9 @@ body.kbk-has-miniplayer {
   .kbk-miniplayer-row .kbk-miniplayer-channels button {
     flex: 1 1 0;
     min-width: 0;
+    /* Die Tabs nehmen auf dem Handy die volle Breite ein — dann ist auch Platz
+       für eine Schriftgröße, die man ohne Zusammenkneifen liest. */
+    font-size: 12px !important;
   }
   /* === Track-Info bekommt eine eigene Zeile (07.08.2026) ===
      Auf schmalen Geräten teilte sich der Titel die erste Zeile mit vier
@@ -899,6 +902,10 @@ img[src*="/icons/pixel/"],
    damit Logo-Block kompakt bleibt und JOIN/PROFILE + Hamburger Platz haben. */
 .kbk-cta-short { display: none; }
 .kbk-cta-full { display: inline; }
+/* Marken-Schriftzug: Langform als Standard, echte Abkürzung auf schmalen
+   Geräten (siehe Media-Query unten). */
+.kbk-brand-short { display: none; }
+.kbk-brand-full { display: inline; }
 
 @media (max-width: 768px) {
   .kbk-navbar-brand-tag {
@@ -927,13 +934,15 @@ img[src*="/icons/pixel/"],
   }
 }
 
-@media (max-width: 420px) {
-  /* Auf sehr schmalen Phones (Pixel 7 = 412px) muss der Brand-Name kompakter werden,
-     damit der CTA + Hamburger ohne Overflow passen. 12px statt 13px schafft die
-     fehlenden Pixel, damit oben gar nicht erst gekürzt werden muss. */
-  .kbk-navbar-brand-name {
-    font-size: 12px !important;
-  }
+@media (max-width: 480px) {
+  /* === Echte Abkürzung statt abgeschnittener Langform (07.08.2026) ===
+     Auf schmalen Phones (Pixel 7 = 412px) passte „KABOOMKARTELL" nicht neben
+     Sprach-Knopf, CTA und Hamburger. Kürzen per Auslassungspunkten ergab
+     „KABOOMK…" — technisch korrekt, als Marke aber wertlos. „KBK" ist die
+     Abkürzung, die ohnehin überall verwendet wird: kürzer UND lesbar.
+     Der volle Name bleibt für Screenreader über das aria-label erhalten. */
+  .kbk-brand-full { display: none !important; }
+  .kbk-brand-short { display: inline !important; }
 }
 
 /* === Mobile-Section-Padding — verhindert doppeltes Padding und Overflow ===

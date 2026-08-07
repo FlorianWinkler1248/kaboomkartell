@@ -449,13 +449,17 @@ export default function MiniPlayer() {
                   style={{
                     ...obsidianFrameVars(tabColor),
                     background: isActive ? tabColor : undefined,
-                    color: isActive ? '#0A0B0C' : isLive ? tabColor : 'rgba(255,255,255,0.7)',
-                    // Der aktive Tab trägt dunkle Schrift auf gesättigter
-                    // Sender-Farbe — auf dem Handy (11px, dazu die Equalizer-
-                    // Balken dahinter) verschwimmt das zu einem Farbblock.
-                    // Ein heller Schlagschatten hebt die Buchstaben ab, ohne
-                    // die Farbgebung anzufassen.
-                    textShadow: isActive ? '0 1px 0 rgba(255,255,255,0.45)' : undefined,
+                    // Aktiver Tab: WEISSE Schrift mit dunklem Anker darunter.
+                    //
+                    // Dunkle Schrift auf dem Blutrot kommt rechnerisch auf 4,4:1
+                    // — weiße auf exakt denselben Wert. Die Farbwahl allein
+                    // entscheidet also nichts. Was den Ausschlag gibt, ist der
+                    // Schatten: ein dunkler unter heller Schrift trennt die
+                    // Buchstaben sauber von der Fläche. Der vorherige Versuch
+                    // (heller Schatten unter dunkler Schrift) tat das Gegenteil
+                    // und ließ die Schrift verwaschen wirken.
+                    color: isActive ? '#fff' : isLive ? tabColor : 'rgba(255,255,255,0.7)',
+                    textShadow: isActive ? '0 1px 2px rgba(0,0,0,0.55)' : undefined,
                     padding: '8px 14px',
                     fontFamily: 'var(--font-display)',
                     fontSize: 11,
@@ -575,7 +579,12 @@ export default function MiniPlayer() {
                   alignItems: 'center',
                   gap: 8,
                   marginBottom: 2,
-                  flexWrap: 'wrap',
+                  // KEIN Umbruch: Die Zeile trägt nur kurze Marker (ON AIR,
+                  // KI-Kennzeichnung, Sync-Punkt). Durfte sie umbrechen, rutschte
+                  // auf schmalen Geräten der letzte — der Sync-Punkt — allein in
+                  // eine eigene Zeile und stand dort als grüner Fleck im Nichts.
+                  flexWrap: 'nowrap',
+                  minWidth: 0,
                 }}
               >
                 {!isOffAir && (
@@ -669,7 +678,9 @@ export default function MiniPlayer() {
                       display: 'inline-flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      padding: 6,
+                      // Schmal halten: Der Punkt sitzt in einer Zeile mit
+                      // ON AIR und der KI-Kennzeichnung und darf sie nicht sprengen.
+                      padding: '6px 2px',
                       background: 'transparent',
                       border: 'none',
                       cursor: 'pointer',

@@ -199,9 +199,12 @@ export default function TopNavBar() {
           padding: '10px 16px',
         }}
       >
-        {/* Logo-Block — auf Mobile schrumpfbar, Subtitle wird ausgeblendet */}
+        {/* Logo-Block — auf Mobile schrumpfbar, Subtitle wird ausgeblendet.
+            aria-label trägt den vollen Namen, unabhängig davon, ob visuell die
+            Lang- oder die Kurzform steht — Screenreader sollen nie „KBK" buchstabieren. */}
         <Link
           href="/"
+          aria-label="KaboomKartell"
           className="kbk-navbar-logo"
           style={{
             display: 'flex',
@@ -240,7 +243,14 @@ export default function TopNavBar() {
                 whiteSpace: 'nowrap',
               }}
             >
-              KABOOM<span style={{ color: '#E63B2E' }}>KARTELL</span>
+              {/* Auf schmalen Geräten die echte Abkürzung statt eines
+                  abgeschnittenen „KABOOMK…" — kürzer UND lesbar. */}
+              <span className="kbk-brand-full">
+                KABOOM<span style={{ color: '#E63B2E' }}>KARTELL</span>
+              </span>
+              <span className="kbk-brand-short">
+                K<span style={{ color: '#E63B2E' }}>B</span>K
+              </span>
             </span>
             <span
               className="kbk-navbar-brand-tag"
