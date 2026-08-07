@@ -80,7 +80,7 @@ class ChannelBroadcaster {
   private timer: ReturnType<typeof setInterval> | null = null
   private idleTimer: ReturnType<typeof setTimeout> | null = null
   private track: LoadedTrack | null = null
-  private backlog: Uint8Array[] = []
+  private backlog: { chunk: Uint8Array; seconds: number }[] = []
   private backlogSeconds = 0
   private loading = false
   /** Wanduhr-Anker und wie viel Musik seitdem ausgegeben wurde (Sekunden). */
@@ -99,7 +99,7 @@ class ChannelBroadcaster {
       clearTimeout(this.idleTimer)
       this.idleTimer = null
     }
-    for (const chunk of this.backlog) listener.push(chunk)
+    for (const entry of this.backlog) listener.push(entry.chunk)
     this.start()
   }
 
@@ -215,14 +215,20 @@ class ChannelBroadcaster {
     return seconds
   }
 
-  /** Rückstau der letzten BURST_SECONDS vorhalten (nach Spielzeit, nicht Bytes). */
+  /** Rückstau der letzten BURST_SECONDS vorhalten (nach Spielzeit, nicht Bytes).
+   *
+   *  Jedes Paket trägt seine eigene Spielzeit mit — die Pakete sind NICHT gleich
+   *  lang: das erste enthält den ganzen Vorlauf (8 s), die folgenden je einen
+   *  Takt (0,25 s). Zöge man pauschal die Dauer des neuesten Pakets ab, liefe
+   *  der Zähler nach dem ersten Schwall aus dem Tritt und der Rückstau leerte
+   *  sich vollständig — Neuzugänge bekämen dann keinen Puffer und würden
+   *  stocken. */
   private remember(chunk: Uint8Array, seconds: number): void {
-    this.backlog.push(chunk)
+    this.backlog.push({ chunk, seconds })
     this.backlogSeconds += seconds
     while (this.backlogSeconds > BURST_SECONDS && this.backlog.length > 1) {
-      this.backlog.shift()
-      // Näherung: der Rückstau besteht aus gleich langen Takt-Paketen.
-      this.backlogSeconds -= seconds
+      const dropped = this.backlog.shift()
+      if (dropped) this.backlogSeconds -= dropped.seconds
     }
   }
 
