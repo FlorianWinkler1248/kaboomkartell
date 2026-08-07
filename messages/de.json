@@ -519,7 +519,9 @@
     "filterAllGenres": "Alle Genres",
     "filterAllSets": "Alle Sets",
     "filterAllArtists": "Alle Artists",
-    "clearFilters": "Filter löschen"
+    "clearFilters": "Filter löschen",
+    "digDeeper": "Weitergraben auf SoundCloud",
+    "digDeeperAria": "{genre} auf SoundCloud suchen"
   },
   "track": {
     "linkCopied": "Link kopiert!",

@@ -563,8 +563,78 @@ export default async function LibraryPage({
           )}
         </>
       )}
+
+      {/* Weitersuchen auf SoundCloud — wir kuratieren drei Genres, der Rest
+          der Kiste liegt drueben. Reiner Aussenlink, keine API, kein Key. */}
+      <DigDeeper genre={genre} t={t} />
       </LibraryQueue>
     </section>
+  )
+}
+
+/**
+ * „KEEP DIGGING" — Aussenlink in die SoundCloud-Suche.
+ *
+ * KBK will nicht ersetzen, sondern der erste Anlaufpunkt fuer Hardtek,
+ * Raggatek und Phonk sein. Wer bei uns nicht faellig wird, soll den Weg
+ * weiter finden statt in einer Sackgasse zu stehen.
+ *
+ * Ist ein Genre-Filter aktiv, zeigt der Block genau diesen einen Begriff —
+ * sonst die drei Haus-Genres. Bewusst ohne API: die oeffentliche Suchseite
+ * von SoundCloud braucht keinen Client-Key (Stand 07.08.2026). Eine echte
+ * In-App-Suche waere ein Artist-Pro-Abo, siehe Budget-Vorbehalt.
+ */
+const HAUS_GENRES = ['Hardtek', 'Raggatek', 'Phonk'] as const;
+
+function DigDeeper({ genre, t }: { genre: string | null; t: LibraryT }) {
+  const terms = genre ? [genre] : [...HAUS_GENRES];
+
+  return (
+    <div
+      style={{
+        marginTop: 28,
+        display: 'flex',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        gap: 10,
+      }}
+    >
+      <span
+        style={{
+          fontFamily: 'var(--font-mono)',
+          fontSize: 10,
+          color: 'rgba(255,255,255,0.4)',
+          letterSpacing: '0.2em',
+          textTransform: 'uppercase',
+        }}
+      >
+        {t('digDeeper')}
+      </span>
+      {terms.map((term) => (
+        <a
+          key={term}
+          href={`https://soundcloud.com/search/sounds?q=${encodeURIComponent(term)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={t('digDeeperAria', { genre: term })}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            minHeight: 34,
+            padding: '6px 12px',
+            border: '1px solid rgba(255,85,0,0.45)',
+            color: '#FF5500',
+            fontFamily: 'var(--font-mono)',
+            fontSize: 11,
+            letterSpacing: '0.12em',
+            textDecoration: 'none',
+            textTransform: 'uppercase',
+          }}
+        >
+          {term} ↗
+        </a>
+      ))}
+    </div>
   )
 }
 
