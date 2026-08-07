@@ -20,7 +20,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { RADIO_CONFIG } from '@/lib/constants'
-import { computeSyncAction, needsPlaybackKick, statusForAction, type SyncStatus } from '@/lib/radio-sync-control'
+import { computeSyncAction, needsPlaybackKick, reconnectDelayMs, statusForAction, type SyncStatus } from '@/lib/radio-sync-control'
 import { radioPreloader, shouldPreload } from '@/lib/radio-preload'
 import type { PlayerTrack } from '@/types'
 
@@ -182,6 +182,12 @@ export function useRadioSync(
   useEffect(() => { streamModeRef.current = streamMode }, [streamMode])
   /** Für welchen Channel läuft die endlose Quelle gerade? null = keine. */
   const streamingChannelRef = useRef<string | null>(null)
+  /** Letzte bekannte Titel-Angaben — beim Wiederverbinden zeigt die Leiste damit
+   *  weiter den richtigen Titel, statt kurz leer zu laufen. */
+  const lastStreamMetaRef = useRef<PlayerTrack | null>(null)
+  /** Fehlversuche in Folge + Zeitpunkt, ab dem der nächste erlaubt ist. */
+  const reconnectAttemptsRef = useRef(0)
+  const reconnectAtRef = useRef(0)
   const [radioMode, setRadioMode] = useState(false)
   const [radioSlot, setRadioSlot] = useState<RadioSlotInfo | null>(null)
   const [radioNextTrack, setRadioNextTrack] = useState<PlayerTrack | null>(null)
@@ -371,14 +377,46 @@ export function useRadioSync(
     // Geschwindigkeits-Veränderungen" hörbar; im Strom entfallen sie ersatzlos.
     // Einzige Aufgabe bleibt: eine abgerissene Verbindung wieder aufnehmen.
     if (streamModeRef.current) {
-      if (
-        streamingChannelRef.current &&
-        audioGetIntendsToPlay() &&
-        !audioIsPlayingRef.current
-      ) {
-        audioEnsurePlaying()
+      const ch = streamingChannelRef.current
+      if (!ch || !audioGetIntendsToPlay()) { setSyncStatus('synced'); return }
+
+      if (audioIsPlayingRef.current) {
+        // Es läuft — Fehlversuche zurücksetzen.
+        reconnectAttemptsRef.current = 0
+        reconnectAtRef.current = 0
+        setSyncStatus('synced')
+        return
       }
-      setSyncStatus('synced')
+
+      // Es soll Ton kommen, kommt aber keiner. Zwei Stufen:
+      //  1. Versuch: nur anwerfen — vielleicht steht das Element bloß.
+      //  danach: die Verbindung ist weg (typisch nach einem Deploy, der den
+      //  Sender neu startet). Dann hilft kein `play()` mehr, die Quelle muss
+      //  neu angefordert werden. Der Zeitstempel im Aufruf verhindert, dass
+      //  der Browser die tote Verbindung aus seinem Zwischenspeicher recycelt.
+      const now = Date.now()
+      if (now < reconnectAtRef.current) { setSyncStatus('seeking'); return }
+
+      const attempt = reconnectAttemptsRef.current
+      if (attempt === 0) {
+        audioEnsurePlaying()
+      } else {
+        const meta = lastStreamMetaRef.current
+        audioPlay({
+          id: meta?.id ?? `stream-${ch}`,
+          title: meta?.title ?? '',
+          artist: meta?.artist ?? '',
+          duration: meta?.duration ?? 0,
+          coverUrl: meta?.coverUrl,
+          aiDisclosure: meta?.aiDisclosure ?? null,
+          isLocal: false,
+          isSoundcloud: false,
+          url: `${streamUrl(ch)}&t=${now}`,
+        })
+      }
+      reconnectAttemptsRef.current = attempt + 1
+      reconnectAtRef.current = now + reconnectDelayMs(attempt + 1)
+      setSyncStatus(attempt === 0 ? 'synced' : 'seeking')
       return
     }
 
@@ -538,10 +576,13 @@ export function useRadioSync(
     if (streamModeRef.current) {
       const ch = channelRef.current
       if (ch) {
+        lastStreamMetaRef.current = currentTrack
         if (streamingChannelRef.current === ch) {
           audioSetCurrentTrackMeta(currentTrack)
         } else {
           streamingChannelRef.current = ch
+          reconnectAttemptsRef.current = 0
+          reconnectAtRef.current = 0
           audioPlay({ ...currentTrack, url: streamUrl(ch) })
         }
       }
@@ -565,6 +606,17 @@ export function useRadioSync(
   // --- Vom PlayerProvider beim `ended`-Event ---
   const handleTrackEnded = useCallback(() => {
     if (!radioModeRef.current) return
+
+    // Dauerstream: Ein endloser Strom endet nicht von selbst. Ein `ended` heißt
+    // deshalb immer „die Verbindung ist weg" — typisch nach einem Deploy, der
+    // den Sender neu startet. Sperrfrist aufheben, damit der nächste
+    // Regelkreis-Takt sofort neu verbindet statt bis zum Ablauf zu warten.
+    if (streamModeRef.current) {
+      reconnectAtRef.current = 0
+      if (reconnectAttemptsRef.current === 0) reconnectAttemptsRef.current = 1
+      return
+    }
+
     if (switchToNext()) return
     // Sicherheitsnetz: kein gelockter Folge-Track im Cache (idle Tab hat seit dem
     // letzten Wechsel nicht gepollt) → einmalig nachladen statt still verstummen.

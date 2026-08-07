@@ -233,6 +233,29 @@ export function needsPlaybackKick(input: ResumeInput): boolean {
   return true
 }
 
+/**
+ * Dauerstream (ADR-043) — Wartezeit vor dem nächsten Wiederverbindungs-Versuch.
+ *
+ * Der Sender lebt im Web-Dienst; jeder Deploy reißt darum jede Verbindung ab.
+ * Der Client muss das selbst auffangen, sonst bleibt es nach einem Neustart
+ * still, bis jemand die Seite neu lädt.
+ *
+ * Die Wartezeit verdoppelt sich mit jedem Fehlversuch und ist gedeckelt. Grund:
+ * Ein Deploy dauert ein paar Sekunden — da soll es schnell wieder anspringen.
+ * Ist der Server dagegen länger weg, würde ein starrer Sekundentakt von vielen
+ * Geräten gleichzeitig zur Anfrage-Flut, die den Start zusätzlich behindert.
+ */
+export const STREAM_RECONNECT = {
+  BASE_MS: 1_000,
+  MAX_MS: 15_000,
+} as const
+
+export function reconnectDelayMs(attempt: number): number {
+  if (attempt <= 0) return 0
+  const grown = STREAM_RECONNECT.BASE_MS * 2 ** (attempt - 1)
+  return Math.min(grown, STREAM_RECONNECT.MAX_MS)
+}
+
 /** UI-Status für den „Beatmatch"-Indikator, abgeleitet aus der Aktion. */
 export type SyncStatus = 'idle' | 'synced' | 'beatmatching' | 'seeking'
 

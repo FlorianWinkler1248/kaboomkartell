@@ -5,7 +5,8 @@
 
 import { describe, it, expect } from 'vitest'
 import {
-  computeSyncAction, needsPlaybackKick, statusForAction, SYNC,
+  computeSyncAction, needsPlaybackKick, statusForAction, reconnectDelayMs,
+  SYNC, STREAM_RECONNECT,
   type SyncInput, type ResumeInput,
 } from '../radio-sync-control'
 
@@ -252,6 +253,26 @@ describe('needsPlaybackKick (Mobile-Continuity v3.1)', () => {
       serverNowMs: 1_100_000 + SYNC.RESUME_STALE_AFTER_MS - 1,
     })
     expect(needsPlaybackKick(insideWindow)).toBe(false)
+  })
+})
+
+describe('reconnectDelayMs (Dauerstream)', () => {
+  it('wartet vor dem ersten Versuch nicht', () => {
+    expect(reconnectDelayMs(0)).toBe(0)
+    expect(reconnectDelayMs(-1)).toBe(0)
+  })
+
+  it('verdoppelt die Wartezeit mit jedem Fehlversuch', () => {
+    expect(reconnectDelayMs(1)).toBe(1_000)
+    expect(reconnectDelayMs(2)).toBe(2_000)
+    expect(reconnectDelayMs(3)).toBe(4_000)
+    expect(reconnectDelayMs(4)).toBe(8_000)
+  })
+
+  it('deckelt die Wartezeit — ein langer Ausfall darf keine Anfrage-Flut erzeugen '
+    + 'und auch keine Wartezeit von Stunden', () => {
+    expect(reconnectDelayMs(5)).toBe(STREAM_RECONNECT.MAX_MS)
+    expect(reconnectDelayMs(20)).toBe(STREAM_RECONNECT.MAX_MS)
   })
 })
 
