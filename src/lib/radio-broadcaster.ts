@@ -14,8 +14,14 @@
  * -----------------------
  * Nicht der Sender. Die Programm-Hoheit bleibt bei `radio-state.ts` — dort
  * werden Kandidaten gewählt, Stimmen gezählt und der Gewinner gelockt
- * (Crowd Control). Der Sender FRAGT an jeder Track-Grenze, was jetzt läuft, und
+ * (Crowd Control). Der Sender FRAGT an jeder Track-Grenze, was läuft, und
  * spielt genau das. Das Voting läuft dadurch unverändert weiter.
+ *
+ * Gefragt wird dabei für den Moment, in dem die Bytes ANKOMMEN — nicht für die
+ * Wanduhr. Der Sender liegt um seinen Vorlauf vor dem Publikum; fragte er nach
+ * dem Jetzt, nennte ihm das Programm an jeder Grenze den Titel, den er selbst
+ * gerade zu Ende gesendet hat. Das Regelgesetz dazu steht als reine, testbare
+ * Einheit in `radio-broadcast-clock.ts`.
  *
  * WARUM RAHMENGENAU UND NICHT NACH BYTES
  * --------------------------------------
@@ -44,6 +50,7 @@ import { getAbsolutePath } from './storage'
 import { audioStartOffset, findFrameStart, readFrameHeader } from './mp3-frames'
 import { loadRadioData, readNowPlayingState, readGrace, isCrowdControlEnabled } from './radio-state'
 import { getActiveContext, getNowPlaying, type NowPlayingResult } from './radio'
+import { sendAheadSeconds, decideNextTrack, type TrackRun } from './radio-broadcast-clock'
 
 /** Sende-Takt. 250 ms hält die Timer-Last niedrig und den Rückstau klein. */
 const TICK_MS = 250
@@ -69,17 +76,23 @@ interface Listener {
 }
 
 interface LoadedTrack {
-  trackId: string
+  run: TrackRun
   data: Buffer
   /** Lese-Position im Puffer (steht immer auf einem Rahmen-Anfang). */
   cursor: number
 }
+
+/** Ergebnis eines Lade-Versuchs — der Sende-Takt reagiert auf jeden Fall anders. */
+type LoadStatus = 'loaded' | 'wait' | 'offair'
 
 class ChannelBroadcaster {
   private listeners = new Set<Listener>()
   private timer: ReturnType<typeof setInterval> | null = null
   private idleTimer: ReturnType<typeof setTimeout> | null = null
   private track: LoadedTrack | null = null
+  /** Zuletzt begonnener Durchlauf — daran erkennt der Sender an der Grenze, ob
+   *  das Programm ihm den eben beendeten Titel erneut nennt. */
+  private lastRun: TrackRun | null = null
   private backlog: { chunk: Uint8Array; seconds: number }[] = []
   private backlogSeconds = 0
   private loading = false
@@ -124,6 +137,7 @@ class ChannelBroadcaster {
     this.timer = null
     this.idleTimer = null
     this.track = null
+    this.lastRun = null
     this.backlog = []
     this.backlogSeconds = 0
   }
@@ -145,15 +159,22 @@ class ChannelBroadcaster {
     while (budget > 0) {
       if (!this.track || this.track.cursor >= this.track.data.length) {
         this.loading = true
+        let status: LoadStatus = 'offair'
         try {
-          await this.loadCurrentTrack()
+          status = await this.loadCurrentTrack()
         } catch (err) {
           console.error(`[radio-broadcaster:${this.channel}] Laden fehlgeschlagen:`, err)
+          this.track = null
         } finally {
           this.loading = false
         }
-        // Nichts zu senden (Off-Air, Server noch nicht vorgerückt): Uhr
-        // mitziehen, damit der Sender danach nicht aufzuholen versucht.
+        // Das Programm nennt noch den eben beendeten Durchlauf: einen Takt
+        // warten und erneut fragen. Der Vorlauf bleibt dabei ABSICHTLICH
+        // stehen — würde er hier zurückgesetzt, fragte der nächste Versuch
+        // wieder die Wanduhr und liefe in denselben Fehler.
+        if (status === 'wait') return
+        // Nichts zu senden (Off-Air): Uhr mitziehen, damit der Sender danach
+        // nicht aufzuholen versucht.
         if (!this.track) {
           this.deliveredSeconds = targetSeconds - LEAD_SECONDS
           return
@@ -233,14 +254,17 @@ class ChannelBroadcaster {
   }
 
   /**
-   * Was läuft jetzt auf diesem Channel? Dieselbe Kaskade wie die
+   * Was läuft auf diesem Channel zum Zeitpunkt `now`? Dieselbe Kaskade wie die
    * `now-playing`-Route — Crowd Control zuerst, dann Grace, dann der
    * deterministische Pfad. Bewusst identisch: Sender und Metadaten-Abfrage
    * müssen dieselbe Antwort geben, sonst zeigt die Leiste einen anderen Titel
    * als der Ton.
+   *
+   * `now` ist bewusst ein Parameter und nicht die Wanduhr: Der Sender fragt für
+   * den Moment, in dem die Bytes beim Publikum ankommen — also um seinen
+   * Vorlauf in der Zukunft (siehe `loadCurrentTrack`).
    */
-  private async resolveNowPlaying(): Promise<NowPlayingResult | null> {
-    const now = new Date()
+  private async resolveNowPlaying(now: Date): Promise<NowPlayingResult | null> {
     const { radioSlots, radioEvents, poolMap } = await loadRadioData(now)
 
     if (isCrowdControlEnabled()) {
@@ -262,57 +286,87 @@ class ChannelBroadcaster {
   }
 
   /**
-   * Fragt die Programm-Hoheit, was jetzt läuft, und lädt die Datei.
+   * Fragt die Programm-Hoheit, was läuft, und lädt die Datei.
    *
-   * Beim ERSTEN Titel steigen wir an der Live-Position ein, damit der Ton zu den
-   * Metadaten passt, die die Hörer parallel abfragen. Bei jedem weiteren Titel
-   * beginnen wir vorn — der Sender ist dann selbst die Uhr und hat den Vorgänger
-   * gerade zu Ende gespielt.
+   * Gefragt wird für den AUSSENDE-Zeitpunkt, nicht für die Wanduhr: Was der
+   * Sender jetzt in die Leitung schiebt, hört das Publikum erst um den Vorlauf
+   * später. Wer hier die Wanduhr fragt, bekommt an der Titel-Grenze den Titel
+   * genannt, den er selbst gerade zu Ende gesendet hat — und beginnt ihn ein
+   * zweites Mal. Genau so geriet der Ton hinter die Anzeige (13.08.2026).
+   *
+   * Angespult wird bei JEDEM Titel auf die Position, die das Programm nennt.
+   * Damit ist das Programm an jeder Grenze wieder der Taktgeber und ein Versatz
+   * kann sich nicht über die Stunden aufsummieren.
    */
-  private async loadCurrentTrack(): Promise<void> {
-    const hadTrack = this.track !== null
-    const np = await this.resolveNowPlaying()
-    if (!np?.track?.id) {
+  private async loadCurrentTrack(): Promise<LoadStatus> {
+    const nowMs = Date.now()
+    const ahead = sendAheadSeconds({
+      nowMs,
+      clockStartMs: this.clockStartMs,
+      deliveredSeconds: this.deliveredSeconds,
+    })
+    const sendTimeMs = nowMs + ahead * 1000
+    const np = await this.resolveNowPlaying(new Date(sendTimeMs))
+
+    const decision = decideNextTrack({
+      finishedRun: this.lastRun,
+      programTrackId: np?.track?.id ?? null,
+      programPositionSeconds: np?.positionSeconds ?? 0,
+      programNowMs: sendTimeMs,
+    })
+
+    if (decision.kind === 'wait') return 'wait'
+    if (decision.kind === 'offair') {
       this.track = null
-      return
+      this.lastRun = null
+      return 'offair'
     }
 
     // Der Programm-Zustand liefert nur die Stream-URL, nicht den Dateipfad —
     // den holen wir direkt, weil wir die Bytes selbst lesen.
     const row = await prisma.track.findUnique({
-      where: { id: np.track.id },
+      where: { id: decision.run.trackId },
       select: { filePath: true },
     })
     if (!row?.filePath) {
       this.track = null
-      return
+      this.lastRun = null
+      return 'offair'
     }
 
     const data = await fs.readFile(getAbsolutePath(row.filePath))
     const audioStart = audioStartOffset(data)
+    const cursor = decision.startAtSeconds > 0
+      ? this.frameAtSecond(data, audioStart, decision.startAtSeconds)
+      : audioStart
 
-    let cursor = audioStart
-    if (!hadTrack && np.positionSeconds > 0) {
-      // Live-Einstieg: rahmenweise bis zur aktuellen Position vorspulen. Das ist
-      // genauer als über die mittlere Bitrate zu schätzen — und landet garantiert
-      // auf einem Rahmen-Anfang statt mittendrin.
-      let seconds = 0
-      let at = audioStart
-      while (seconds < np.positionSeconds && at < data.length) {
-        const header = readFrameHeader(data, at)
-        if (!header) {
-          const next = findFrameStart(data, at + 1)
-          if (next < 0) break
-          at = next
-          continue
-        }
-        at += header.frameLength
-        seconds += SAMPLES_PER_FRAME / header.sampleRate
+    this.track = { run: decision.run, data, cursor }
+    this.lastRun = decision.run
+    return 'loaded'
+  }
+
+  /**
+   * Rahmen-Anfang, der einer Spielzeit-Position am nächsten liegt.
+   *
+   * Rahmenweise gezählt statt über die mittlere Bitrate geschätzt: Das ist bei
+   * variabel kodierten Dateien deutlich genauer und landet garantiert auf einem
+   * Rahmen-Anfang statt mittendrin — ein halber Rahmen wäre als Knacken hörbar.
+   */
+  private frameAtSecond(data: Buffer, audioStart: number, targetSeconds: number): number {
+    let seconds = 0
+    let at = audioStart
+    while (seconds < targetSeconds && at < data.length) {
+      const header = readFrameHeader(data, at)
+      if (!header) {
+        const next = findFrameStart(data, at + 1)
+        if (next < 0) break
+        at = next
+        continue
       }
-      cursor = Math.min(at, data.length)
+      at += header.frameLength
+      seconds += SAMPLES_PER_FRAME / header.sampleRate
     }
-
-    this.track = { trackId: np.track.id, data, cursor }
+    return Math.min(at, data.length)
   }
 }
 
