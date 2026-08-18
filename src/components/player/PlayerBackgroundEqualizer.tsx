@@ -67,11 +67,11 @@ const MIN_ACTIVE_HEIGHT = 0.04;
 const FFT_GAIN = 1.4;
 const NEON_GLOW_BLUR_ACTIVE = 10;
 const NEON_GLOW_BLUR_IDLE = 4;
-/** Im Leerlauf wird nur jedes n-te Bild gezeichnet (60 / 6 = 10 Bilder je
- *  Sekunde). Die Ruhewelle laeuft mit IDLE_SPEED 0.5 und braucht gut zwoelf
- *  Sekunden fuer einen Durchlauf — zehn Bilder je Sekunde sind dafuer reichlich,
- *  sechzig waren Verschwendung. */
-const IDLE_FRAME_SKIP = 6;
+/** Ab dieser mittleren Frequenz-Staerke (0-255 je Bin) gilt Audio als
+ *  wirklich laufend. `> 0` genuegt nicht: bei offenem Audio-Kontext liefert
+ *  die Analyse auch ohne Wiedergabe einzelne Werte ueber null, und die
+ *  Ruhe-Erkennung schlug dadurch nie an. */
+const AUDIO_SCHWELLE = 2;
 
 /** Konvertiert #RRGGBB zu {r,g,b}. Fallback rasta-green bei ungueltiger Eingabe. */
 function hexToRgb(hex: string): { r: number; g: number; b: number } {
@@ -124,9 +124,9 @@ export default function PlayerBackgroundEqualizer({
     let rafId = 0;
     let stopped = false;
     let smoothed = new Float32Array(settingsRef.current.barCount);
-    // Zaehler und Merker fuer die Leerlauf-Drosselung (siehe `tick`).
-    let idleFrame = 0;
-    let warIdle = true;
+    // Ruht die Anzeige gerade? Dann steht ein einmal gezeichnetes Standbild
+    // auf der Flaeche und sie wird nicht mehr angefasst (siehe `tick`).
+    let ruht = false;
 
     const resize = () => {
       const canvas = canvasRef.current;
@@ -252,8 +252,6 @@ export default function PlayerBackgroundEqualizer({
         }
       }
 
-      // Rueckmeldung fuer die Drosselung in `tick`.
-      return useIdle;
     };
 
     const tick = () => {
@@ -268,37 +266,41 @@ export default function PlayerBackgroundEqualizer({
       // Tab im Hintergrund: skip Frame, aber Loop weiterlaufen lassen, damit
       // bei Tab-Wechsel sofort wieder gezeichnet wird.
       if (typeof document !== 'undefined' && !document.hidden) {
-        // v2.31 (18.08.2026): Im Leerlauf wird nur jedes sechste Bild
-        // gezeichnet. Der Takt selbst bleibt unangetastet — der Lebenszyklus
-        // der Schleife (siehe Kopf der Datei, v2.23) ist bewusst NICHT
-        // angefasst: sie startet weiterhin genau einmal beim Einhaengen und
-        // liest ihre Werte aus dem Ref. Ein Anhalten und Wiederanwerfen ueber
-        // die Abhaengigkeitsliste war der Fehler der vier gescheiterten
-        // Anlaeufe vor v2.23.
+        // v2.31 (18.08.2026): Spielt nichts, ruht die Anzeige. Ein Standbild
+        // wird einmal gezeichnet, danach wird die Flaeche nicht mehr angefasst.
         //
-        // Warum das wirkt: Nicht das Zeichnen selbst ist teuer (im Leerlauf
-        // rund 1,4 ms), sondern dass jede Aenderung der Zeichenflaeche die
-        // Hintergrund-Unschaerfe der Player-Leiste darueber zur Neuberechnung
-        // zwingt. Seltener zeichnen heisst seltener neu berechnen.
+        // Warum das der wirksame Hebel ist — am 18.08.2026 in Chrome gemessen:
+        // Nicht das Zeichnen kostet (ein Bild rund 1,4 ms), sondern dass das
+        // Ergebnis in jedem Einzelbild ins Bild uebernommen wird. Auf
+        // `visibility: hidden` gestellt laeuft die Schleife unveraendert
+        // weiter, und die Seite springt von 83 ms auf 16,7 ms je Bild —
+        // also von 11 auf volle 60 Bilder je Sekunde.
         //
-        // Kriterium ist allein die Rueckmeldung aus `drawFrame` — dort ist
-        // Leerlauf als `!isActive || !hasAudioData` definiert. Ein zusaetzlicher
-        // `!isActive`-Term hier waere falsch: bei pausiertem Radio bleibt
-        // `isActive` wahr, und die Drosselung griffe nie. Genau das war am
-        // 18.08.2026 im ersten Anlauf gemessen worden — 10,6 von 11 Bildern
-        // wurden weiterhin gezeichnet.
-        //
-        // Startet die Wiedergabe, meldet das naechste gezeichnete Bild
-        // `useIdle = false` zurueck und die volle Rate ist wieder da; die
-        // Anlaufverzoegerung betraegt hoechstens fuenf Bilder.
-        const drosseln = warIdle;
-        if (!drosseln || idleFrame % IDLE_FRAME_SKIP === 0) {
-          const idle = drawFrame();
-          // `undefined` heisst: Bild uebersprungen (Layout noch 0x0) — dann
-          // bleibt die letzte Einschaetzung stehen.
-          if (idle !== undefined) warIdle = idle;
+        // Der Takt selbst bleibt unangetastet: Die Schleife startet weiterhin
+        // genau einmal beim Einhaengen und liest ihre Werte aus dem Ref
+        // (siehe Dateikopf, v2.23). Sie anzuhalten und ueber die
+        // Abhaengigkeitsliste wieder anzuwerfen war der Fehler der vier
+        // Anlaeufe davor — deshalb laeuft sie durch und prueft nur billig,
+        // ob wieder etwas zu tun ist.
+        const settings = settingsRef.current;
+        let staerke = 0;
+        if (settings.isActive) {
+          const freq = settings.getFrequencyData();
+          const n = freq.length || 1;
+          let summe = 0;
+          for (let i = 0; i < n; i++) summe += freq[i] ?? 0;
+          staerke = summe / n;
         }
-        idleFrame = (idleFrame + 1) % IDLE_FRAME_SKIP;
+        const spielt = settings.isActive && staerke >= AUDIO_SCHWELLE;
+
+        if (spielt) {
+          ruht = false;
+          drawFrame();
+        } else if (!ruht) {
+          // Uebergang in die Ruhe: einmal das Standbild setzen, dann nichts mehr.
+          drawStatic();
+          ruht = true;
+        }
       }
       rafId = requestAnimationFrame(tick);
     };
@@ -309,6 +311,10 @@ export default function PlayerBackgroundEqualizer({
     const handleResize = () => {
       resize();
       if (reducedMotionRef.current) drawStatic();
+      // Groessenaenderung leert die Flaeche. Ruht die Anzeige gerade, wuerde
+      // sie leer stehen bleiben — deshalb Ruhe aufheben, das naechste Bild
+      // setzt das Standbild neu.
+      ruht = false;
     };
     window.addEventListener('resize', handleResize);
 
