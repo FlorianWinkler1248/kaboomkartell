@@ -185,16 +185,16 @@ export default function PlayerBackgroundEqualizer({
     const drawFrame = () => {
       const canvas = canvasRef.current;
       const container = containerRef.current;
-      if (!canvas || !container) return;
+      if (!canvas || !container) return false;
       const ctx = canvas.getContext('2d');
-      if (!ctx) return;
+      if (!ctx) return false;
 
       const settings = settingsRef.current;
       const width = container.clientWidth;
       const height = container.clientHeight;
       // Layout noch nicht fertig (initial mount + 0-Hoehen-CSS-Phase). Skip
       // diesen Frame, RAF läuft weiter — der nächste Frame zeichnet.
-      if (width === 0 || height === 0) return;
+      if (width === 0 || height === 0) return false;
 
       // Bar-Buffer bei Größe-Änderung neu alloziieren (zero-copy zum Reset).
       if (smoothed.length !== settings.barCount) {
@@ -282,6 +282,7 @@ export default function PlayerBackgroundEqualizer({
         }
       }
 
+      return true;
     };
 
     const tick = () => {
@@ -327,9 +328,15 @@ export default function PlayerBackgroundEqualizer({
           ruht = false;
           drawFrame();
         } else if (!ruht) {
-          // Uebergang in die Ruhe: einmal das Standbild setzen, dann nichts mehr.
-          drawStatic();
-          ruht = true;
+          // Uebergang in die Ruhe: die Ruhewelle EINMAL zeichnen, danach die
+          // Flaeche nicht mehr anfassen.
+          //
+          // Hier stand zuerst `drawStatic()` — falsch: das ist das Standbild
+          // fuer `prefers-reduced-motion` und zeichnet die Balken auf 55 bis
+          // 85 Prozent Hoehe. Vierfach gespiegelt fuellte das die Leiste mit
+          // einem grellen Block, statt die zehn Prozent hohe Ruhewelle zu
+          // zeigen. `drawFrame` trifft im Leerlauf genau diese Welle.
+          ruht = drawFrame() === true;
         }
       }
       rafId = requestAnimationFrame(tick);
