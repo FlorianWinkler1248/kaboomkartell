@@ -22,6 +22,7 @@ import {
 } from '@/components/kbk/icons';
 import { obsidianFrameVars } from '@/lib/obsidian-frame';
 import { SafeImg } from '@/components/ui/SafeImg';
+import { cache } from 'react';
 
 /**
  * Oeffentliche Profilseite (Cockpit-Style).
@@ -42,35 +43,17 @@ const roleConfig: Record<string, { roleKey: string; color: string }> = {
   MITGLIED: { roleKey: 'member', color: '#3FCF4A' },
 };
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { username } = await params;
-  const t = await getTranslations('meta.profile');
-
-  const user = await prisma.user.findUnique({
-    where: { username },
-    select: { displayName: true, username: true, bio: true },
-  });
-
-  if (!user) return { title: t('notFoundTitle') };
-
-  const name = user.displayName || user.username;
-  return {
-    title: t('title', { name }),
-    description: user.bio || t('description', { name }),
-    openGraph: {
-      title: t('ogTitle', { name }),
-      description: user.bio || t('ogDescription', { name }),
-    },
-  };
-}
-
-export default async function ProfilePage({ params }: PageProps) {
-  const { username } = await params;
-  const session = await auth();
-  const t = await getTranslations('profile');
-  const isOwnProfile = session?.user?.username === username;
-
-  const user = await prisma.user.findUnique({
+/**
+ * Nutzer per Benutzernamen laden — EIN Loader fuer Metadaten und Seite.
+ *
+ * (18.08.2026) `generateMetadata` fragte vorher drei Felder separat ab,
+ * waehrend die Seite dieselbe Zeile mit allen Feldern nochmal holte. Beides
+ * laeuft bei jedem Aufruf; Prisma fasst das nicht zusammen. `cache()` gilt
+ * je Anfrage — Entdopplung innerhalb einer Anfrage, keine Zwischenspeicherung
+ * darueber hinaus.
+ */
+const ladeNutzer = cache(async (username: string) =>
+  prisma.user.findUnique({
     where: { username },
     select: {
       id: true,
@@ -118,7 +101,35 @@ export default async function ProfilePage({ params }: PageProps) {
         select: { providerName: true },
       },
     },
-  });
+  })
+);
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { username } = await params;
+  const t = await getTranslations('meta.profile');
+
+  const user = await ladeNutzer(username);
+
+  if (!user) return { title: t('notFoundTitle') };
+
+  const name = user.displayName || user.username;
+  return {
+    title: t('title', { name }),
+    description: user.bio || t('description', { name }),
+    openGraph: {
+      title: t('ogTitle', { name }),
+      description: user.bio || t('ogDescription', { name }),
+    },
+  };
+}
+
+export default async function ProfilePage({ params }: PageProps) {
+  const { username } = await params;
+  const session = await auth();
+  const t = await getTranslations('profile');
+  const isOwnProfile = session?.user?.username === username;
+
+  const user = await ladeNutzer(username);
 
   if (!user) {
     notFound();

@@ -1,8 +1,41 @@
+import { cache } from 'react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import prisma from '@/lib/db';
 import TrackDetailClient from './TrackDetailClient';
+
+/**
+ * Track per Slug laden — EIN Loader fuer Metadaten und Seite.
+ *
+ * (18.08.2026) Vorher fragten `generateMetadata` und die Seite die Datenbank
+ * getrennt ab, mit unterschiedlichen Feldlisten. Beide laufen bei jedem
+ * Seitenaufruf, Prisma fasst das nicht von selbst zusammen — und weil die
+ * Argumente verschieden waren, haette `cache()` allein auch nichts gebracht.
+ * Erst die gemeinsame Abfrage macht aus zwei Datenbank-Runden eine.
+ *
+ * `cache()` gilt je Anfrage, nicht darueber hinaus — es ist keine
+ * Zwischenspeicherung ueber Aufrufe hinweg, sondern Entdopplung innerhalb
+ * einer Anfrage.
+ */
+const ladeTrack = cache(async (slug: string) =>
+  prisma.track.findUnique({
+    where: { slug },
+    include: {
+      artist: {
+        select: { id: true, username: true, displayName: true },
+      },
+      // v2.8: Featuring-Artist mitladen.
+      featuringArtist: {
+        select: { id: true, username: true, displayName: true },
+      },
+      // ADR-041: externes Künstler-Profil — Anzeige-Priorität vor artist.
+      artistProfile: {
+        select: { slug: true, name: true },
+      },
+    },
+  })
+);
 
 /**
  * Track-Detail-Seite
@@ -19,18 +52,7 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
 
-  const track = await prisma.track.findUnique({
-    where: { slug },
-    select: {
-      title: true,
-      description: true,
-      genre: true,
-      coverUrl: true,
-      soundcloudArtwork: true,
-      artist: { select: { displayName: true, username: true } },
-      featuringArtist: { select: { displayName: true, username: true } },
-    },
-  });
+  const track = await ladeTrack(slug);
 
   const tMeta = await getTranslations('meta.track');
 
@@ -65,23 +87,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function TrackDetailPage({ params }: PageProps) {
   const { slug } = await params;
 
-  // Track mit allen Feldern laden
-  const track = await prisma.track.findUnique({
-    where: { slug },
-    include: {
-      artist: {
-        select: { id: true, username: true, displayName: true },
-      },
-      // v2.8: Featuring-Artist mitladen.
-      featuringArtist: {
-        select: { id: true, username: true, displayName: true },
-      },
-      // ADR-041: externes Künstler-Profil — Anzeige-Priorität vor artist.
-      artistProfile: {
-        select: { slug: true, name: true },
-      },
-    },
-  });
+  // Track laden — dieselbe Abfrage wie in `generateMetadata`, dank `cache()`
+  // wird sie je Anfrage nur einmal ausgefuehrt.
+  const track = await ladeTrack(slug);
 
   // 404 wenn nicht gefunden oder nicht öffentlich
   if (!track || !track.isPublic) {

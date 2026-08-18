@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -58,25 +59,30 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
+/**
+ * Mission per Slug laden — EIN Loader fuer Metadaten und Seite.
+ *
+ * (18.08.2026) Beide fragten vorher getrennt ab, mit unterschiedlichen
+ * Feldlisten; Prisma fasst das nicht zusammen. `cache()` gilt je Anfrage.
+ *
+ * Datenbank-Fehler ergeben `null` statt einer Ausnahme — die Seite behandelt
+ * ein voruebergehend nicht erreichbares System bewusst wie einen unbekannten
+ * Slug (404 statt Fehlerseite, Muster WolfpackSection).
+ */
+const ladeMission = cache(async (slug: string) => {
+  try {
+    return await prisma.mission.findUnique({ where: { slug } });
+  } catch (err) {
+    console.error('MissionDetail mission-query failed:', err);
+    return null;
+  }
+});
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const tMeta = await getTranslations('meta.mission');
 
-  let mission: {
-    title: string;
-    summary: string;
-    status: string;
-    actionLabel: string | null;
-    translations: string | null;
-  } | null = null;
-  try {
-    mission = await prisma.mission.findUnique({
-      where: { slug },
-      select: { title: true, summary: true, status: true, actionLabel: true, translations: true },
-    });
-  } catch {
-    mission = null;
-  }
+  const mission = await ladeMission(slug);
 
   // ARCHIVED = identisch zu unbekannt (kein Existenz-Orakel).
   if (!mission || mission.status === 'ARCHIVED') {
@@ -102,12 +108,7 @@ export default async function MissionDetailPage({ params }: PageProps) {
   // DB-Fehler → 404 statt Error-Boundary: die Detail-Seite eines temporär
   // nicht erreichbaren Systems soll sich wie ein unbekannter Slug verhalten
   // (Muster WolfpackSection: degradieren statt crashen).
-  let mission = null;
-  try {
-    mission = await prisma.mission.findUnique({ where: { slug } });
-  } catch (err) {
-    console.error('MissionDetail mission-query failed:', err);
-  }
+  const mission = await ladeMission(slug);
 
   // ARCHIVED und unbekannter Slug antworten IDENTISCH (404-Disziplin).
   if (!mission || mission.status === 'ARCHIVED') {

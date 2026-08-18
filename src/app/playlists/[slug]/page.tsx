@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
@@ -19,10 +20,7 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
 
-  const playlist = await prisma.playlist.findUnique({
-    where: { slug },
-    select: { name: true, description: true, genre: true, coverUrl: true },
-  });
+  const playlist = await getPlaylistData(slug);
 
   const tMeta = await getTranslations('meta.playlists');
 
@@ -42,7 +40,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-async function getPlaylistData(slug: string) {
+// (18.08.2026) `cache()` ergaenzt und `generateMetadata` auf denselben
+// Loader umgestellt. Vorher holte die Metadaten-Funktion vier Felder separat,
+// waehrend die Seite dieselbe Zeile vollstaendig lud — zwei Datenbank-Runden
+// je Aufruf. `cache()` gilt je Anfrage, ist also Entdopplung innerhalb einer
+// Anfrage und keine Zwischenspeicherung darueber hinaus.
+const getPlaylistData = cache(async (slug: string) => {
   const playlist = await prisma.playlist.findUnique({
     where: { slug },
     include: {
@@ -101,7 +104,7 @@ async function getPlaylistData(slug: string) {
     trackCount: tracks.length,
     tracks,
   };
-}
+})
 
 export default async function PlaylistDetailPage({ params }: PageProps) {
   const { slug } = await params;

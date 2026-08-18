@@ -18,6 +18,7 @@ import { formatTime } from '@/lib/utils';
 import { obsidianFrameVars } from '@/lib/obsidian-frame';
 import { SafeImg } from '@/components/ui/SafeImg';
 import ArtistSoundcloudList, { type ScTrackItem } from './ArtistSoundcloudList';
+import { cache } from 'react';
 
 // Live aus der DB rendern — Profil-Edits im Studio sollen sofort sichtbar sein
 export const dynamic = 'force-dynamic';
@@ -28,7 +29,11 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-async function loadProfile(slug: string) {
+// (18.08.2026) `cache()` ergaenzt: Die Funktion war bereits zwischen
+// `generateMetadata` und der Seite geteilt, lief aber trotzdem zweimal je
+// Aufruf — geteilter Code allein entdoppelt keine Datenbank-Abfragen.
+// Gilt je Anfrage, ist also keine Zwischenspeicherung ueber Aufrufe hinweg.
+const loadProfile = cache(async (slug: string) => {
   const profile = await prisma.artistProfile.findUnique({
     where: { slug },
     select: {
@@ -48,7 +53,7 @@ async function loadProfile(slug: string) {
   // Unveröffentlichte Profile sind öffentlich unsichtbar
   if (!profile || !profile.isPublished) return null;
   return profile;
-}
+});
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;

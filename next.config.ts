@@ -10,6 +10,16 @@ const nextConfig: NextConfig = {
   // Erzeugt eine eigenstaendige Kopie mit allen Dependencies
   output: 'standalone',
 
+  experimental: {
+    // Router-Zwischenspeicher (18.08.2026). Next 16 haelt dynamische Routen
+    // per Vorgabe 0 Sekunden vor — dadurch loest selbst der Zurueck-Knopf eine
+    // volle Server-Runde aus, obwohl die Seite gerade erst besucht wurde.
+    // 30 Sekunden machen Zurueck-Navigation sofort, ohne dass Inhalte
+    // sichtbar veralten: die Live-Daten (Radio, Publikum) kommen ohnehin
+    // ueber eigene Abfragen im Browser, nicht ueber die Seiten-Nutzlast.
+    staleTimes: { dynamic: 30 },
+  },
+
   // MCP-Discovery: Link-Header auf jeder Antwort, damit KI-Agenten den
   // öffentlichen MCP-Server schon am HTTP-Header erkennen (Workflow
   // kbk-mcp-discovery). URL-SoT ist src/lib/mcp-info.ts — next.config kann
