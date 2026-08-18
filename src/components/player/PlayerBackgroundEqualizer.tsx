@@ -64,9 +64,25 @@ const IDLE_AMP = 0.06;
 const IDLE_SPEED = 0.5;
 const IDLE_PHASE_PER_BAR = 0.25;
 const MIN_ACTIVE_HEIGHT = 0.04;
-const FFT_GAIN = 1.4;
+/** Verstaerkung nach der Aussteuerung. Mit dem alten festen Bezug 255 war
+ *  1.4 noetig, weil Musik den Vollausschlag nie erreicht. Seit die Balken
+ *  gegen die gerade lauteste Frequenz gemessen werden, wuerde 1.4 alles ab
+ *  71 Prozent der Spitze an den Anschlag druecken — genau das sah man dann
+ *  auch. 1.0 heisst: nur die Spitze selbst erreicht die volle Hoehe. */
+const FFT_GAIN = 1.0;
+/** Kurve ueber den ausgesteuerten Wert (>1 senkt die Mitte ab). Spreizt
+ *  Bass und Hoehen wieder auseinander, statt alles auf einem Niveau zu
+ *  zeigen. */
+const KURVE = 1.35;
 const NEON_GLOW_BLUR_ACTIVE = 10;
 const NEON_GLOW_BLUR_IDLE = 4;
+/** So viele Bilder wird beim Uebergang in die Ruhe nachgezeichnet, bevor die
+ *  Flaeche liegen bleibt (rund eine halbe Sekunde). Ein einziges Bild war zu
+ *  wenig: faellt es aus, weil das Layout noch nicht steht oder eine
+ *  Groessenaenderung die Flaeche danach leert, bleibt sie fuer immer leer —
+ *  genau das passierte am 18.08.2026 im ersten Anlauf. */
+const RUHE_ANLAUF = 30;
+
 /** Abfall der gleitenden Spitze je Bild (~0.8 % ). Langsam genug, dass die
  *  Aussteuerung waehrend eines Stuecks ruhig steht, schnell genug, um einem
  *  leiseren Abschnitt binnen ein bis zwei Sekunden zu folgen. */
@@ -134,9 +150,9 @@ export default function PlayerBackgroundEqualizer({
     let smoothed = new Float32Array(settingsRef.current.barCount);
     // Gleitende Spitze fuer die Aussteuerung (siehe `bezug` in `drawFrame`).
     let spitze = SPITZE_MIN;
-    // Ruht die Anzeige gerade? Dann steht ein einmal gezeichnetes Standbild
-    // auf der Flaeche und sie wird nicht mehr angefasst (siehe `tick`).
-    let ruht = false;
+    // Zaehlt die Bilder seit dem Uebergang in die Ruhe. Ab RUHE_ANLAUF wird
+    // die Flaeche nicht mehr angefasst (siehe `tick`).
+    let ruheBilder = 0;
 
     const resize = () => {
       const canvas = canvasRef.current;
@@ -243,7 +259,8 @@ export default function PlayerBackgroundEqualizer({
 
       for (let i = 0; i < settings.barCount; i++) {
         const binIndex = Math.floor(i * (binCount / settings.barCount));
-        const rawValue = Math.min(1, ((freq[binIndex] ?? 0) / bezug) * FFT_GAIN);
+        const skaliert = Math.min(1, ((freq[binIndex] ?? 0) / bezug) * FFT_GAIN);
+        const rawValue = Math.pow(skaliert, KURVE);
 
         if (!useIdle) {
           smoothed[i] = Math.max(rawValue, smoothed[i] * DECAY);
@@ -325,18 +342,17 @@ export default function PlayerBackgroundEqualizer({
         const spielt = settings.isActive && staerke >= AUDIO_SCHWELLE;
 
         if (spielt) {
-          ruht = false;
+          ruheBilder = 0;
           drawFrame();
-        } else if (!ruht) {
-          // Uebergang in die Ruhe: die Ruhewelle EINMAL zeichnen, danach die
-          // Flaeche nicht mehr anfassen.
+        } else if (ruheBilder < RUHE_ANLAUF) {
+          // Uebergang in die Ruhe: die Ruhewelle noch kurz weiterzeichnen,
+          // danach die Flaeche liegen lassen.
           //
-          // Hier stand zuerst `drawStatic()` — falsch: das ist das Standbild
-          // fuer `prefers-reduced-motion` und zeichnet die Balken auf 55 bis
-          // 85 Prozent Hoehe. Vierfach gespiegelt fuellte das die Leiste mit
-          // einem grellen Block, statt die zehn Prozent hohe Ruhewelle zu
-          // zeigen. `drawFrame` trifft im Leerlauf genau diese Welle.
-          ruht = drawFrame() === true;
+          // Nicht `drawStatic()` verwenden — das ist das Standbild fuer
+          // `prefers-reduced-motion` mit 55 bis 85 Prozent Balkenhoehe und
+          // fuellt die Leiste mit einem grellen Block. `drawFrame` trifft im
+          // Leerlauf die zehn Prozent hohe Ruhewelle.
+          if (drawFrame()) ruheBilder++;
         }
       }
       rafId = requestAnimationFrame(tick);
@@ -349,9 +365,8 @@ export default function PlayerBackgroundEqualizer({
       resize();
       if (reducedMotionRef.current) drawStatic();
       // Groessenaenderung leert die Flaeche. Ruht die Anzeige gerade, wuerde
-      // sie leer stehen bleiben — deshalb Ruhe aufheben, das naechste Bild
-      // setzt das Standbild neu.
-      ruht = false;
+      // sie leer stehen bleiben — deshalb den Anlauf neu starten.
+      ruheBilder = 0;
     };
     window.addEventListener('resize', handleResize);
 
