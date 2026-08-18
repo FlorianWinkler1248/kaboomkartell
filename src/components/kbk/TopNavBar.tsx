@@ -31,12 +31,16 @@ import LocaleSwitcher from './LocaleSwitcher';
 // MISSION (ADR-039, 16.07.2026): Mission-Board — Desktop UND Mobile ziehen aus
 // derselben Konstante, ein Eintrag reicht fuer beide Breakpoints.
 // Labels kommen seit i18n (ADR-031) aus dem nav-Namespace der Message-Kataloge.
-// SHOWCASE (ADR-041, 24.07.2026): kuratierte externe Künstler — zeigt auf die
-// Playlist-Übersicht mit der Showcase-Zone oben.
-const NAV_ITEMS: { key: 'home' | 'pack' | 'showcase' | 'library' | 'schedule' | 'mission' | 'learn'; href: string }[] = [
+// PLAYLISTS (ADR-041, 24.07.2026; umbenannt 18.08.2026): Der Eintrag hiess
+// zuerst SHOWCASE und war damit nach der obersten Zone der Zielseite benannt,
+// nicht nach der Seite. Weil es keinen eigenen Playlist-Eintrag gab, war die
+// Playlist-Uebersicht ausschliesslich hinter dem Wort „Showcase" erreichbar —
+// wer Playlists suchte, fand sie nicht. Die Showcase-Zone bleibt, wo sie ist:
+// oben auf /playlists.
+const NAV_ITEMS: { key: 'home' | 'pack' | 'playlists' | 'library' | 'schedule' | 'mission' | 'learn'; href: string }[] = [
   { key: 'home', href: '/' },
   { key: 'pack', href: '/artists' },
-  { key: 'showcase', href: '/playlists' },
+  { key: 'playlists', href: '/playlists' },
   { key: 'library', href: '/library' },
   { key: 'schedule', href: '/schedule' },
   { key: 'mission', href: '/mission' },
