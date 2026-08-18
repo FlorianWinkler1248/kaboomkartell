@@ -67,6 +67,11 @@ const MIN_ACTIVE_HEIGHT = 0.04;
 const FFT_GAIN = 1.4;
 const NEON_GLOW_BLUR_ACTIVE = 10;
 const NEON_GLOW_BLUR_IDLE = 4;
+/** Im Leerlauf wird nur jedes n-te Bild gezeichnet (60 / 6 = 10 Bilder je
+ *  Sekunde). Die Ruhewelle laeuft mit IDLE_SPEED 0.5 und braucht gut zwoelf
+ *  Sekunden fuer einen Durchlauf — zehn Bilder je Sekunde sind dafuer reichlich,
+ *  sechzig waren Verschwendung. */
+const IDLE_FRAME_SKIP = 6;
 
 /** Konvertiert #RRGGBB zu {r,g,b}. Fallback rasta-green bei ungueltiger Eingabe. */
 function hexToRgb(hex: string): { r: number; g: number; b: number } {
@@ -119,6 +124,9 @@ export default function PlayerBackgroundEqualizer({
     let rafId = 0;
     let stopped = false;
     let smoothed = new Float32Array(settingsRef.current.barCount);
+    // Zaehler und Merker fuer die Leerlauf-Drosselung (siehe `tick`).
+    let idleFrame = 0;
+    let warIdle = true;
 
     const resize = () => {
       const canvas = canvasRef.current;
@@ -243,6 +251,9 @@ export default function PlayerBackgroundEqualizer({
           ctx.fill();
         }
       }
+
+      // Rueckmeldung fuer die Drosselung in `tick`.
+      return useIdle;
     };
 
     const tick = () => {
@@ -257,7 +268,29 @@ export default function PlayerBackgroundEqualizer({
       // Tab im Hintergrund: skip Frame, aber Loop weiterlaufen lassen, damit
       // bei Tab-Wechsel sofort wieder gezeichnet wird.
       if (typeof document !== 'undefined' && !document.hidden) {
-        drawFrame();
+        // v2.31 (18.08.2026): Im Leerlauf wird nur jedes sechste Bild
+        // gezeichnet. Der Takt selbst bleibt unangetastet — der Lebenszyklus
+        // der Schleife (siehe Kopf der Datei, v2.23) ist bewusst NICHT
+        // angefasst: sie startet weiterhin genau einmal beim Einhaengen und
+        // liest ihre Werte aus dem Ref. Ein Anhalten und Wiederanwerfen ueber
+        // die Abhaengigkeitsliste war der Fehler der vier gescheiterten
+        // Anlaeufe vor v2.23.
+        //
+        // Warum das wirkt: Nicht das Zeichnen selbst ist teuer (im Leerlauf
+        // rund 1,4 ms), sondern dass jede Aenderung der Zeichenflaeche die
+        // Hintergrund-Unschaerfe der Player-Leiste darueber zur Neuberechnung
+        // zwingt. Seltener zeichnen heisst seltener neu berechnen.
+        //
+        // `isActive` wird in jedem Bild geprueft, damit die Anzeige beim Start
+        // der Wiedergabe sofort wieder voll laeuft.
+        const drosseln = warIdle && !settingsRef.current.isActive;
+        if (!drosseln || idleFrame % IDLE_FRAME_SKIP === 0) {
+          const idle = drawFrame();
+          // `undefined` heisst: Bild uebersprungen (Layout noch 0x0) — dann
+          // bleibt die letzte Einschaetzung stehen.
+          if (idle !== undefined) warIdle = idle;
+        }
+        idleFrame = (idleFrame + 1) % IDLE_FRAME_SKIP;
       }
       rafId = requestAnimationFrame(tick);
     };
