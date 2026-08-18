@@ -281,9 +281,17 @@ export default function PlayerBackgroundEqualizer({
         // Hintergrund-Unschaerfe der Player-Leiste darueber zur Neuberechnung
         // zwingt. Seltener zeichnen heisst seltener neu berechnen.
         //
-        // `isActive` wird in jedem Bild geprueft, damit die Anzeige beim Start
-        // der Wiedergabe sofort wieder voll laeuft.
-        const drosseln = warIdle && !settingsRef.current.isActive;
+        // Kriterium ist allein die Rueckmeldung aus `drawFrame` — dort ist
+        // Leerlauf als `!isActive || !hasAudioData` definiert. Ein zusaetzlicher
+        // `!isActive`-Term hier waere falsch: bei pausiertem Radio bleibt
+        // `isActive` wahr, und die Drosselung griffe nie. Genau das war am
+        // 18.08.2026 im ersten Anlauf gemessen worden — 10,6 von 11 Bildern
+        // wurden weiterhin gezeichnet.
+        //
+        // Startet die Wiedergabe, meldet das naechste gezeichnete Bild
+        // `useIdle = false` zurueck und die volle Rate ist wieder da; die
+        // Anlaufverzoegerung betraegt hoechstens fuenf Bilder.
+        const drosseln = warIdle;
         if (!drosseln || idleFrame % IDLE_FRAME_SKIP === 0) {
           const idle = drawFrame();
           // `undefined` heisst: Bild uebersprungen (Layout noch 0x0) — dann
