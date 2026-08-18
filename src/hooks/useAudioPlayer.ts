@@ -147,8 +147,27 @@ export function useAudioPlayer(options: UseAudioPlayerOptions = {}): UseAudioPla
     // === Event Listeners (migriert von MP3Player) ===
 
     // timeupdate -> updateProgress()
+    //
+    // (18.08.2026) Auf ganze Sekunden gerastert. Der Browser feuert
+    // `timeupdate` rund viermal je Sekunde; jeder Aufruf schrieb bisher in den
+    // Zustand des PlayerProviders und renderte damit **alle** zwanzig
+    // angeschlossenen Komponenten neu — darunter MiniPlayer (894 Zeilen) und
+    // die Kopfleiste (649 Zeilen). Gebraucht wird die Genauigkeit nirgends:
+    // Angezeigt werden ganze Sekunden (`formatTime`), und der Fortschritts-
+    // balken wandert bei einem fuenfminuetigen Stueck rund einen Bildpunkt je
+    // Sekunde.
+    //
+    // Das senkt die Renderstoesse von vier auf einen je Sekunde. Die saubere
+    // Loesung waere, die Abspielzeit ganz aus dem geteilten Zustand zu loesen
+    // (eigener, schmaler Context nur fuer die zwei Verbraucher, die sie
+    // wirklich brauchen: Fortschrittsbalken und Modus-Leiste). Das ist ein
+    // Umbau an vier Dateien der Wiedergabe-Logik und gehoert in einen Schritt
+    // mit lauffaehiger Testumgebung, nicht nebenbei.
     const handleTimeUpdate = () => {
-      setCurrentTime(audio.currentTime);
+      const jetzt = audio.currentTime;
+      setCurrentTime((vorher) =>
+        Math.floor(vorher) === Math.floor(jetzt) ? vorher : jetzt
+      );
     };
 
     // loadedmetadata -> updateDuration()
