@@ -67,6 +67,14 @@ const MIN_ACTIVE_HEIGHT = 0.04;
 const FFT_GAIN = 1.4;
 const NEON_GLOW_BLUR_ACTIVE = 10;
 const NEON_GLOW_BLUR_IDLE = 4;
+/** Abfall der gleitenden Spitze je Bild (~0.8 % ). Langsam genug, dass die
+ *  Aussteuerung waehrend eines Stuecks ruhig steht, schnell genug, um einem
+ *  leiseren Abschnitt binnen ein bis zwei Sekunden zu folgen. */
+const SPITZE_ABFALL = 0.992;
+/** Untergrenze fuer den Bezugswert. Ohne sie wuerde bei fast stillem Signal
+ *  das Rauschen auf volle Balkenhoehe hochgezogen. */
+const SPITZE_MIN = 40;
+
 /** Ab dieser mittleren Frequenz-Staerke (0-255 je Bin) gilt Audio als
  *  wirklich laufend. `> 0` genuegt nicht: bei offenem Audio-Kontext liefert
  *  die Analyse auch ohne Wiedergabe einzelne Werte ueber null, und die
@@ -124,6 +132,8 @@ export default function PlayerBackgroundEqualizer({
     let rafId = 0;
     let stopped = false;
     let smoothed = new Float32Array(settingsRef.current.barCount);
+    // Gleitende Spitze fuer die Aussteuerung (siehe `bezug` in `drawFrame`).
+    let spitze = SPITZE_MIN;
     // Ruht die Anzeige gerade? Dann steht ein einmal gezeichnetes Standbild
     // auf der Flaeche und sie wird nicht mehr angefasst (siehe `tick`).
     let ruht = false;
@@ -205,15 +215,35 @@ export default function PlayerBackgroundEqualizer({
       // FFT liefert nur echte Daten wenn AudioContext live ist. Direct-Play
       // ohne Analyser → komplett 0 → wir zeigen die Idle-Welle.
       let freqSum = 0;
-      for (let i = 0; i < binCount; i++) freqSum += freq[i] ?? 0;
+      let freqMax = 0;
+      for (let i = 0; i < binCount; i++) {
+        const v = freq[i] ?? 0;
+        freqSum += v;
+        if (v > freqMax) freqMax = v;
+      }
       const hasAudioData = freqSum > 0;
       const useIdle = !settings.isActive || !hasAudioData;
+
+      // v2.31 (18.08.2026): Aussteuerung. Die Balken werden gegen die lauteste
+      // gerade vorhandene Frequenz gemessen, nicht gegen den theoretischen
+      // Vollausschlag 255.
+      //
+      // Grund: `createMediaElementSource` greift das Signal NACH der
+      // Lautstaerke des Audio-Elements ab (`useAudioPlayer.ts:141` setzt sie).
+      // Gegen die feste 255 gemessen schrumpfte die Welle deshalb mit dem
+      // Lautstaerkeregler — sie zeigte die Reglerstellung statt der Musik.
+      // Die gleitende Spitze faellt langsam ab, damit die Aussteuerung
+      // waehrend eines Stuecks ruhig steht und nicht bei jedem Schlag springt.
+      if (!useIdle) {
+        spitze = Math.max(freqMax, spitze * SPITZE_ABFALL);
+      }
+      const bezug = Math.max(SPITZE_MIN, spitze);
 
       const cornerRadius = Math.min(barWidth / 2, 4);
 
       for (let i = 0; i < settings.barCount; i++) {
         const binIndex = Math.floor(i * (binCount / settings.barCount));
-        const rawValue = Math.min(1, ((freq[binIndex] ?? 0) / 255) * FFT_GAIN);
+        const rawValue = Math.min(1, ((freq[binIndex] ?? 0) / bezug) * FFT_GAIN);
 
         if (!useIdle) {
           smoothed[i] = Math.max(rawValue, smoothed[i] * DECAY);
