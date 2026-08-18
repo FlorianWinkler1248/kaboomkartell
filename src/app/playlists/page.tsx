@@ -387,7 +387,15 @@ export default async function PlaylistsPage() {
             className="kbk-subpage-grid-3"
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              // (18.08.2026) Die Spalten wachsen mit der Anzahl, statt immer
+              // drei feste zu bilden. Bei einer einzelnen Playlist stand die
+              // Karte sonst links und der Rest der Zeile blieb leer.
+              // Obergrenze 520px, damit eine einzelne Karte nicht zum
+              // bildschirmbreiten Banner wird; `center` ruecht das Raster in
+              // die Mitte, damit wenige Karten platziert wirken statt
+              // abgebrochen. Ab drei Karten ist das Bild wie zuvor.
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 520px))',
+              justifyContent: 'center',
               gap: 16,
             }}
           >
@@ -438,7 +446,9 @@ export default async function PlaylistsPage() {
             className="kbk-subpage-grid-3"
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              // Siehe Erlaeuterung am Showcase-Raster weiter oben.
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 520px))',
+              justifyContent: 'center',
               gap: 16,
               marginTop: 28,
             }}
