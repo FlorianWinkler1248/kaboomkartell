@@ -117,9 +117,17 @@ export default function BoomyPoolPage() {
       const json = await res.json();
       if (json.success && json.data) {
         const all = json.data as TrackData[];
-        // Wartende Boomy-Tracks: noch nicht öffentlich
+        // Wartende Boomy-Tracks: noch nicht öffentlich UND nicht archiviert.
+        // Der Status-Filter ist nicht kosmetisch: ohne ihn blieb ein
+        // archivierter Track hier als "Pool" stehen — samt Publish-Knopf, der
+        // den Soft-Delete mit einem Klick wieder aufgehoben hätte.
         setPoolTracks(
-          all.filter((t) => !t.isPublic && t.artist?.username === 'boomy')
+          all.filter(
+            (t) =>
+              !t.isPublic &&
+              t.status !== 'ARCHIVED' &&
+              t.artist?.username === 'boomy'
+          )
         );
         // Öffentliche Boomy-Tracks
         setPublishedTracks(
