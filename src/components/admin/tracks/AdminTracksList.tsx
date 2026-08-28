@@ -9,6 +9,8 @@
  *
  * Jede Track-Zeile ist eine Card mit Cover, Titel, Status- und Genre-Badge,
  * Dauer sowie einem Drei-Punkte-Menue für Edit / Publish-Toggle / Archive.
+ * Bei bereits archivierten Tracks kommt dort das endgültige Löschen dazu
+ * (Datensatz + MP3 von der Platte) — Muster wie im Mission-Cockpit.
  */
 
 import {
@@ -34,6 +36,7 @@ import {
   MoreVertical,
   Music2,
   Search,
+  Trash2,
   X,
 } from 'lucide-react';
 import { cn, formatTime } from '@/lib/utils';
@@ -214,6 +217,7 @@ interface ActionMenuProps {
   onEdit: (track: AdminTrack) => void;
   onToggleStatus: (track: AdminTrack) => void;
   onArchive: (track: AdminTrack) => void;
+  onDelete: (track: AdminTrack) => void;
   isOpen: boolean;
   onToggle: (id: string | null) => void;
 }
@@ -223,6 +227,7 @@ function ActionMenu({
   onEdit,
   onToggleStatus,
   onArchive,
+  onDelete,
   isOpen,
   onToggle,
 }: ActionMenuProps) {
@@ -318,20 +323,39 @@ function ActionMenu({
 
           <div className="my-1 h-px bg-border" />
 
-          <button
-            type="button"
-            role="menuitem"
-            onClick={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              onToggle(null);
-              onArchive(track);
-            }}
-            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left text-rasta-red hover:bg-rasta-red/10 transition-colors cursor-pointer"
-          >
-            <Archive size={14} />
-            Archive
-          </button>
+          {isArchived ? (
+            /* Endgültiges Löschen erst nach dem Archivieren — Server-Guard 409
+               spiegelt das, die UI zeigt es hier gar nicht erst an. */
+            <button
+              type="button"
+              role="menuitem"
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                onToggle(null);
+                onDelete(track);
+              }}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left text-rasta-red hover:bg-rasta-red/10 transition-colors cursor-pointer"
+            >
+              <Trash2 size={14} />
+              Delete permanently
+            </button>
+          ) : (
+            <button
+              type="button"
+              role="menuitem"
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                onToggle(null);
+                onArchive(track);
+              }}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left text-rasta-red hover:bg-rasta-red/10 transition-colors cursor-pointer"
+            >
+              <Archive size={14} />
+              Archive
+            </button>
+          )}
         </div>
       )}
     </div>
@@ -539,6 +563,53 @@ export default function AdminTracksList({
       }
     },
     [reload, toast]
+  );
+
+  // Hard-Delete — nur für ARCHIVED erlaubt (Server-Guard 409). Löscht den
+  // Datensatz UND die MP3 auf der Platte; das Archiv allein tut das nicht.
+  const handleDelete = useCallback(
+    async (track: AdminTrack) => {
+      if (
+        !confirm(
+          `Delete "${track.title}" permanently?\n\n` +
+            'The audio file will be removed from disk. This cannot be undone.'
+        )
+      )
+        return;
+      try {
+        const res = await fetch(`/api/admin/tracks/${track.id}`, {
+          method: 'DELETE',
+        });
+        const json = await res.json();
+        if (!json.success) {
+          throw new Error(json.error || 'Something went wrong.');
+        }
+        // Eine liegengebliebene Datei wird als Warnung gezeigt, nicht als Erfolg
+        // verschluckt — sonst hält man die Platte für aufgeräumt, obwohl sie es nicht ist.
+        toast(
+          json.fileWarning
+            ? {
+                type: 'error',
+                message: `Track deleted, but a file could not be removed: ${json.fileWarning.join(', ')}`,
+              }
+            : { type: 'success', message: 'Track deleted from database and disk.' }
+        );
+        // War es der letzte Eintrag der Seite: eine Seite zurückspringen,
+        // sonst steht man vor einer leeren Liste.
+        if (tracks.length === 1 && urlPage > 1) {
+          pushParams({ page: urlPage - 1 === 1 ? null : urlPage - 1 });
+        } else {
+          reload();
+        }
+      } catch (err) {
+        toast({
+          type: 'error',
+          message:
+            err instanceof Error ? err.message : 'Something went wrong.',
+        });
+      }
+    },
+    [reload, toast, tracks.length, urlPage, pushParams]
   );
 
   // === Render ===
@@ -753,6 +824,7 @@ export default function AdminTracksList({
                     onEdit={onEdit}
                     onToggleStatus={handleToggleStatus}
                     onArchive={handleArchive}
+                    onDelete={handleDelete}
                     isOpen={openMenuId === track.id}
                     onToggle={setOpenMenuId}
                   />
