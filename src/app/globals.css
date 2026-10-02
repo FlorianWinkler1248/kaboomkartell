@@ -1052,8 +1052,16 @@ body::before {
     radial-gradient(ellipse 50vmax 35vmax at 28% 22%, rgba(63, 207, 74, 0.022) 0%, transparent 55%),
     radial-gradient(ellipse 60vmax 50vmax at 78% 78%, rgba(28, 30, 36, 0.55) 0%, transparent 60%),
     radial-gradient(ellipse 40vmax 30vmax at 50% 95%, rgba(18, 19, 21, 0.45) 0%, transparent 65%);
-  animation: kk-body-drift 28s ease-in-out infinite alternate;
-  will-change: transform;
+}
+
+/* Die Drift läuft nur auf Geräten mit Maus und breitem Bild. Auf dem Handy
+   kostet sie eine bildschirmgroße Dauer-Ebene samt Mischung in jedem Bild,
+   für eine Bewegung, die bei 2 % Deckkraft kaum zu sehen ist. */
+@media (hover: hover) and (min-width: 1024px) {
+  body::before {
+    animation: kk-body-drift 28s ease-in-out infinite alternate;
+    will-change: transform;
+  }
 }
 
 @keyframes kk-body-drift {
@@ -1196,6 +1204,27 @@ body::before {
   50%      { opacity: 1; }
 }
 
+/* Außerhalb des Bildes ruht der Puls (OffscreenAnimationGate setzt
+   `data-offscreen`). Jeder laufende Puls hält eine eigene Grafik-Ebene und
+   zwingt Korn und Inhalt der Karte in weitere; auf der Startseite waren das
+   am Handy 17 Karten gleichzeitig, sichtbar sind zwei oder drei. */
+.kbk-obsidian.framed[data-offscreen]::before {
+  animation: none;
+  will-change: auto;
+  opacity: 0;
+}
+
+/* Tanz-Figuren und Boomy: dieselbe Ruhe außerhalb des Bildes. `!important`,
+   weil Animation und `will-change` dort als Inline-Stil stehen. */
+[data-offscreen].kbk-dance-bob,
+[data-offscreen] .kbk-dance-strip,
+[data-offscreen].kbk-boomy-mascot-bob,
+[data-offscreen] .kbk-boomy-mascot-strip,
+[data-offscreen] .kbk-boomy-mascot-glow {
+  animation: none !important;
+  will-change: auto !important;
+}
+
 .kbk-obsidian.framed.kbk-frame-red {
   --neon-r: 230;
   --neon-g: 59;
@@ -1278,26 +1307,37 @@ button.kbk-obsidian:active,
    Sanfter pulsierender Schimmer für kleinere Buttons (z.B. AURA+ im
    MiniPlayer). Zarter als der framed-Pulse — Button ist klein, Glow soll
    leicht atmen, nicht aufdringlich blinken. */
+/* 02.10.2026: Der Puls läuft über die Deckkraft eines Pseudo-Elements statt
+   über einen animierten `box-shadow`. Ein animierter Schatten wird in jedem
+   Bild auf dem Hauptstrang neu gezeichnet; der Knopf sitzt im MiniPlayer und
+   damit auf jeder Seite. Ruhezustand am Element, Höhepunkt im ::after. */
 @keyframes kk-aura-glow {
-  0%, 100% {
-    box-shadow:
-      0 0 6px rgba(63, 207, 74, 0.35),
-      0 0 12px rgba(63, 207, 74, 0.15),
-      inset 0 0 6px rgba(63, 207, 74, 0.08);
-  }
-  50% {
-    box-shadow:
-      0 0 14px rgba(63, 207, 74, 0.6),
-      0 0 28px rgba(63, 207, 74, 0.28),
-      inset 0 0 10px rgba(63, 207, 74, 0.18);
-  }
+  0%, 100% { opacity: 0; }
+  50%      { opacity: 1; }
 }
 
 .kbk-aura-glow {
+  position: relative;
+  box-shadow:
+    0 0 6px rgba(63, 207, 74, 0.35),
+    0 0 12px rgba(63, 207, 74, 0.15),
+    inset 0 0 6px rgba(63, 207, 74, 0.08);
+}
+
+.kbk-aura-glow::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow:
+    0 0 14px rgba(63, 207, 74, 0.6),
+    0 0 28px rgba(63, 207, 74, 0.28),
+    inset 0 0 10px rgba(63, 207, 74, 0.18);
   animation: kk-aura-glow 2.4s ease-in-out infinite;
 }
 
-.kbk-aura-glow:hover {
+.kbk-aura-glow:hover::after {
   animation-duration: 1.4s;
 }
 
@@ -1317,8 +1357,11 @@ button.kbk-obsidian:active,
       0 16px 40px rgba(0, 0, 0, 0.45) !important;
   }
   .kbk-aura-glow {
-    animation: none !important;
     box-shadow: 0 0 12px rgba(63, 207, 74, 0.45) !important;
+  }
+  .kbk-aura-glow::after {
+    animation: none !important;
+    opacity: 0;
   }
   .kbk-track-marquee-active {
     animation: none !important;

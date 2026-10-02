@@ -74,6 +74,15 @@ const FFT_GAIN = 1.0;
  *  Bass und Hoehen wieder auseinander, statt alles auf einem Niveau zu
  *  zeigen. */
 const KURVE = 1.35;
+/** Leuchten um die Balken, als ein CSS-Filter auf der ganzen Zeichenfläche.
+ *
+ *  02.10.2026: Vorher trug jeder Balken einen eigenen `shadowBlur`, also 224
+ *  weichgezeichnete Flächen je Bild. Gemessen im Handy-Profil bei laufender
+ *  Wiedergabe: 9 bis 11 Bilder je Sekunde beim Scrollen, ohne den
+ *  Weichzeichner 58. Ein einzelner `drop-shadow` über die Fläche kostet die
+ *  Grafikeinheit dagegen nichts Messbares und sieht gleich aus. Die Messung
+ *  vom 18.08.2026, die das Gegenteil ergab, hatte über `getImageData`
+ *  gemessen und damit das Zurücklesen, nicht das Zeichnen. */
 const NEON_GLOW_BLUR_ACTIVE = 10;
 const NEON_GLOW_BLUR_IDLE = 4;
 /** So viele Bilder wird beim Uebergang in die Ruhe nachgezeichnet, bevor die
@@ -96,6 +105,10 @@ const SPITZE_MIN = 40;
  *  die Analyse auch ohne Wiedergabe einzelne Werte ueber null, und die
  *  Ruhe-Erkennung schlug dadurch nie an. */
 const AUDIO_SCHWELLE = 2;
+
+/** Takt der Schleife, solange die Anzeige ruht (Millisekunden). In der Ruhe
+ *  wird nur geprüft, ob wieder Audio läuft; das braucht kein Bild-Raster. */
+const RUHE_TAKT_MS = 200;
 
 /** Konvertiert #RRGGBB zu {r,g,b}. Fallback rasta-green bei ungueltiger Eingabe. */
 function hexToRgb(hex: string): { r: number; g: number; b: number } {
@@ -146,6 +159,7 @@ export default function PlayerBackgroundEqualizer({
   // verglichen und ggf. neu alloziiert.
   useEffect(() => {
     let rafId = 0;
+    let timerId = 0;
     let stopped = false;
     let smoothed = new Float32Array(settingsRef.current.barCount);
     // Gleitende Spitze fuer die Aussteuerung (siehe `bezug` in `drawFrame`).
@@ -256,6 +270,7 @@ export default function PlayerBackgroundEqualizer({
       const bezug = Math.max(SPITZE_MIN, spitze);
 
       const cornerRadius = Math.min(barWidth / 2, 4);
+      ctx.fillStyle = `rgb(${baseRgb.r}, ${baseRgb.g}, ${baseRgb.b})`;
 
       for (let i = 0; i < settings.barCount; i++) {
         const binIndex = Math.floor(i * (binCount / settings.barCount));
@@ -275,29 +290,22 @@ export default function PlayerBackgroundEqualizer({
         const barH = value * halfH * 0.95;
         const alpha = !useIdle ? 0.35 + value * 0.35 : 0.18 + value * 0.30;
 
-        ctx.fillStyle = `rgba(${baseRgb.r}, ${baseRgb.g}, ${baseRgb.b}, ${alpha})`;
-        ctx.shadowColor = `rgba(${baseRgb.r}, ${baseRgb.g}, ${baseRgb.b}, 0.85)`;
-        ctx.shadowBlur = !useIdle ? NEON_GLOW_BLUR_ACTIVE : NEON_GLOW_BLUR_IDLE;
+        ctx.globalAlpha = alpha;
 
         const xRight = halfW + i * (barWidth + gap);
         const xLeft = halfW - (i + 1) * barWidth - i * gap;
         const yTop = halfH - barH;
 
+        // Obere und untere Hälfte eines Balkens sind eine Fläche: zwei
+        // Rechtecke je Balken statt vier.
         if (barH >= 1) {
           ctx.beginPath();
-          ctx.roundRect(xRight, yTop, barWidth, barH, cornerRadius);
-          ctx.fill();
-          ctx.beginPath();
-          ctx.roundRect(xLeft, yTop, barWidth, barH, cornerRadius);
-          ctx.fill();
-          ctx.beginPath();
-          ctx.roundRect(xRight, halfH, barWidth, barH, cornerRadius);
-          ctx.fill();
-          ctx.beginPath();
-          ctx.roundRect(xLeft, halfH, barWidth, barH, cornerRadius);
+          ctx.roundRect(xRight, yTop, barWidth, barH * 2, cornerRadius);
+          ctx.roundRect(xLeft, yTop, barWidth, barH * 2, cornerRadius);
           ctx.fill();
         }
       }
+      ctx.globalAlpha = 1;
 
       return true;
     };
@@ -313,6 +321,7 @@ export default function PlayerBackgroundEqualizer({
 
       // Tab im Hintergrund: skip Frame, aber Loop weiterlaufen lassen, damit
       // bei Tab-Wechsel sofort wieder gezeichnet wird.
+      let ruht = true;
       if (typeof document !== 'undefined' && !document.hidden) {
         // v2.31 (18.08.2026): Spielt nichts, ruht die Anzeige. Ein Standbild
         // wird einmal gezeichnet, danach wird die Flaeche nicht mehr angefasst.
@@ -354,8 +363,23 @@ export default function PlayerBackgroundEqualizer({
           // Leerlauf die zehn Prozent hohe Ruhewelle.
           if (drawFrame()) ruheBilder++;
         }
+        ruht = !spielt && ruheBilder >= RUHE_ANLAUF;
       }
-      rafId = requestAnimationFrame(tick);
+      // 02.10.2026: In der Ruhe läuft die Schleife über einen Zeitgeber statt
+      // über `requestAnimationFrame`. Ein angemeldetes Bild zwingt den Browser
+      // zu einem vollen Hauptstrang-Durchlauf (Stil, Ebenen-Aufbau, Übergabe),
+      // auch wenn hier nichts gezeichnet wird: gemessen im Handy-Profil 60
+      // Durchläufe je Sekunde im Leerlauf, mit dem Zeitgeber rund die Hälfte.
+      // Der Takt bleibt eine einzige, sich selbst fortsetzende Kette (siehe
+      // Dateikopf, v2.23); nur ihr Abstand wechselt.
+      if (ruht) {
+        timerId = window.setTimeout(() => {
+          timerId = 0;
+          tick();
+        }, RUHE_TAKT_MS);
+      } else {
+        rafId = requestAnimationFrame(tick);
+      }
     };
 
     resize();
@@ -373,6 +397,7 @@ export default function PlayerBackgroundEqualizer({
     return () => {
       stopped = true;
       if (rafId) cancelAnimationFrame(rafId);
+      if (timerId) window.clearTimeout(timerId);
       window.removeEventListener('resize', handleResize);
     };
   }, []);
@@ -409,13 +434,21 @@ export default function PlayerBackgroundEqualizer({
     }
   }, [reducedMotion]);
 
+  const glowRgb = hexToRgb(accentColor);
+
   return (
     <div
       ref={containerRef}
       aria-hidden="true"
       className={cn('absolute inset-0 z-0 overflow-hidden pointer-events-none', className)}
     >
-      <canvas ref={canvasRef} className="block w-full h-full" />
+      <canvas
+        ref={canvasRef}
+        className="block w-full h-full"
+        style={{
+          filter: `drop-shadow(0 0 ${isActive ? NEON_GLOW_BLUR_ACTIVE : NEON_GLOW_BLUR_IDLE}px rgba(${glowRgb.r}, ${glowRgb.g}, ${glowRgb.b}, 0.85))`,
+        }}
+      />
     </div>
   );
 }

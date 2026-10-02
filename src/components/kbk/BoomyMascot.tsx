@@ -31,23 +31,13 @@ const KEYFRAMES = `
   50% { transform: translateY(-6px); }
 }
 @keyframes kbk-boomy-glow {
-  0%, 100% {
-    box-shadow:
-      0 0 0 1px rgba(139, 92, 246, 0.55),
-      0 0 18px rgba(139, 92, 246, 0.35),
-      0 6px 22px rgba(76, 50, 130, 0.45);
-  }
-  50% {
-    box-shadow:
-      0 0 0 1px rgba(180, 140, 255, 0.85),
-      0 0 32px rgba(180, 140, 255, 0.6),
-      0 8px 32px rgba(76, 50, 130, 0.6);
-  }
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
 }
 @media (prefers-reduced-motion: reduce) {
   .kbk-boomy-mascot-bob { animation: none !important; }
   .kbk-boomy-mascot-strip { animation: none !important; transform: none !important; }
-  .kbk-boomy-mascot-frame { animation: none !important; }
+  .kbk-boomy-mascot-glow { animation: none !important; opacity: 0 !important; }
 }
 `;
 
@@ -78,6 +68,24 @@ export default function BoomyMascot({
           willChange: 'transform',
         }}
       >
+        {/* Der Glow pulsiert über die Deckkraft einer eigenen Fläche statt über
+            `box-shadow`: ein animierter Schatten wird in jedem Bild auf dem
+            Hauptstrang neu gezeichnet und zog Stil, Zeichnen und Ebenen-Aufbau
+            der ganzen Seite mit (Messung 02.10.2026). */}
+        <div style={{ position: 'relative', width: size, height: size }}>
+        <div
+          className="kbk-boomy-mascot-glow"
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            borderRadius: 8,
+            pointerEvents: 'none',
+            boxShadow:
+              '0 0 0 1px rgba(180, 140, 255, 0.85), 0 0 32px rgba(180, 140, 255, 0.6), 0 8px 32px rgba(76, 50, 130, 0.6)',
+            animation: 'kbk-boomy-glow 1.714s ease-in-out infinite',
+          }}
+        />
         <div
           className="kbk-boomy-mascot-frame"
           style={{
@@ -86,7 +94,8 @@ export default function BoomyMascot({
             borderRadius: 8,
             overflow: 'hidden',
             position: 'relative',
-            animation: 'kbk-boomy-glow 1.714s ease-in-out infinite',
+            boxShadow:
+              '0 0 0 1px rgba(139, 92, 246, 0.55), 0 0 18px rgba(139, 92, 246, 0.35), 0 6px 22px rgba(76, 50, 130, 0.45)',
             // Pixel-Aliasing: Hard-Edge-Rendering, damit der PixelArt-Stil
             // nicht durch Browser-Smoothing weichgespuelt wird.
             imageRendering: 'pixelated',
@@ -110,6 +119,7 @@ export default function BoomyMascot({
               willChange: 'transform',
             }}
           />
+        </div>
         </div>
       </div>
     </>

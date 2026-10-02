@@ -8,6 +8,7 @@ import PlayerProvider from '@/components/providers/PlayerProvider';
 import ToastProvider from '@/components/providers/ToastProvider';
 import LikesProvider from '@/components/providers/LikesProvider';
 import IntroGate from '@/components/kbk/IntroGate';
+import OffscreenAnimationGate from '@/components/kbk/OffscreenAnimationGate';
 import MiniPlayer from '@/components/kbk/MiniPlayer';
 import SiteFooter from '@/components/kbk/SiteFooter';
 import RefBeacon from '@/components/kbk/RefBeacon';
@@ -157,6 +158,9 @@ export default async function RootLayout({
             <LikesProvider>
               {/* Intro-Sequence (einmalig pro Browser, respektiert reduced-motion) */}
               <IntroGate />
+
+              {/* Hält Dauer-Animationen außerhalb des Bildes an (Neon-Puls, Tanz-Figuren). */}
+              <OffscreenAnimationGate />
 
               {/* Global FX: Scanlines */}
               <div
