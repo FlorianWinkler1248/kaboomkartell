@@ -24,6 +24,7 @@ import {
   composeReleaseAnnouncement,
   getReleaseQueueStats,
   pickReleaseCandidate,
+  resolveReleaseCover,
 } from '@/lib/boomy';
 import { postToDiscord, hexToDiscordColor } from '@/lib/discord-webhook';
 import { applyRateLimit, boomyLimit } from '@/lib/rate-limit';
@@ -75,7 +76,7 @@ export async function POST(request: NextRequest) {
     // setzen duration=0, ohne Backfill blieb sie auf 0 stehen.
     const trackBeforeUpdate = await prisma.track.findUnique({
       where: { id: candidate.trackId },
-      select: { duration: true, filePath: true, trackType: true },
+      select: { duration: true, filePath: true, trackType: true, aiDisclosure: true, coverUrl: true },
     });
     let extractedDuration: number | null = null;
     if (
@@ -95,12 +96,17 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Hybride mit eigenem Cover behalten es (Dual-Accent-Sprite vom Upload).
+    const releaseCoverUrl = trackBeforeUpdate
+      ? resolveReleaseCover(trackBeforeUpdate, coverUrl)
+      : coverUrl;
+
     const publishedTrack = await prisma.track.update({
       where: { id: candidate.trackId },
       data: {
         isPublic: true,
         publishedAt: new Date(),
-        ...(coverUrl ? { coverUrl } : {}),
+        ...(releaseCoverUrl ? { coverUrl: releaseCoverUrl } : {}),
         ...(extractedDuration ? { duration: extractedDuration } : {}),
       },
       include: {

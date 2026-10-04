@@ -15,12 +15,34 @@ import { AI_DISCLOSURE, BOOMY_CONFIG } from '@/lib/constants';
 // === Release-Queue ===
 //
 // Pool-Restrukturierung 16.05.2026: Es gibt keine Source-Pools mehr. Boomys
-// Release-Queue = alle KI-Tracks (aiDisclosure='ai_generated'), die noch nicht
-// öffentlich sind (isPublic=false). Alle 2 Tage macht der Cron einen public.
+// Release-Queue = alle Tracks mit KI-Anteil, die noch nicht öffentlich sind
+// (isPublic=false). Alle 2 Tage macht der Cron einen public.
+//
+// Seit 04.10.2026 (Flow) zählen auch Hybride dazu: aiDisclosure='ai_assisted'
+// („4Flow feat. Boomy") läuft über dieselbe Queue wie 'ai_generated'.
+export const RELEASE_QUEUE_DISCLOSURES: string[] = [
+  AI_DISCLOSURE.AI_GENERATED,
+  AI_DISCLOSURE.AI_ASSISTED,
+];
+
+/**
+ * Cover-Regel beim Release: Ein Hybrid, der schon ein Cover trägt, behält es
+ * (sein Dual-Accent-Sprite entsteht beim Upload). Sonst gewinnt das Cover, das
+ * der Release-Lauf mitgibt.
+ */
+export function resolveReleaseCover(
+  track: { aiDisclosure: string | null; coverUrl: string | null },
+  incomingCoverUrl?: string
+): string | undefined {
+  if (track.aiDisclosure === AI_DISCLOSURE.AI_ASSISTED && track.coverUrl) {
+    return undefined;
+  }
+  return incomingCoverUrl;
+}
 
 export interface ReleaseQueueStats {
-  waitingTracks: number;   // ai_generated + isPublic=false
-  publicTracks: number;    // ai_generated + isPublic=true
+  waitingTracks: number;   // KI-Anteil (ai_generated, ai_assisted) + isPublic=false
+  publicTracks: number;    // KI-Anteil (ai_generated, ai_assisted) + isPublic=true
   byGenre: Array<{ genre: string; waiting: number; live: number }>;
   belowThreshold: boolean; // waitingTracks < BOOMY_CONFIG.poolLowThreshold
 }
@@ -32,7 +54,7 @@ export interface ReleaseQueueStats {
 export async function getReleaseQueueStats(): Promise<ReleaseQueueStats> {
   const tracks = await prisma.track.findMany({
     where: {
-      aiDisclosure: AI_DISCLOSURE.AI_GENERATED,
+      aiDisclosure: { in: RELEASE_QUEUE_DISCLOSURES },
       status: { not: 'ARCHIVED' },
     },
     select: { genre: true, isPublic: true },
@@ -68,8 +90,8 @@ export interface ReleaseCandidate {
 }
 
 /**
- * Wählt einen Release-Kandidaten aus Boomys Release-Queue (KI-Tracks mit
- * isPublic=false). Mit `opts.trackId` exakt diesen — sonst zufällig.
+ * Wählt einen Release-Kandidaten aus Boomys Release-Queue (Tracks mit
+ * KI-Anteil, auch Hybride, und isPublic=false). Mit `opts.trackId` exakt diesen — sonst zufällig.
  *
  * Der explizite-ID-Modus erlaubt das Peek-then-Finalize-Pattern: erst peek
  * (nur lesen), dann Cover generieren, dann auto-publish mit gleicher ID.
@@ -79,7 +101,7 @@ export interface ReleaseCandidate {
 export async function pickReleaseCandidate(opts?: { trackId?: string }): Promise<ReleaseCandidate | null> {
   const waiting = await prisma.track.findMany({
     where: {
-      aiDisclosure: AI_DISCLOSURE.AI_GENERATED,
+      aiDisclosure: { in: RELEASE_QUEUE_DISCLOSURES },
       isPublic: false,
       status: { not: 'ARCHIVED' },
     },
