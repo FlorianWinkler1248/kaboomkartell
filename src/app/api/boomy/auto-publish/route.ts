@@ -26,7 +26,12 @@ import {
   pickReleaseCandidate,
   resolveReleaseCover,
 } from '@/lib/boomy';
-import { postToDiscord, hexToDiscordColor } from '@/lib/discord-webhook';
+import {
+  postToDiscord,
+  hexToDiscordColor,
+  boomyDiscordIdentity,
+  siteBaseUrl,
+} from '@/lib/discord-webhook';
 import { applyRateLimit, boomyLimit } from '@/lib/rate-limit';
 import { tryGetMp3Duration } from '@/lib/mp3-duration';
 import path from 'path';
@@ -134,13 +139,15 @@ export async function POST(request: NextRequest) {
       const discordCover = coverUrl
         ? coverUrl.startsWith('http')
           ? coverUrl
-          : `${(process.env.NEXTAUTH_URL ?? 'https://kaboomkartell.com').replace(/\/$/, '')}${coverUrl}`
+          : `${siteBaseUrl()}${coverUrl}`
         : undefined;
       await postToDiscord({
-        username: 'Boomy',
+        ...boomyDiscordIdentity(),
         embeds: [
           {
             title: publishedTrack.title,
+            // Titel führt zur Track-Seite.
+            url: `${siteBaseUrl()}/tracks/${publishedTrack.slug}`,
             description: content,
             color: hexToDiscordColor(BOOMY_PURPLE),
             thumbnail: discordCover ? { url: discordCover } : undefined,

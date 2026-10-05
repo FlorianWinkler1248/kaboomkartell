@@ -37,6 +37,19 @@ export interface DiscordWebhookPayload {
   avatar_url?: string;
 }
 
+/** Öffentliche Basis-URL der Website, ohne Schrägstrich am Ende. */
+export function siteBaseUrl(): string {
+  return (process.env.NEXTAUTH_URL ?? 'https://kaboomkartell.com').replace(/\/$/, '');
+}
+
+/**
+ * Boomys Absender für Discord: Name und Avatar je Nachricht, damit die Meldung
+ * nicht mit dem Standard-Avatar des Webhooks erscheint.
+ */
+export function boomyDiscordIdentity(): { username: string; avatar_url: string } {
+  return { username: 'Boomy', avatar_url: `${siteBaseUrl()}/images/boomy-sprite-1.png` };
+}
+
 /** Wandelt einen Hex-String ("#8B5CF6") in Discords Dezimal-Farbwert. */
 export function hexToDiscordColor(hex: string): number {
   return parseInt(hex.replace(/^#/, ''), 16);

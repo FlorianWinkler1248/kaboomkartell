@@ -19,7 +19,7 @@ import { z } from 'zod';
 import prisma from '@/lib/db';
 import { BOOMY_CONFIG, BOOMY_PURPLE, validateBoomySecret } from '@/lib/constants';
 import { applyRateLimit, boomyLimit } from '@/lib/rate-limit';
-import { postToDiscord, hexToDiscordColor } from '@/lib/discord-webhook';
+import { postToDiscord, hexToDiscordColor, boomyDiscordIdentity } from '@/lib/discord-webhook';
 
 const schema = z.object({
   content: z.string().min(1).max(500),
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     // ADR-005 D: Boomy-Wall-Posts in den Discord-#radio-feed spiegeln.
     // postToDiscord wirft nie — ein Webhook-Fehler darf den Wall-Post nicht kippen.
     await postToDiscord({
-      username: 'Boomy',
+      ...boomyDiscordIdentity(),
       embeds: [
         {
           description: post.content,

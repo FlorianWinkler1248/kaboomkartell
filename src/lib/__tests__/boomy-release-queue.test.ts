@@ -53,3 +53,15 @@ describe('Release-Queue: Hybride', () => {
     ).toBe('https://x/neu.png');
   });
 });
+
+import { boomyDiscordIdentity, siteBaseUrl } from '@/lib/discord-webhook';
+
+describe('Discord: Boomys Absender', () => {
+  it('trägt Namen und einen absoluten Avatar auf der eigenen Website', () => {
+    const id = boomyDiscordIdentity();
+    expect(id.username).toBe('Boomy');
+    expect(id.avatar_url).toBe(`${siteBaseUrl()}/images/boomy-sprite-1.png`);
+    expect(id.avatar_url.startsWith('http')).toBe(true);
+    expect(siteBaseUrl().endsWith('/')).toBe(false);
+  });
+});
