@@ -47,7 +47,7 @@ export function siteBaseUrl(): string {
  * nicht mit dem Standard-Avatar des Webhooks erscheint.
  */
 export function boomyDiscordIdentity(): { username: string; avatar_url: string } {
-  return { username: 'Boomy', avatar_url: `${siteBaseUrl()}/images/boomy-sprite-1.png` };
+  return { username: 'Boomy', avatar_url: `${siteBaseUrl()}/images/boomy-avatar.png` };
 }
 
 /** Wandelt einen Hex-String ("#8B5CF6") in Discords Dezimal-Farbwert. */

@@ -17,14 +17,18 @@ const ACCENT = '#3FCF4A';
 
 export default async function OgImage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const track = await prisma.track.findUnique({
+  const found = await prisma.track.findUnique({
     where: { slug },
     select: {
+      isPublic: true,
       title: true,
       artist: { select: { username: true, displayName: true } },
       featuringArtist: { select: { username: true, displayName: true } },
     },
   });
+
+  // Nicht öffentliche Tracks bekommen das neutrale Bild.
+  const track = found?.isPublic ? found : null;
 
   const title = track?.title ?? 'KaboomKartell';
   const main = track?.artist?.displayName || track?.artist?.username || '4Flow';

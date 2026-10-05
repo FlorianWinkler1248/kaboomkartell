@@ -87,11 +87,16 @@ export interface ReleaseCandidate {
   trackId: string;
   title: string;
   genre: string;
+  // false, wenn der Track sein Cover behält (Hybrid mit eigenem Sprite) —
+  // der Release-Lauf spart sich dann Erzeugen und Hochladen.
+  needsCover: boolean;
 }
 
 /**
  * Wählt einen Release-Kandidaten aus Boomys Release-Queue (Tracks mit
- * KI-Anteil, auch Hybride, und isPublic=false). Mit `opts.trackId` exakt diesen — sonst zufällig.
+ * KI-Anteil, auch Hybride, und isPublic=false). Mit `opts.trackId` exakt diesen —
+ * sonst den, der am längsten wartet (sortOrder, dann createdAt). Die Reihenfolge
+ * ist damit vorhersagbar.
  *
  * Der explizite-ID-Modus erlaubt das Peek-then-Finalize-Pattern: erst peek
  * (nur lesen), dann Cover generieren, dann auto-publish mit gleicher ID.
@@ -105,7 +110,8 @@ export async function pickReleaseCandidate(opts?: { trackId?: string }): Promise
       isPublic: false,
       status: { not: 'ARCHIVED' },
     },
-    select: { id: true, title: true, genre: true },
+    select: { id: true, title: true, genre: true, aiDisclosure: true, coverUrl: true },
+    orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
   });
 
   if (waiting.length === 0) return null;
@@ -114,13 +120,54 @@ export async function pickReleaseCandidate(opts?: { trackId?: string }): Promise
     trackId: t.id,
     title: t.title,
     genre: t.genre || 'unknown',
+    needsCover: !(t.aiDisclosure === AI_DISCLOSURE.AI_ASSISTED && Boolean(t.coverUrl)),
   }));
 
   if (opts?.trackId) {
     return candidates.find((c) => c.trackId === opts.trackId) ?? null;
   }
 
-  return candidates[Math.floor(Math.random() * candidates.length)];
+  return candidates[0];
+}
+
+/**
+ * Hybrid-Regel: Ein Track mit aiDisclosure='ai_assisted' ist ein Hybrid mit
+ * Boomy als Feature („4Flow feat. Boomy"). Liefert die Felder, die dafür zu
+ * setzen sind, oder ein leeres Objekt, wenn der Track kein Hybrid ist. Ein
+ * schon gesetztes Featuring bleibt unangetastet.
+ */
+export async function hybridFeaturingDefaults(
+  aiDisclosure: string | null | undefined,
+  current?: { featuringArtistId: string | null; aiSource: string | null }
+): Promise<{ featuringArtistId?: string; aiSource?: string }> {
+  if (aiDisclosure !== AI_DISCLOSURE.AI_ASSISTED) return {};
+  const out: { featuringArtistId?: string; aiSource?: string } = {};
+  if (!current?.featuringArtistId) {
+    const boomy = await prisma.user.findUnique({
+      where: { username: BOOMY_CONFIG.username },
+      select: { id: true },
+    });
+    if (boomy) out.featuringArtistId = boomy.id;
+  }
+  if (!current?.aiSource) out.aiSource = 'boomy';
+  return out;
+}
+
+/**
+ * Autor der Release-Ankündigung: Der Text spricht in Boomys Stimme, also
+ * postet bei einem Hybrid Boomy und nicht der Hauptkünstler. Fehlt Boomys
+ * Konto, bleibt es beim Künstler des Tracks.
+ */
+export async function releaseAnnouncementAuthorId(track: {
+  aiDisclosure: string | null;
+  artistId: string;
+}): Promise<string> {
+  if (track.aiDisclosure !== AI_DISCLOSURE.AI_ASSISTED) return track.artistId;
+  const boomy = await prisma.user.findUnique({
+    where: { username: BOOMY_CONFIG.username },
+    select: { id: true },
+  });
+  return boomy?.id ?? track.artistId;
 }
 
 // === Wall-Post-Generator (organische Variation) ===

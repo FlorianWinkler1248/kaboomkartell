@@ -26,6 +26,8 @@ SHEET_NAME = "boomy-sprites.png"
 GRID = 16          # Pixel-Aufloesung pro Frame
 SCALE = 6          # Skalierungsfaktor (16 -> 96px)
 FRAME_PX = GRID * SCALE  # 96
+AVATAR_FACTOR = 6  # 96 -> 576
+AVATAR_NAME = 'boomy-avatar.png'
 NUM_FRAMES = 4
 SHEET_W = FRAME_PX * NUM_FRAMES
 SHEET_H = FRAME_PX
@@ -243,6 +245,15 @@ def main() -> None:
     sheet_path = os.path.join(OUT_DIR, SHEET_NAME)
     sheet.save(sheet_path, 'PNG', optimize=True)
     print(f'OK {SHEET_NAME}  ({SHEET_W}x{SHEET_H})')
+
+    # Avatar fuer Discord und andere Absender-Bilder: Frame 1, pixelgenau
+    # vergroessert (96 -> 576), damit er nicht weichgezeichnet wird.
+    name, grid, eye_color = FRAMES[0]
+    avatar = render_frame(grid, eye_color).resize(
+        (FRAME_PX * AVATAR_FACTOR, FRAME_PX * AVATAR_FACTOR), Image.NEAREST
+    )
+    avatar.save(os.path.join(OUT_DIR, AVATAR_NAME), 'PNG', optimize=True)
+    print(f'OK {AVATAR_NAME}  ({avatar.width}x{avatar.height})')
 
 
 if __name__ == '__main__':

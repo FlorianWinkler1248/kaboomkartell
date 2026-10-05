@@ -18,6 +18,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import prisma from '@/lib/db';
 import { getAbsolutePath, fileExists } from '@/lib/storage';
+import { auth } from '@/lib/auth';
+import { canAccessTrackAudio } from '@/lib/track-access';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -37,6 +39,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         fileSize: true,
         fileName: true,
         status: true,
+        isPublic: true,
+        artistId: true,
+        uploaderId: true,
       },
     });
 
@@ -49,10 +54,18 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return new NextResponse('SoundCloud tracks do not have a local stream.', { status: 400 });
     }
 
-    // Nur publizierte Tracks (oder wenn kein Auth-Check nötig)
-    // Admin-Zugriff wird hier bewusst nicht geprüft für Preview im Admin
+    // Öffentliche Tracks hört jeder, ohne Anmeldung. Nicht öffentliche (Vorrat,
+    // Release-Queue) nur Admins sowie Künstler und Uploader des Tracks; die
+    // Sitzung wird nur in diesem Fall gelesen. Archivierte nie.
     if (track.status === 'ARCHIVED') {
       return new NextResponse('Track not available.', { status: 404 });
+    }
+    if (!track.isPublic) {
+      const session = await auth();
+      const user = session?.user ? { id: session.user.id, role: session.user.role } : null;
+      if (!canAccessTrackAudio(track, user)) {
+        return new NextResponse('Track not available.', { status: 404 });
+      }
     }
 
     // Datei prüfen

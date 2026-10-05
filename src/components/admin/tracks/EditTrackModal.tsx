@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Modal zum Bearbeiten von Track-Metadaten: Titel, Genre, KI-Anteil
+ * Modal zum Bearbeiten von Track-Metadaten: Titel, Genre, BPM, KI-Anteil
  * (aiDisclosure) und Sichtbarkeit (isPublic). Wird aus AdminTracksList
  * (via onEdit) geöffnet.
  */
@@ -38,6 +38,7 @@ export default function EditTrackModal({
   const { toast } = useToast();
   const [title, setTitle] = useState(track.title);
   const [genre, setGenre] = useState(track.genre || '');
+  const [bpm, setBpm] = useState(track.bpm ? String(track.bpm) : '');
   const [aiDisclosure, setAiDisclosure] = useState(track.aiDisclosure || '');
   const [isPublic, setIsPublic] = useState(track.isPublic ?? false);
   const [saving, setSaving] = useState(false);
@@ -62,6 +63,12 @@ export default function EditTrackModal({
       return;
     }
 
+    const bpmValue = bpm.trim() ? Number(bpm) : null;
+    if (bpmValue !== null && (!Number.isInteger(bpmValue) || bpmValue < 1 || bpmValue > 999)) {
+      setError('BPM must be a whole number between 1 and 999');
+      return;
+    }
+
     setSaving(true);
     setError(null);
     try {
@@ -71,6 +78,7 @@ export default function EditTrackModal({
         body: JSON.stringify({
           title: title.trim(),
           genre,
+          bpm: bpmValue,
           aiDisclosure: aiDisclosure || null,
           isPublic,
         }),
@@ -159,6 +167,27 @@ export default function EditTrackModal({
                 </option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <label
+              htmlFor="edit-bpm"
+              className="block text-xs font-semibold text-secondary uppercase tracking-wider mb-1.5"
+            >
+              BPM
+            </label>
+            <input
+              id="edit-bpm"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={999}
+              value={bpm}
+              onChange={(e) => setBpm(e.target.value)}
+              disabled={saving}
+              placeholder="e.g. 140"
+              className={cn(adminInputClass, 'w-full')}
+            />
           </div>
 
           <div>

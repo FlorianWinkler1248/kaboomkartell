@@ -56,7 +56,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const tMeta = await getTranslations('meta.track');
 
-  if (!track) {
+  // Nicht öffentliche Tracks verraten weder Titel noch Cover.
+  if (!track || !track.isPublic) {
     return { title: tMeta('notFound') };
   }
 

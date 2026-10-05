@@ -24,6 +24,7 @@ import {
   composeReleaseAnnouncement,
   getReleaseQueueStats,
   pickReleaseCandidate,
+  releaseAnnouncementAuthorId,
   resolveReleaseCover,
 } from '@/lib/boomy';
 import {
@@ -129,7 +130,10 @@ export async function POST(request: NextRequest) {
         data: {
           content,
           type: 'SHOUTOUT',
-          authorId: publishedTrack.artist.id,
+          authorId: await releaseAnnouncementAuthorId({
+            aiDisclosure: publishedTrack.aiDisclosure,
+            artistId: publishedTrack.artist.id,
+          }),
         },
       });
 

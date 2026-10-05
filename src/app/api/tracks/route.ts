@@ -11,7 +11,7 @@ import { auth } from '@/lib/auth';
 import { createTrackSchema, createSoundcloudTrackSchema } from '@/lib/validations';
 import { slugify } from '@/lib/utils';
 import { fetchSoundcloudMetadata } from '@/lib/soundcloud';
-import { attachTrackToPool } from '@/lib/boomy';
+import { attachTrackToPool, hybridFeaturingDefaults } from '@/lib/boomy';
 import { isGenre, genrePoolSlug } from '@/lib/constants';
 import { getAbsolutePath } from '@/lib/storage';
 import { tryGetMp3Duration } from '@/lib/mp3-duration';
@@ -300,6 +300,11 @@ export async function POST(request: NextRequest) {
         description: description || null,
         aiDisclosure: aiDisclosure || null,
         aiSource: aiSource || null,
+        // Hybrid-Regel: ai_assisted trägt Boomy als Feature.
+        ...(await hybridFeaturingDefaults(aiDisclosure, {
+          featuringArtistId: null,
+          aiSource: aiSource || null,
+        })),
         isPublic: isPublic === true,
         artistId: artistId || session.user.id,
         uploaderId: session.user.id,

@@ -6,9 +6,9 @@ import createNextIntlPlugin from "next-intl/plugin";
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig: NextConfig = {
-  // Standalone-Output fuer Docker-Deployment
-  // Erzeugt eine eigenstaendige Kopie mit allen Dependencies
-  output: 'standalone',
+  // Kein Standalone-Output: Der Server startet mit `next start` (systemd,
+  // kein Docker mehr seit 20.05.2026); `output: 'standalone'` passte dazu
+  // nicht und warnte bei jedem Start.
 
   experimental: {
     // Router-Zwischenspeicher (18.08.2026). Next 16 haelt dynamische Routen

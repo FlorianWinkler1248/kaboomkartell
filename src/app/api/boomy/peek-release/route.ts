@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
       trackId: candidate.trackId,
       title: candidate.title,
       genre: candidate.genre,
+      needsCover: candidate.needsCover,
     },
   });
 }
