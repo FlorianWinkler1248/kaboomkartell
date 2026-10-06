@@ -194,7 +194,9 @@ export const APP_CONFIG = {
 // Öffentlicher Invite-Link des KBK-Discord-Servers (kein Secret). Von Flow im
 // Server erstellt: "Einladung erstellen" → "Bearbeiten" → "Läuft nie ab".
 // Verlinkt im Hero-CTA und in der Socials-Sektion.
-export const DISCORD_INVITE_URL = 'https://discord.gg/nrvuW7aB';
+// Dauerhafter Link (läuft nie ab, kein Nutzungslimit), angelegt am 06.10.2026
+// für den Kanal welcome. Der Vorgänger war nach der Standardfrist verfallen.
+export const DISCORD_INVITE_URL = 'https://discord.gg/wp8BsFqm7W';
 
 // === Playlist-Typen ===
 // 'showcase' (ADR-041): manuell kuratierte Schaufenster-Playlist für externe
