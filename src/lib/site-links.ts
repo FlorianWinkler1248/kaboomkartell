@@ -42,7 +42,7 @@ const YELLOW = '#F5D02E';
  */
 export const SOCIAL_LINKS: readonly SocialLink[] = [
   { id: 'soundcloud', label: 'SOUNDCLOUD', handle: '4flow-official', href: 'https://soundcloud.com/4-flow', color: YELLOW },
-  { id: 'instagram', label: 'INSTAGRAM', handle: '@4flow_music', href: 'https://www.instagram.com/4flow_music', color: RED },
+  { id: 'instagram', label: 'INSTAGRAM', handle: '@kaboomkartell.4flow', href: 'https://www.instagram.com/kaboomkartell.4flow', color: RED },
   { id: 'tiktok', label: 'TIKTOK', handle: '@phonkby4flow', href: 'https://www.tiktok.com/@phonkby4flow', color: GREEN },
   { id: 'discord', label: 'DISCORD', handle: 'kaboomkartell', href: DISCORD_INVITE_URL, color: YELLOW },
 ] as const;
