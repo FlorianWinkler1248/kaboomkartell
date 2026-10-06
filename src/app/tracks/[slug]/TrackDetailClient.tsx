@@ -82,7 +82,7 @@ interface TrackDetailClientProps {
 
 export default function TrackDetailClient({ track, relatedTracks }: TrackDetailClientProps) {
   const t = useTranslations('track');
-  const { audio, playlist, playTrackAtIndex } = usePlayer();
+  const { audio, playlist, playTrackAtIndex, playTracks } = usePlayer();
   const { toast } = useToast();
 
   const artwork = track.coverUrl || track.soundcloudArtwork;
@@ -116,13 +116,13 @@ export default function TrackDetailClient({ track, relatedTracks }: TrackDetailC
       }
       playTrackAtIndex(existingIndex);
     } else {
-      // Track an den Anfang der Playlist setzen und abspielen
-      const newTracks = [playerTrack, ...playlist.tracks];
-      playlist.setTracks(newTracks);
-      // Kleiner Delay damit State sich aktualisiert
-      setTimeout(() => playTrackAtIndex(0), 50);
+      // Track an den Anfang der Playlist setzen und abspielen. playTracks
+      // statt setTracks + verzögertem playTrackAtIndex(0): der alte Zwei-Schritt
+      // rief nach 50 ms noch die ALTE Funktion mit der ALTEN Liste und startete
+      // deren ersten Titel von vorn, also das zuvor gewählte Lied (Fund 06.10.2026).
+      playTracks([playerTrack, ...playlist.tracks], 0);
     }
-  }, [track, isSoundcloud, artwork, playlist, audio, playTrackAtIndex]);
+  }, [track, isSoundcloud, artwork, playlist, audio, playTrackAtIndex, playTracks]);
 
   // Aktuellen Play-State tracken
   const isCurrentTrack = playlist.tracks[playlist.currentIndex]?.id === track.id;

@@ -338,7 +338,11 @@ function HeroLogoButton({ isMobile }: { isMobile: boolean }) {
             position: 'absolute',
             bottom: -22,
             left: '50%',
-            transform: 'translateX(-50%)',
+            // Zentrierung über `translate`, nicht über `transform`: die Animation
+            // kk-pulse setzt `transform: scale()` und überschrieb sonst die
+            // Verschiebung — der Hinweis begann dann in der Mitte und lief rechts
+            // aus dem Bild (Fund 06.10.2026).
+            translate: '-50% 0',
             fontFamily: 'var(--font-mono)',
             fontSize: 10,
             letterSpacing: '0.3em',
