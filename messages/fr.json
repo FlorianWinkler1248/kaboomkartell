@@ -806,6 +806,11 @@
       "moveUp": "Monter {title}",
       "moveDown": "Descendre {title}",
       "remove": "Retirer {title} de la file"
+    },
+    "autoSwitch": {
+      "message": "{from} fait une pause. Passage à {to} dans",
+      "cancel": "Annuler",
+      "switchNow": "Changer maintenant"
     }
   },
   "schedule": {

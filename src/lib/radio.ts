@@ -403,6 +403,18 @@ export function getActiveChannels(
   )
 }
 
+/** Channels mit regulär laufendem Slot/Event — OHNE Grace. Ein Channel, dessen Set
+ *  vorbei ist und der nur noch den letzten Track ausspielt, fehlt hier bereits.
+ *  Grundlage für den Auto-Switch im Player (lib/channel-autoswitch.ts). */
+export function getScheduledChannels(
+  slots: RadioSlot[],
+  events: RadioEvent[],
+  pools: Map<string, RadioPool>,
+  now: Date,
+): RadioChannel[] {
+  return RADIO_CHANNELS.filter((c) => findCurrentSlot(slots, events, pools, now, c) !== null)
+}
+
 /** Maximales Grace-Fenster nach Slot-Ende (in Sekunden). Begrenzt die Suche
  *  nach „letzter Slot, dessen letzter Track noch läuft" — länger als das
  *  größte realistische Track-Limit (~10 Minuten) brauchen wir nicht.

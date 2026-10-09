@@ -23,6 +23,7 @@ import { useMediaSession } from '@/hooks/useMediaSession';
 import { useRadioSync } from '@/hooks/useRadioSync';
 import { useAudioAnalyser, type UseAudioAnalyserReturn } from '@/hooks/useAudioAnalyser';
 import { VOTING_CONFIG } from '@/lib/constants';
+import { pickAutoSwitchTarget, computeSwitchAtMs } from '@/lib/channel-autoswitch';
 import type { SyncStatus } from '@/lib/radio-sync-control';
 import type { PlayerTrack } from '@/types';
 
@@ -87,6 +88,12 @@ interface PlayerContextType {
   setSelectedChannel: (c: string) => void;
   /** Welche Channels senden gerade — für Pulse-Animation der Tabs. */
   activeChannels: string[];
+  /** Angekündigter Auto-Switch (Ziel-Channel + Zeitpunkt in Server-Zeit) oder null. */
+  autoSwitch: { target: string; switchAtMs: number } | null;
+  /** Hörer bleibt im Channel; bis dieser wieder sendet, kommt kein neuer Vorschlag. */
+  cancelAutoSwitch: () => void;
+  /** Sofort wechseln, ohne den Titelbeginn im Ziel-Channel abzuwarten. */
+  confirmAutoSwitch: () => void;
   // Audio-Analyser (Echtzeit-Frequenzdaten für Visualizer)
   analyser: UseAudioAnalyserReturn;
 }
@@ -188,6 +195,68 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
   // Radio-Refs synchronisieren (werden im onTrackEnd-Callback gelesen)
   radioModeRef.current = radio.radioMode;
   radioHandleEndedRef.current = radio.handleTrackEnded;
+
+  // === Auto-Switch (09.10.2026) ===
+  // Endet das Set im gewählten Channel, während der andere sendet, wird der Wechsel
+  // angekündigt und zum Beginn des nächsten Titels im Ziel-Channel ausgeführt.
+  const [autoSwitch, setAutoSwitch] = useState<{ target: string; switchAtMs: number } | null>(null);
+  // Vom Hörer abgebrochen: gilt, bis der eigene Channel wieder sendet oder er selbst wechselt.
+  const autoSwitchDismissedRef = useRef(false);
+  const autoSwitchTarget = radio.radioMode
+    ? pickAutoSwitchTarget(selectedChannel, radio.scheduledChannels)
+    : null;
+  const getServerNow = radio.getServerNow;
+
+  useEffect(() => {
+    if (!autoSwitchTarget) {
+      autoSwitchDismissedRef.current = false;
+      setAutoSwitch(null);
+      return;
+    }
+    if (autoSwitchDismissedRef.current) return;
+    let stale = false;
+    const announce = (targetTrackEndsAtMs: number | null) => {
+      if (stale) return;
+      setAutoSwitch({
+        target: autoSwitchTarget,
+        switchAtMs: computeSwitchAtMs(targetTrackEndsAtMs, getServerNow()),
+      });
+    };
+    fetch(`/api/radio/now-playing?channel=${encodeURIComponent(autoSwitchTarget)}`, { cache: 'no-store' })
+      .then((res) => res.json())
+      .then((json) => {
+        const data = json?.data;
+        const isPool = data && (!data.eventType || data.eventType === 'POOL');
+        announce(isPool && data.endsAt ? Date.parse(data.endsAt) : null);
+      })
+      .catch(() => announce(null));
+    return () => {
+      stale = true;
+    };
+  }, [autoSwitchTarget, getServerNow]);
+
+  useEffect(() => {
+    if (!autoSwitch) return;
+    const id = setTimeout(
+      () => {
+        setAutoSwitch(null);
+        setSelectedChannel(autoSwitch.target);
+      },
+      Math.max(0, autoSwitch.switchAtMs - getServerNow()),
+    );
+    return () => clearTimeout(id);
+  }, [autoSwitch, getServerNow, setSelectedChannel]);
+
+  const cancelAutoSwitch = useCallback(() => {
+    autoSwitchDismissedRef.current = true;
+    setAutoSwitch(null);
+  }, []);
+
+  const confirmAutoSwitch = useCallback(() => {
+    if (!autoSwitch) return;
+    setAutoSwitch(null);
+    setSelectedChannel(autoSwitch.target);
+  }, [autoSwitch, setSelectedChannel]);
 
   // Mute-State für Keyboard-Shortcut (M-Taste)
   const prevVolumeRef = useRef(audio.volume);
@@ -640,6 +709,9 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
         selectedChannel,
         setSelectedChannel,
         activeChannels: radio.activeChannels,
+        autoSwitch,
+        cancelAutoSwitch,
+        confirmAutoSwitch,
         // Audio-Analyser
         analyser,
       }}

@@ -94,6 +94,7 @@ interface NowPlayingEnvelope {
   success: boolean
   data: NowPlayingResponse | null
   activeChannels?: string[]
+  scheduledChannels?: string[]
   serverTime?: string
   channel?: string | null
   message?: string
@@ -107,6 +108,8 @@ interface UseRadioSyncReturn {
   isLiveEvent: boolean
   liveStreamUrl: string | null
   activeChannels: string[]
+  /** Channels mit laufendem Set (ohne Grace). null = Server liefert das Feld (noch) nicht. */
+  scheduledChannels: string[] | null
   /** Agency-Loop (18.06.2026, ADR-033): Herkunft des laufenden Radio-Tracks. */
   radioCurrentSource: 'VOTE' | 'RANDOM' | 'SEED' | null
   /** Agency-Loop: Crowd-Control-Fenster-ID des laufenden Tracks (für N+2-Pick-Match). */
@@ -195,6 +198,7 @@ export function useRadioSync(
   const [isLiveEvent, setIsLiveEvent] = useState(false)
   const [liveStreamUrl, setLiveStreamUrl] = useState<string | null>(null)
   const [activeChannels, setActiveChannels] = useState<string[]>([])
+  const [scheduledChannels, setScheduledChannels] = useState<string[] | null>(null)
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle')
   // Agency-Loop (18.06.2026): Herkunft + Fenster-ID des laufenden Tracks, vom Server
   // durchgereicht. Speist die client-seitige „mein Pick läuft"-Erkennung im MiniPlayer.
@@ -511,6 +515,7 @@ export function useRadioSync(
       const tRecv = Date.now()
       if (!json.success) return null
       setActiveChannels(json.activeChannels ?? [])
+      setScheduledChannels(json.scheduledChannels ?? null)
       const serverIso = json.data?.serverTime ?? json.serverTime
       if (serverIso) {
         const samples = offsetSamplesRef.current
@@ -747,6 +752,7 @@ export function useRadioSync(
     isLiveEvent,
     liveStreamUrl,
     activeChannels,
+    scheduledChannels,
     radioCurrentSource,
     radioCurrentDecisionSeq,
     syncStatus,

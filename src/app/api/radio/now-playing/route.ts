@@ -11,13 +11,16 @@
  * Wenn `channel` gesetzt ist und KEIN Slot dieses Genres aktiv → `data: null`
  * (Sender ist gerade off air). Die Antwort enthält IMMER `activeChannels: []`,
  * damit das Frontend die Pulse-Animation auf den live-sendenden Tabs anzeigen
- * kann, ohne mehrere Requests parallel feuern zu müssen.
+ * kann, ohne mehrere Requests parallel feuern zu müssen. `scheduledChannels: []`
+ * sind die Channels mit laufendem Set (ohne ausspielenden letzten Track) — daran
+ * erkennt der Player, dass sein Channel endet und der andere übernimmt.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/db'
 import {
   getActiveChannels,
+  getScheduledChannels,
   getNowPlaying,
   getActiveContext,
   mapPoolTracks,
@@ -168,6 +171,7 @@ export async function GET(request: NextRequest) {
 
     // Pulse-Animation im MiniPlayer braucht: welche Channels senden gerade?
     const activeChannels = getActiveChannels(radioSlots, radioEvents, poolMap, now)
+    const scheduledChannels = getScheduledChannels(radioSlots, radioEvents, poolMap, now)
 
     // Crowd Control (ADR-026): bei aktivem Kill-Switch + Channel + POOL-Slot kommt der
     // Track aus dem server-gehaltenen Head-State (probabilistisch + Voting) statt aus der
@@ -202,6 +206,7 @@ export async function GET(request: NextRequest) {
         success: true,
         data: null,
         activeChannels,
+        scheduledChannels,
         serverTime: serverTimeIso,
         channel,
         message: channel
@@ -241,6 +246,7 @@ export async function GET(request: NextRequest) {
         currentDecisionSeq: result.currentDecisionSeq ?? null,
       },
       activeChannels,
+      scheduledChannels,
       serverTime: serverTimeIso,
       channel,
     })

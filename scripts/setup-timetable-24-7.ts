@@ -2,25 +2,21 @@
  * Setup-Script: 24/7-Sendeplan + wiederkehrendes Freitag-Live-Event (ADR-028)
  *
  * Ersetzt den kompletten Wochen-Sendeplan durch die 2h-Raster-Rotation:
- *   - phonk-Channel (24/7): alterniert alle 2h Phonk (rot) / Brazilian Phonk (grün)
- *   - hardtek-Channel: "Hardphonk" (Hardtek-Pool) parallel zu den Phonk-Fenstern
+ *   - phonk-Channel: Phonk (rot), jedes zweite 2h-Fenster
+ *   - hardtek-Channel: "Hardphonk" (Hardtek-Pool) in den Fenstern dazwischen
+ *     — es sendet also immer genau einer der beiden, sie wechseln sich ab
+ *   - Brazilian Phonk (grün, phonk-Channel): nur noch zweimal pro Woche
+ *     (BRAZILIAN_DAYS, Mittwoch und Samstag), abends parallel zu einer
+ *     Hardphonk-Session; nur dann senden beide Channels gleichzeitig
  *   - LIVE-Channel: wiederkehrendes Twitch-Event jeden Freitag 18:00–20:00 UTC
  *
  * Zeiten sind UTC (KBK-Server läuft in Etc/UTC; die Radio-Engine rechnet mit der
  * lokalen = UTC-Stunde). IDEMPOTENT: löscht erst alle Slots + wiederkehrenden
  * Events, legt dann frisch an — mehrfaches Ausführen ergibt denselben Endzustand.
  *
- * Sendeplan-Abwechslung (Folge-Session auf ADR-028, kein neues ADR — TimetableSlot
- * bleibt strukturell unverändert, radio.ts/radio-state.ts unberührt): das reine 2h-
- * Raster wiederholte sich bisher jeden Wochentag IDENTISCH (Phonk immer auf geraden,
- * Brazilian immer auf ungeraden 2h-Blöcken; Hardphonk deckungsgleich mit Phonk). Pro
- * Wochentag wird jetzt deterministisch (SEASON_SEED + Wochentag, reproduzierbar via
- * `seededShuffle` aus radio.ts — kein neuer PRNG) je ein 2h-Phasenversatz gewürfelt:
- *   - phonk-Channel: 0 = Phonk führt (wie bisher), 2 = Brazilian führt (vertauscht)
- *     — reiner Phasenversatz, die 2h-Kachelung bleibt lückenlos + überlappungsfrei.
- *   - hardtek-Channel: eigener, von phonk UNABHÄNGIGER Versatz — Hardphonk lief bisher
- *     stur deckungsgleich mit den Phonk-Fenstern; jetzt mal mit Phonk-, mal mit
- *     Brazilian-Stunden überlappend, je Wochentag.
+ * Pro Wochentag wird deterministisch (SEASON_SEED + Wochentag, reproduzierbar via
+ * `seededShuffle` aus radio.ts) gewürfelt, ob Phonk oder Hardphonk den Tag eröffnet.
+ * Die Brazilian-Session liegt je nach Versatz um 18 oder 20 Uhr UTC.
  * SEASON_SEED von Hand bumpen, um die Rotation bewusst neu zu würfeln (bleibt bis
  * dahin über beliebig viele Skript-Läufe reproduzierbar — Pflicht für /schedule,
  * MCP get_schedule, Timetable-API: 24h-Vorschau bleibt ein vorab bekannter Plan).
@@ -46,12 +42,10 @@ const FRIDAY_TITLE = 'KBK Friday Live';
 const TWITCH_URL = process.env.KBK_FRIDAY_STREAM_URL || 'https://www.twitch.tv/kbk4flow';
 const FRIDAY = 5; // Date.getDay(): 0=So .. 5=Fr
 
-// 2h-Raster (Start-Stunden, UTC) — Basis-Anker, siehe Abwechslungs-Kommentar oben.
-// Die eigentliche Wochentags-Rotation (Phasenversatz + Determinismus-Garantie) steckt
-// in src/lib/timetable-rotation.ts (pure, testbar ohne DB).
-const PHONK_START_HOURS = [0, 4, 8, 12, 16, 20]; // Phonk (rot)
-const BRAZILIAN_START_HOURS = [2, 6, 10, 14, 18, 22]; // Brazilian Phonk (grün)
-const HARDPHONK_START_HOURS = [0, 4, 8, 12, 16, 20]; // Hardphonk-Basis (deckt sich mit Phonk)
+// 2h-Raster (Start-Stunden, UTC). Wer welche Hälfte bekommt, entscheidet der
+// Phasenversatz je Wochentag in src/lib/timetable-rotation.ts (pure, testbar ohne DB).
+const EVEN_START_HOURS = [0, 4, 8, 12, 16, 20];
+const ODD_START_HOURS = [2, 6, 10, 14, 18, 22];
 
 async function main() {
   console.log('=== setup-timetable-24-7 (ADR-028) ===');
@@ -77,20 +71,13 @@ async function main() {
   console.log(`Alte Slots: ${oldSlots.length} (werden gelöscht — DB-Backup vorausgesetzt!)`);
   await prisma.timetableSlot.deleteMany({});
 
-  // 3) Neue Rotation — pro Wochentag mit eigenem, deterministisch gewürfeltem
-  //    Phasenversatz (SEASON_SEED), statt 7× identischem Raster.
-  const rows = buildWeekSlots(
-    phonkId!,
-    brazilianId!,
-    hardtekId!,
-    PHONK_START_HOURS,
-    BRAZILIAN_START_HOURS,
-    HARDPHONK_START_HOURS,
-  );
+  // 3) Neue Rotation — Phonk und Hardphonk im Wechsel, Brazilian an zwei Abenden.
+  const rows = buildWeekSlots(phonkId!, brazilianId!, hardtekId!, EVEN_START_HOURS, ODD_START_HOURS);
   await prisma.timetableSlot.createMany({ data: rows });
+  const brazilianCount = rows.filter((r) => r.poolId === brazilianId).length;
   console.log(
     `Neue Slots angelegt: ${rows.length} (SEASON_SEED="${SEASON_SEED}", ` +
-      `${PHONK_START_HOURS.length + BRAZILIAN_START_HOURS.length + HARDPHONK_START_HOURS.length} Slots/Tag × 7 Tage).`,
+      `davon ${brazilianCount} Brazilian-Sessions pro Woche).`,
   );
 
   // 4) Wiederkehrendes Twitch-Event (Fr 18–20 UTC). Idempotent: vorhandene

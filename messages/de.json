@@ -806,6 +806,11 @@
       "moveUp": "{title} nach oben schieben",
       "moveDown": "{title} nach unten schieben",
       "remove": "{title} aus der Warteschlange entfernen"
+    },
+    "autoSwitch": {
+      "message": "{from} macht Pause. Wechsel zu {to} in",
+      "cancel": "Abbrechen",
+      "switchNow": "Jetzt wechseln"
     }
   },
   "schedule": {

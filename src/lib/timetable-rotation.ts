@@ -2,11 +2,11 @@
 //
 // Reine Funktionen, keine Prisma-Abhängigkeit (client-safe, analog radio.ts) — testbar
 // ohne DB. Genutzt von scripts/setup-timetable-24-7.ts beim (Re-)Seeden der
-// TimetableSlot-Zeilen. Vorher: das 2h-Raster wiederholte sich jeden Wochentag
-// IDENTISCH (Phonk immer auf geraden, Brazilian immer auf ungeraden 2h-Blöcken;
-// Hardphonk deckungsgleich mit Phonk). Jetzt bekommt jeder Wochentag einen
-// deterministisch gewürfelten 2h-Phasenversatz — reiner Versatz, keine Umsortierung,
-// daher bleibt die Kachelung pro Tag lückenlos + überlappungsfrei.
+// TimetableSlot-Zeilen. Seit 09.10.2026 wechseln sich Phonk und Hardphonk im
+// 2h-Raster ab; Brazilian Phonk kommt nur noch zweimal pro Woche, abends parallel
+// zu einer Hardphonk-Session. Jeder Wochentag bekommt einen deterministisch
+// gewürfelten 2h-Phasenversatz (wer eröffnet den Tag), damit die Woche nicht
+// siebenmal identisch aussieht.
 //
 // SEASON_SEED von Hand bumpen, um die Rotation bewusst neu zu würfeln (bleibt bis
 // dahin über beliebig viele Skript-Läufe reproduzierbar — Pflicht für /schedule,
@@ -15,6 +15,13 @@
 import { seededShuffle } from './radio'
 
 export const SEASON_SEED = 'kbk-rotation-v1'
+
+/** Wochentage mit Brazilian-Phonk-Session (Date.getDay(): 3 = Mittwoch, 6 = Samstag). */
+export const BRAZILIAN_DAYS: readonly number[] = [3, 6]
+
+/** Abendfenster (Start-Stunden, UTC), in denen die Brazilian-Session liegen darf.
+ *  Je Phasenversatz des Tages beginnt genau eines davon mit einer Hardphonk-Session. */
+export const BRAZILIAN_PRIME_HOURS: readonly number[] = [18, 20]
 
 /** Deterministischer 2h-Phasenversatz (0 oder 2) für einen Wochentag + Namensraum.
  *  Nutzt den bestehenden seeded PRNG (`seededShuffle`) statt einen neuen zu bauen. */
@@ -51,33 +58,35 @@ export function buildDaySlots(poolId: string, label: string, startHours: number[
   }))
 }
 
-/** Baut die Slot-Zeilen für alle 7 Wochentage — pro Tag mit eigenem Phasenversatz.
- *  Phonk/Brazilian tauschen sich pro Tag ggf. die Basis-Stunden (bleibt lückenlos, da
- *  beide Arrays zusammen immer die vollen 24h abdecken); Hardphonk bekommt einen
- *  unabhängigen Versatz, statt stur mit Phonk deckungsgleich zu bleiben. */
+/** Baut die Slot-Zeilen für alle 7 Wochentage: Phonk (phonk-Channel) und Hardphonk
+ *  (hardtek-Channel) wechseln sich im 2h-Raster ab, es sendet also immer genau einer
+ *  der beiden. Der Phasenversatz je Wochentag entscheidet nur, wer den Tag eröffnet.
+ *  An den `brazilianDays` läuft zusätzlich im phonk-Channel eine Brazilian-Phonk-
+ *  Session parallel zur abendlichen Hardphonk-Session, dann senden beide Channels. */
 export function buildWeekSlots(
   phonkId: string,
   brazilianId: string,
   hardtekId: string,
-  phonkHoursBase: number[],
-  brazilianHoursBase: number[],
-  hardphonkHoursBase: number[],
+  evenHours: number[],
+  oddHours: number[],
+  brazilianDays: readonly number[] = BRAZILIAN_DAYS,
   allDays: number[] = [0, 1, 2, 3, 4, 5, 6],
   seed: string = SEASON_SEED,
 ): SlotRow[] {
   const rows: SlotRow[] = []
   for (const day of allDays) {
     const phonkOffset = pickPhaseOffset('phonk', day, seed)
-    const hardOffset = pickPhaseOffset('hard', day, seed)
-    const phonkHours = phonkOffset === 0 ? phonkHoursBase : brazilianHoursBase
-    const brazilianHours = phonkOffset === 0 ? brazilianHoursBase : phonkHoursBase
-    const hardphonkHours = hardOffset === 0 ? hardphonkHoursBase : hardphonkHoursBase.map((h) => (h + 2) % 24)
+    const phonkHours = phonkOffset === 0 ? evenHours : oddHours
+    const hardphonkHours = phonkOffset === 0 ? oddHours : evenHours
 
     rows.push(
       ...buildDaySlots(phonkId, 'Phonk', phonkHours, day),
-      ...buildDaySlots(brazilianId, 'Brazilian Phonk', brazilianHours, day),
       ...buildDaySlots(hardtekId, 'Hardphonk', hardphonkHours, day),
     )
+    if (brazilianDays.includes(day)) {
+      const primeHours = hardphonkHours.filter((h) => BRAZILIAN_PRIME_HOURS.includes(h)).slice(0, 1)
+      rows.push(...buildDaySlots(brazilianId, 'Brazilian Phonk', primeHours, day))
+    }
   }
   return rows
 }

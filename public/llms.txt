@@ -81,9 +81,9 @@ KBK publishes this canon as a **possibility space**, not as finished stories: co
 
 ## Channels & Slot Engine
 
-KBK runs two 24/7 music channels plus an event-only live channel (since v2.36, 08.06.2026):
-- **phonk** — alternates Phonk and Brazilian Phonk in a 2-hour UTC rotation (6 windows each per day)
-- **hardtek** — "Hardphonk" sessions in parallel with the phonk windows; Raggatek airs here as a sub-theme
+KBK runs two music channels that take turns around the clock, plus an event-only live channel:
+- **phonk** — Phonk sessions in every second 2-hour UTC window; Brazilian Phonk airs here twice a week (Wednesday and Saturday evening UTC)
+- **hardtek** — "Hardphonk" sessions in the windows in between, so usually exactly one of the two channels is on air; during the Brazilian Phonk sessions both are. Raggatek airs here as a sub-theme
 - **live** — ONLY on-air during scheduled live-stream events (e.g. the weekly Friday 18:00–20:00 UTC Twitch stream, twitch.tv/kbk4flow); off-air otherwise, the music channels keep playing in parallel
 
 Engine guarantees:

@@ -806,6 +806,11 @@
       "moveUp": "Move {title} up",
       "moveDown": "Move {title} down",
       "remove": "Remove {title} from the queue"
+    },
+    "autoSwitch": {
+      "message": "{from} is taking a break. Switching to {to} in",
+      "cancel": "Cancel",
+      "switchNow": "Switch now"
     }
   },
   "schedule": {

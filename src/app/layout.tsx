@@ -10,6 +10,7 @@ import LikesProvider from '@/components/providers/LikesProvider';
 import IntroGate from '@/components/kbk/IntroGate';
 import OffscreenAnimationGate from '@/components/kbk/OffscreenAnimationGate';
 import MiniPlayer from '@/components/kbk/MiniPlayer';
+import ChannelAutoSwitchNotice from '@/components/kbk/ChannelAutoSwitchNotice';
 import SiteFooter from '@/components/kbk/SiteFooter';
 import RefBeacon from '@/components/kbk/RefBeacon';
 import { TwitchLiveBanner } from '@/components/twitch/TwitchLiveBanner';
@@ -217,6 +218,8 @@ export default async function RootLayout({
                 <SiteFooter />
                 {/* Mini-Player: persistente Steuerung auf allen Pages außer /admin. */}
                 <MiniPlayer />
+                {/* Ankündigung des Channel-Wechsels, wenn das Set im gewählten Channel endet. */}
+                <ChannelAutoSwitchNotice />
                 {/* P0.8: PII-freier Ref-Beacon (zählt ?ref=-Deep-Link-Landungen). */}
                 <RefBeacon />
               </div>

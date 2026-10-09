@@ -806,6 +806,11 @@
       "moveUp": "Subir {title}",
       "moveDown": "Bajar {title}",
       "remove": "Quitar {title} de la cola"
+    },
+    "autoSwitch": {
+      "message": "{from} hace una pausa. Cambio a {to} en",
+      "cancel": "Cancelar",
+      "switchNow": "Cambiar ahora"
     }
   },
   "schedule": {
