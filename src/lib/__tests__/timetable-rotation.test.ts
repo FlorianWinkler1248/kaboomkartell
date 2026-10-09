@@ -109,6 +109,7 @@ describe('timetable-rotation — buildWeekSlots', () => {
       expect(braz.map((r) => r.dayOfWeek).sort()).toEqual([...BRAZILIAN_DAYS].sort())
       for (const b of braz) {
         expect(BRAZILIAN_PRIME_HOURS).toContain(b.startHour)
+        expect(b.subgenre).toBe('brazilian-phonk') // grüner Akzent im phonk-Channel
         const parallel = rows.find(
           (r) => r.poolId === 'hard' && r.dayOfWeek === b.dayOfWeek && r.startHour === b.startHour,
         )

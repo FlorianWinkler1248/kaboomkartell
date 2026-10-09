@@ -43,9 +43,17 @@ export interface SlotRow {
   label: string
   poolId: string
   priority: number
+  /** Theme-Override des Slots (grüner Akzent für Brazilian Phonk); null = keiner. */
+  subgenre: string | null
 }
 
-export function buildDaySlots(poolId: string, label: string, startHours: number[], day: number): SlotRow[] {
+export function buildDaySlots(
+  poolId: string,
+  label: string,
+  startHours: number[],
+  day: number,
+  subgenre: string | null = null,
+): SlotRow[] {
   return startHours.map((sh) => ({
     dayOfWeek: day,
     startHour: sh,
@@ -55,6 +63,7 @@ export function buildDaySlots(poolId: string, label: string, startHours: number[
     label,
     poolId,
     priority: 0,
+    subgenre,
   }))
 }
 
@@ -85,7 +94,7 @@ export function buildWeekSlots(
     )
     if (brazilianDays.includes(day)) {
       const primeHours = hardphonkHours.filter((h) => BRAZILIAN_PRIME_HOURS.includes(h)).slice(0, 1)
-      rows.push(...buildDaySlots(brazilianId, 'Brazilian Phonk', primeHours, day))
+      rows.push(...buildDaySlots(brazilianId, 'Brazilian Phonk', primeHours, day, 'brazilian-phonk'))
     }
   }
   return rows
