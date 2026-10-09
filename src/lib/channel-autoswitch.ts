@@ -2,14 +2,17 @@
 //
 // Seit 09.10.2026 wechseln sich Phonk und Hardphonk im Sendeplan ab; meist sendet
 // also nur einer der beiden Channels. Endet das Set im gewählten Channel, während
-// der andere sendet, schlägt der Player den Wechsel vor und führt ihn zum Beginn
-// des nächsten Titels im Ziel-Channel aus. Der Hörer kann vorher abbrechen.
+// der andere sendet, kündigt der Player den Wechsel an. Oberste Regel: die Musik
+// reißt nicht ab. Gewechselt wird deshalb spätestens, wenn der eigene letzte Titel
+// endet; beginnt im Ziel-Channel vorher ein neuer Titel, dann genau dort. Der Hörer
+// kann vorher abbrechen.
 
 /** Die Channels, zwischen denen automatisch gewechselt wird (LIVE gehört nicht dazu). */
 export const AUTO_SWITCH_CHANNELS: readonly string[] = ['phonk', 'hardtek']
 
-/** Countdown, wenn der Titelbeginn im Ziel-Channel nicht bekannt ist. */
-export const AUTO_SWITCH_FALLBACK_MS = 10_000
+/** Countdown, wenn im eigenen Channel schon nichts mehr läuft: kurz, damit die
+ *  Stille kurz bleibt, aber lang genug zum Abbrechen. */
+export const AUTO_SWITCH_SILENT_MS = 5_000
 
 /** Ziel-Channel für den Auto-Switch oder null, wenn nicht gewechselt werden soll.
  *  `scheduled` sind die Channels mit laufendem Set (ohne ausspielenden letzten
@@ -25,14 +28,22 @@ export function pickAutoSwitchTarget(
   return channels.find((c) => c !== selected && scheduled.includes(c)) ?? null
 }
 
-/** Zeitpunkt des Wechsels (Server-Zeit, ms): das Ende des laufenden Titels im
- *  Ziel-Channel, also der Beginn des nächsten. Ohne brauchbaren Wert greift ein
- *  kurzer fester Countdown. */
-export function computeSwitchAtMs(targetTrackEndsAtMs: number | null, serverNowMs: number): number {
-  if (targetTrackEndsAtMs !== null && Number.isFinite(targetTrackEndsAtMs) && targetTrackEndsAtMs > serverNowMs) {
-    return targetTrackEndsAtMs
-  }
-  return serverNowMs + AUTO_SWITCH_FALLBACK_MS
+/** Zeitpunkt des Wechsels (Server-Zeit, ms).
+ *
+ *  Läuft im eigenen Channel noch der letzte Titel, wird spätestens an dessen Ende
+ *  gewechselt — früher nur, wenn im Ziel-Channel vorher ein neuer Titel beginnt
+ *  (sauberer Einstieg). Läuft im eigenen Channel nichts mehr, gilt der kurze feste
+ *  Countdown: auf einen Titelbeginn zu warten hieße, in Stille zu warten. */
+export function computeSwitchAtMs(
+  ownTrackEndsAtMs: number | null,
+  targetTrackEndsAtMs: number | null,
+  serverNowMs: number,
+): number {
+  const ownPlaying = ownTrackEndsAtMs !== null && Number.isFinite(ownTrackEndsAtMs) && ownTrackEndsAtMs > serverNowMs
+  if (!ownPlaying) return serverNowMs + AUTO_SWITCH_SILENT_MS
+  const targetStartKnown =
+    targetTrackEndsAtMs !== null && Number.isFinite(targetTrackEndsAtMs) && targetTrackEndsAtMs > serverNowMs
+  return targetStartKnown ? Math.min(ownTrackEndsAtMs, targetTrackEndsAtMs) : ownTrackEndsAtMs
 }
 
 /** Restzeit als m:ss für die Anzeige. */

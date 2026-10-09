@@ -119,3 +119,43 @@ export function decideNextTrack(input: {
     startAtSeconds: input.programPositionSeconds > 0 ? input.programPositionSeconds : 0,
   }
 }
+
+/** Größte Rest-Laufzeit, die der Sender an der Titel-Grenze überspringt (Sekunden).
+ *
+ *  Datei und Datenbank-Dauer liegen um Hundertstel auseinander. Bis zu dieser
+ *  Grenze gilt der Titel als zu Ende; alles darüber ist kein Rundungsrest mehr,
+ *  sondern ein echter Unterschied, und der Sender wartet wie bisher. */
+export const MAX_BOUNDARY_GAP_SECONDS = 2
+
+/**
+ * Nahtloser Übergang: der Folge-Titel, ohne auf das Programm zu warten.
+ *
+ * Fehlerbild 09.10.2026: An der Titel-Grenze nannte das Programm noch für
+ * Hundertstelsekunden den eben beendeten Durchlauf. Der Sender wartete — und
+ * weil sein Aussende-Zeitpunkt beim Warten stehen bleibt, bis der Vorlauf
+ * aufgezehrt ist, kamen acht bis neun Sekunden lang keine Daten. Wer frisch
+ * zugeschaltet hatte, hörte an der Grenze eine Pause.
+ *
+ * Das Programm legt den Folge-Titel schon beim Start des laufenden fest
+ * (`nextTrack`). Der Sender darf ihn deshalb selbst anhängen, sobald nur noch
+ * ein Rundungsrest fehlt. Nicht am Slot-Ende: dort bestimmt der neue Slot, was
+ * kommt, und der Sender fragt wie bisher.
+ *
+ * Liefert den Durchlauf des Folge-Titels oder null, wenn gewartet werden muss.
+ */
+export function seamlessNextRun(input: {
+  /** Rest-Laufzeit des eben beendeten Durchlaufs laut Programm (Sekunden). */
+  remainingSeconds: number
+  /** Vom Programm festgelegter Folge-Titel (null = noch keiner bekannt). */
+  nextTrackId: string | null
+  /** Zeit bis zum Slot-Ende, gemessen am Aussende-Zeitpunkt (Sekunden). */
+  slotRemainingSeconds: number
+  /** Aussende-Zeitpunkt, auf den sich die Angaben beziehen (ms). */
+  programNowMs: number
+}): TrackRun | null {
+  if (!input.nextTrackId) return null
+  const remaining = input.remainingSeconds > 0 ? input.remainingSeconds : 0
+  if (remaining > MAX_BOUNDARY_GAP_SECONDS) return null
+  if (input.slotRemainingSeconds <= remaining) return null
+  return { trackId: input.nextTrackId, startedAtMs: input.programNowMs + remaining * 1000 }
+}

@@ -4,7 +4,7 @@
  * ChannelAutoSwitchNotice — Hinweis über der Player-Leiste, wenn das Set im
  * gewählten Channel endet und der andere Channel sendet.
  *
- * Zeigt den Countdown bis zum Wechsel (Beginn des nächsten Titels im Ziel-Channel)
+ * Zeigt den Countdown bis zum Wechsel (spätestens das Ende des eigenen letzten Titels)
  * mit „Abbrechen" und „Jetzt wechseln". Die Entscheidung selbst trifft der
  * PlayerProvider (lib/channel-autoswitch.ts); hier wird nur angezeigt.
  */

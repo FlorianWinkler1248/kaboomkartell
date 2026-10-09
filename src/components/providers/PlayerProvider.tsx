@@ -198,7 +198,8 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
 
   // === Auto-Switch (09.10.2026) ===
   // Endet das Set im gewählten Channel, während der andere sendet, wird der Wechsel
-  // angekündigt und zum Beginn des nächsten Titels im Ziel-Channel ausgeführt.
+  // angekündigt. Die Musik reißt dabei nicht ab: gewechselt wird spätestens am Ende
+  // des eigenen letzten Titels, bei Stille im eigenen Channel nach kurzem Countdown.
   const [autoSwitch, setAutoSwitch] = useState<{ target: string; switchAtMs: number } | null>(null);
   // Vom Hörer abgebrochen: gilt, bis der eigene Channel wieder sendet oder er selbst wechselt.
   const autoSwitchDismissedRef = useRef(false);
@@ -215,25 +216,27 @@ export default function PlayerProvider({ children }: { children: React.ReactNode
     }
     if (autoSwitchDismissedRef.current) return;
     let stale = false;
-    const announce = (targetTrackEndsAtMs: number | null) => {
+    // Titelende eines Channels in Server-Zeit; null bei Off-Air, Live-Event oder Fehler.
+    const trackEndsAt = (channel: string): Promise<number | null> =>
+      fetch(`/api/radio/now-playing?channel=${encodeURIComponent(channel)}`, { cache: 'no-store' })
+        .then((res) => res.json())
+        .then((json) => {
+          const data = json?.data;
+          const isPool = data && (!data.eventType || data.eventType === 'POOL');
+          return isPool && data.endsAt ? Date.parse(data.endsAt) : null;
+        })
+        .catch(() => null);
+    Promise.all([trackEndsAt(selectedChannel), trackEndsAt(autoSwitchTarget)]).then(([own, target]) => {
       if (stale) return;
       setAutoSwitch({
         target: autoSwitchTarget,
-        switchAtMs: computeSwitchAtMs(targetTrackEndsAtMs, getServerNow()),
+        switchAtMs: computeSwitchAtMs(own, target, getServerNow()),
       });
-    };
-    fetch(`/api/radio/now-playing?channel=${encodeURIComponent(autoSwitchTarget)}`, { cache: 'no-store' })
-      .then((res) => res.json())
-      .then((json) => {
-        const data = json?.data;
-        const isPool = data && (!data.eventType || data.eventType === 'POOL');
-        announce(isPool && data.endsAt ? Date.parse(data.endsAt) : null);
-      })
-      .catch(() => announce(null));
+    });
     return () => {
       stale = true;
     };
-  }, [autoSwitchTarget, getServerNow]);
+  }, [autoSwitchTarget, selectedChannel, getServerNow]);
 
   useEffect(() => {
     if (!autoSwitch) return;

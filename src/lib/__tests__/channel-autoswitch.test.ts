@@ -5,7 +5,7 @@ import {
   pickAutoSwitchTarget,
   computeSwitchAtMs,
   formatCountdown,
-  AUTO_SWITCH_FALLBACK_MS,
+  AUTO_SWITCH_SILENT_MS,
 } from '../channel-autoswitch'
 
 describe('channel-autoswitch — pickAutoSwitchTarget', () => {
@@ -31,14 +31,25 @@ describe('channel-autoswitch — pickAutoSwitchTarget', () => {
 })
 
 describe('channel-autoswitch — computeSwitchAtMs', () => {
-  it('nimmt den Beginn des nächsten Titels im Ziel-Channel', () => {
-    expect(computeSwitchAtMs(1_090_000, 1_000_000)).toBe(1_090_000)
+  const now = 1_000_000
+
+  it('wechselt spätestens am Ende des eigenen letzten Titels — keine Stille', () => {
+    expect(computeSwitchAtMs(now + 40_000, now + 90_000, now)).toBe(now + 40_000)
   })
 
-  it('fällt auf den festen Countdown zurück, wenn der Wert fehlt oder vorbei ist', () => {
-    expect(computeSwitchAtMs(null, 1_000_000)).toBe(1_000_000 + AUTO_SWITCH_FALLBACK_MS)
-    expect(computeSwitchAtMs(NaN, 1_000_000)).toBe(1_000_000 + AUTO_SWITCH_FALLBACK_MS)
-    expect(computeSwitchAtMs(999_000, 1_000_000)).toBe(1_000_000 + AUTO_SWITCH_FALLBACK_MS)
+  it('wechselt früher, wenn im Ziel-Channel vorher ein neuer Titel beginnt', () => {
+    expect(computeSwitchAtMs(now + 90_000, now + 40_000, now)).toBe(now + 40_000)
+  })
+
+  it('nimmt das eigene Titelende, wenn der Titelbeginn im Ziel unbekannt ist', () => {
+    expect(computeSwitchAtMs(now + 40_000, null, now)).toBe(now + 40_000)
+    expect(computeSwitchAtMs(now + 40_000, now - 1_000, now)).toBe(now + 40_000)
+  })
+
+  it('wartet nicht in Stille: läuft im eigenen Channel nichts, gilt der kurze Countdown', () => {
+    expect(computeSwitchAtMs(null, now + 120_000, now)).toBe(now + AUTO_SWITCH_SILENT_MS)
+    expect(computeSwitchAtMs(now - 1, now + 120_000, now)).toBe(now + AUTO_SWITCH_SILENT_MS)
+    expect(computeSwitchAtMs(NaN, null, now)).toBe(now + AUTO_SWITCH_SILENT_MS)
   })
 })
 

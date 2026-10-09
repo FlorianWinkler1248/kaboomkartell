@@ -50,7 +50,7 @@ import { getAbsolutePath } from './storage'
 import { audioStartOffset, findFrameStart, readFrameHeader } from './mp3-frames'
 import { loadRadioData, readNowPlayingState, readGrace, isCrowdControlEnabled } from './radio-state'
 import { getActiveContext, getNowPlaying, type NowPlayingResult } from './radio'
-import { sendAheadSeconds, decideNextTrack, type TrackRun } from './radio-broadcast-clock'
+import { sendAheadSeconds, decideNextTrack, seamlessNextRun, type TrackRun } from './radio-broadcast-clock'
 
 /** Sende-Takt. 250 ms hält die Timer-Last niedrig und den Rückstau klein. */
 const TICK_MS = 250
@@ -315,17 +315,35 @@ class ChannelBroadcaster {
       programNowMs: sendTimeMs,
     })
 
-    if (decision.kind === 'wait') return 'wait'
-    if (decision.kind === 'offair') {
+    let run: TrackRun
+    let startAtSeconds = 0
+    if (decision.kind === 'wait') {
+      // Das Programm nennt noch den eben beendeten Durchlauf. Fehlt nur ein
+      // Rundungsrest, hängt der Sender den bereits festgelegten Folge-Titel
+      // selbst an — sonst stünde der Strom still, bis der Vorlauf aufgezehrt ist.
+      const seamless = np?.track
+        ? seamlessNextRun({
+            remainingSeconds: np.track.duration - np.positionSeconds,
+            nextTrackId: np.nextTrack?.id ?? null,
+            slotRemainingSeconds: (np.slotEndsAt.getTime() - sendTimeMs) / 1000,
+            programNowMs: sendTimeMs,
+          })
+        : null
+      if (!seamless) return 'wait'
+      run = seamless
+    } else if (decision.kind === 'offair') {
       this.track = null
       this.lastRun = null
       return 'offair'
+    } else {
+      run = decision.run
+      startAtSeconds = decision.startAtSeconds
     }
 
     // Der Programm-Zustand liefert nur die Stream-URL, nicht den Dateipfad —
     // den holen wir direkt, weil wir die Bytes selbst lesen.
     const row = await prisma.track.findUnique({
-      where: { id: decision.run.trackId },
+      where: { id: run.trackId },
       select: { filePath: true },
     })
     if (!row?.filePath) {
@@ -336,12 +354,12 @@ class ChannelBroadcaster {
 
     const data = await fs.readFile(getAbsolutePath(row.filePath))
     const audioStart = audioStartOffset(data)
-    const cursor = decision.startAtSeconds > 0
-      ? this.frameAtSecond(data, audioStart, decision.startAtSeconds)
+    const cursor = startAtSeconds > 0
+      ? this.frameAtSecond(data, audioStart, startAtSeconds)
       : audioStart
 
-    this.track = { run: decision.run, data, cursor }
-    this.lastRun = decision.run
+    this.track = { run, data, cursor }
+    this.lastRun = run
     return 'loaded'
   }
 

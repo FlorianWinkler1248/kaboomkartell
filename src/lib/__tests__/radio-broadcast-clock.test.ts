@@ -8,7 +8,13 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { sendAheadSeconds, decideNextTrack, type TrackRun } from '../radio-broadcast-clock'
+import {
+  sendAheadSeconds,
+  decideNextTrack,
+  seamlessNextRun,
+  MAX_BOUNDARY_GAP_SECONDS,
+  type TrackRun,
+} from '../radio-broadcast-clock'
 
 const SERVER_NOW = 1_700_000_000_000
 
@@ -120,5 +126,42 @@ describe('decideNextTrack', () => {
     })
     expect(decision.kind).toBe('play')
     if (decision.kind === 'play') expect(decision.startAtSeconds).toBe(0)
+  })
+})
+
+describe('seamlessNextRun', () => {
+  const base = { remainingSeconds: 0.03, nextTrackId: 'next', slotRemainingSeconds: 3600, programNowMs: 1_000_000 }
+
+  it('hängt den festgelegten Folge-Titel an, wenn nur ein Rundungsrest fehlt (Fehlerbild 09.10.2026)', () => {
+    expect(seamlessNextRun(base)).toEqual({ trackId: 'next', startedAtMs: 1_000_030 })
+  })
+
+  it('der Folge-Durchlauf wird an der nächsten Grenze als derselbe wiedererkannt', () => {
+    const run = seamlessNextRun(base)!
+    // Das Programm sieht den Folge-Titel später an Position 100 s.
+    const decision = decideNextTrack({
+      finishedRun: run,
+      programTrackId: 'next',
+      programPositionSeconds: 100,
+      programNowMs: run.startedAtMs + 100_000,
+    })
+    expect(decision.kind).toBe('wait')
+  })
+
+  it('wartet, wenn das Programm noch keinen Folge-Titel kennt', () => {
+    expect(seamlessNextRun({ ...base, nextTrackId: null })).toBeNull()
+  })
+
+  it('wartet, wenn mehr als ein Rundungsrest fehlt', () => {
+    expect(seamlessNextRun({ ...base, remainingSeconds: MAX_BOUNDARY_GAP_SECONDS + 0.1 })).toBeNull()
+  })
+
+  it('wartet am Slot-Ende — dort bestimmt der neue Slot, was kommt', () => {
+    expect(seamlessNextRun({ ...base, slotRemainingSeconds: 0.02 })).toBeNull()
+    expect(seamlessNextRun({ ...base, slotRemainingSeconds: -5 })).toBeNull()
+  })
+
+  it('behandelt eine negative Rest-Laufzeit als null', () => {
+    expect(seamlessNextRun({ ...base, remainingSeconds: -0.4 })).toEqual({ trackId: 'next', startedAtMs: 1_000_000 })
   })
 })
