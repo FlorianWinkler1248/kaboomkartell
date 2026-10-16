@@ -24,7 +24,8 @@ interface Projekt {
   zeitraum: string;
   rahmen: string;
   text: string;
-  bild?: { src: string; alt: string };
+  bild?: { src: string; alt: string; breite: number; hoehe: number };
+  breit?: boolean;
   link?: { href: string; label: string };
   akzent: Akzent;
 }
@@ -36,6 +37,24 @@ const AKZENT_HEX: Record<Akzent, string> = {
   purple: '#9F6BFF',
 };
 
+const BERUF: Projekt[] = [
+  {
+    titel: 'Marc und Info Center',
+    zeitraum: '05/2026 bis 07/2026',
+    rahmen: 'Coderitter GmbH, Praktikum, direkt mit dem Geschäftsführer',
+    text:
+      'Der Vertrieb pflegte Firmendaten im CRM von Hand. Marc durchsucht öffentliche Quellen, schlägt Ergänzungen vor und schreibt erst nach Freigabe durch einen Menschen ins CRM. Dazu das Info Center mit Anmeldung, Rollen und einer Suche in Alltagssprache. Allein gebaut, nach zwei Monaten im Einsatz bei Vertrieb und Geschäftsführung.',
+    bild: {
+      src: '/images/projekte/infocenter.jpg',
+      alt: 'Startansicht des Info Centers mit den Stationen von Marc, unten die letzten Einträge ins CRM',
+      breite: 1440,
+      hoehe: 769,
+    },
+    breit: true,
+    akzent: 'purple',
+  },
+];
+
 const EIGENE: Projekt[] = [
   {
     titel: 'KaboomKartell',
@@ -43,7 +62,7 @@ const EIGENE: Projekt[] = [
     rahmen: 'eigenes Produkt, live',
     text:
       'Eine digitale Hausparty: ein Radio, das rund um die Uhr läuft und bei dem die Community bestimmt, was als Nächstes spielt. Die Idee begleitet mich seit dem ersten Tag der Umschulung. Angefangen zu dritt, am Ende allein weitergetragen; nach eineinhalb Jahren Konzept online, seit Juli 2026 öffentlich. Mit Twitch-Anbindung und Boomy, einer KI, die durch die Plattform führt.',
-    bild: { src: '/images/projekte/kbk.jpg', alt: 'Startseite von KaboomKartell' },
+    bild: { src: '/images/projekte/kbk.jpg', alt: 'Startseite von KaboomKartell', breite: 800, hoehe: 503 },
     link: { href: 'https://github.com/FlorianWinkler1248/kaboomkartell', label: 'Code ansehen' },
     akzent: 'green',
   },
@@ -53,7 +72,7 @@ const EIGENE: Projekt[] = [
     rahmen: 'eigenes Spiel',
     text:
       'Ein Echtzeit-Strategiespiel mit acht Völkern. Das Ziel: dass es auf einer LAN-Party gespielt wird, die nicht ich organisiert habe. In fünf Wochen von der ersten Zeile zu einem spielbaren Spiel mit Kampagne und Computer-Gegnern.',
-    bild: { src: '/images/projekte/ashcrown.jpg', alt: 'Burg der Menschen zu Beginn eines Gefechts in Ashcrown' },
+    bild: { src: '/images/projekte/ashcrown.jpg', alt: 'Burg der Menschen zu Beginn eines Gefechts in Ashcrown', breite: 800, hoehe: 500 },
     akzent: 'red',
   },
 ];
@@ -85,11 +104,19 @@ function ProjektKarte({ p }: { p: Projekt }) {
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
+        gridColumn: p.breit ? '1 / -1' : undefined,
       }}
     >
       {p.bild && (
-        <div style={{ position: 'relative', aspectRatio: '16 / 10', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-          <Image src={p.bild.src} alt={p.bild.alt} fill sizes="(max-width: 760px) 100vw, 520px" style={{ objectFit: 'cover', objectPosition: 'top' }} />
+        <div style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', lineHeight: 0 }}>
+          <Image
+            src={p.bild.src}
+            alt={p.bild.alt}
+            width={p.bild.breite}
+            height={p.bild.hoehe}
+            sizes={p.breit ? '(max-width: 1080px) 100vw, 1048px' : '(max-width: 760px) 100vw, 520px'}
+            style={{ width: '100%', height: 'auto' }}
+          />
         </div>
       )}
       <div style={{ padding: '20px 22px 22px', display: 'flex', flexDirection: 'column', gap: 10, flex: 1 }}>
@@ -146,16 +173,11 @@ export default function ProjektePage() {
             fontSize: 'clamp(28px, 5vw, 48px)',
             lineHeight: 1.1,
             color: '#fff',
-            margin: '12px 0 18px',
+            margin: '12px 0 0',
           }}
         >
-          Ich baue KI-Software, die Teams im Alltag wirklich benutzen.
+          Projekte
         </h1>
-        <p style={{ ...textStil, fontSize: 17, maxWidth: 720 }}>
-          Fachinformatiker für Anwendungsentwicklung (IHK). Ich komme vom Telefon: Jahre im Callcenter haben mir gezeigt,
-          wo Menschen an Software verzweifeln. Seit 2024 baue ich Antworten darauf, im Beruf direkt mit der
-          Geschäftsführung und daneben in eigenen Produkten, die öffentlich laufen.
-        </p>
         <p style={{ ...metaStil, marginTop: 18 }}>
           Pirna bei Dresden &middot; verfügbar ab sofort &middot;{' '}
           <a href="mailto:4flow@kaboomkartell.com" style={{ color: '#3FCF4A', textDecoration: 'none' }}>
@@ -168,11 +190,14 @@ export default function ProjektePage() {
         </p>
       </header>
 
-      <SectionTitle sub="01" label="EIGENE PRODUKTE" title="AUS EIGENEM ANTRIEB" accent="green" />
+      <SectionTitle sub="01" label="BERUF" title="IM AUFTRAG" accent="yellow" />
+      <Raster projekte={BERUF} />
+
+      <SectionTitle sub="02" label="EIGENE PRODUKTE" title="AUS EIGENEM ANTRIEB" accent="green" />
       <Raster projekte={EIGENE} />
 
       <p style={{ ...metaStil, textAlign: 'center', lineHeight: 1.8 }}>
-        Weitere Projekte, auch aus dem Beruf, zeige ich gern im Gespräch.
+        Weitere Projekte zeige ich gern im Gespräch.
       </p>
     </section>
   );
