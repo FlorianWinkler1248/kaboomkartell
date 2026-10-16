@@ -67,6 +67,20 @@ const EIGENE: Projekt[] = [
     akzent: 'green',
   },
   {
+    titel: 'GraficBend',
+    zeitraum: 'seit 03/2026',
+    rahmen: 'eigenes Produkt, bald Open Source',
+    text:
+      'Ein Grafik-Editor für Sticker, Pixel-Art und Spielgrafik, den Mensch und KI gemeinsam bedienen. Läuft als Mac-Programm und erscheint demnächst unter freier Lizenz.',
+    bild: {
+      src: '/images/projekte/graficbend.jpg',
+      alt: 'Das Ashcrown-Logo im Editor von GraficBend, rechts die Ebenen',
+      breite: 800,
+      hoehe: 500,
+    },
+    akzent: 'red',
+  },
+  {
     titel: 'Ashcrown',
     zeitraum: 'seit 09/2026',
     rahmen: 'eigenes Spiel',
