@@ -178,16 +178,6 @@ export default function ProjektePage() {
         >
           Projekte
         </h1>
-        <p style={{ ...metaStil, marginTop: 18 }}>
-          Pirna bei Dresden &middot; verfügbar ab sofort &middot;{' '}
-          <a href="mailto:4flow@kaboomkartell.com" style={{ color: '#3FCF4A', textDecoration: 'none' }}>
-            4flow@kaboomkartell.com
-          </a>{' '}
-          &middot;{' '}
-          <a href="https://github.com/FlorianWinkler1248" target="_blank" rel="noopener noreferrer" style={{ color: '#3FCF4A', textDecoration: 'none' }}>
-            GitHub
-          </a>
-        </p>
       </header>
 
       <SectionTitle sub="01" label="BERUF" title="IM AUFTRAG" accent="yellow" />
