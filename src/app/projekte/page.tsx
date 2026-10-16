@@ -67,6 +67,20 @@ const EIGENE: Projekt[] = [
     akzent: 'green',
   },
   {
+    titel: 'Master Hub',
+    zeitraum: 'seit 04/2026',
+    rahmen: 'eigenes Produkt, live',
+    text:
+      'Meine Steuerzentrale für KI-Agenten. Ihr Kern ist eine Warteschlange: Aufgaben und Experimente, die ich tagsüber sammle, arbeiten die Agenten über Nacht ab, jede beim passenden Modell, auch über mehrere Rechner. Morgens liegen die Ergebnisse bereit, und läuft die Schlange leer, schaltet sich der Automodus von selbst ab. Hier probiere ich aus, was später in den AI Booster wandert.',
+    bild: {
+      src: '/images/projekte/masterhub.jpg',
+      alt: 'Die Warteschlange des Master Hub mit den erledigten Aufgaben einer Nacht',
+      breite: 800,
+      hoehe: 500,
+    },
+    akzent: 'purple',
+  },
+  {
     titel: 'GraficBend',
     zeitraum: 'seit 03/2026',
     rahmen: 'eigenes Produkt, bald Open Source',
