@@ -41,7 +41,7 @@ const BERUF: Projekt[] = [
   {
     titel: 'Marc und Info Center',
     zeitraum: '05/2026 bis 07/2026',
-    rahmen: 'Coderitter GmbH, Praktikum, direkt mit dem Geschäftsführer',
+    rahmen: 'Coderitter GmbH, direkt mit dem Geschäftsführer',
     text:
       'Der Vertrieb pflegte Firmendaten im CRM von Hand. Marc durchsucht öffentliche Quellen, schlägt Ergänzungen vor und schreibt erst nach Freigabe durch einen Menschen ins CRM. Dazu das Info Center mit Anmeldung, Rollen und einer Suche in Alltagssprache. Allein gebaut, nach zwei Monaten im Einsatz bei Vertrieb und Geschäftsführung.',
     bild: {
