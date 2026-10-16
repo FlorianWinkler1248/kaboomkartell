@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import Intro from './Intro';
 
 /**
@@ -19,9 +20,11 @@ import Intro from './Intro';
 export default function IntroGate() {
   const [mounted, setMounted] = useState(false);
   const [done, setDone] = useState(false);
+  const pfad = usePathname();
   useEffect(() => {
     setMounted(true);
   }, []);
-  if (!mounted || done) return null;
+  // Die Projekte-Seite ist der Link aus dem Lebenslauf: dort ohne Intro.
+  if (!mounted || done || pfad?.startsWith('/projekte')) return null;
   return <Intro onDone={() => setDone(true)} />;
 }
