@@ -765,9 +765,9 @@
       "channelLive": "(LIVE)",
       "channelOffAir": "(off air)",
       "watchLiveTwitch": "Live auf Twitch ansehen: {channel}",
-      "livestreamNow": "LIVESTREAM JETZT!",
-      "tapToWatch": "tippen zum Ansehen ↗",
-      "aiTag": "KI-Tag: {label}"
+      "aiTag": "KI-Tag: {label}",
+      "liveBadge": "LIVE",
+      "watchNow": "ZUSCHAUEN"
     },
     "vote": {
       "markAura": "AURA+ vergeben",
@@ -1245,8 +1245,6 @@
     "openOnTwitch": "AUF TWITCH ÖFFNEN ↗",
     "comingSoon": "DEMNÄCHST",
     "streamingSlotComingSoonHint": "Sobald 4Flow oder ein Gast live auf Twitch geht, wechselt der Player zum Stream und der Slot leuchtet hier auf. Die Einrichtung läuft — merk dir diese Stelle.",
-    "livestreamNow": "JETZT IM LIVESTREAM!",
-    "watch": "Ansehen ↗",
     "watchLiveStreamAria": "Den Livestream von {channel} auf Twitch ansehen",
     "interactiveTutorial": "Interaktives Tutorial",
     "synthTagline": "Lerne Sounddesign — vom Nullpunkt zum Bass-Helden.",
@@ -1257,7 +1255,11 @@
     "humanMade": "Von Menschen gemacht",
     "likelyAi": "Vermutlich KI",
     "noVotesYet": "Noch keine Stimmen. Hör rein, um abzustimmen!",
-    "voteCount": "{count, plural, one {# Stimme} other {# Stimmen}}"
+    "voteCount": "{count, plural, one {# Stimme} other {# Stimmen}}",
+    "liveBadge": "LIVE",
+    "watchNow": "ZUSCHAUEN",
+    "liveSince": "seit {duration} h",
+    "liveSoundHint": "Ton ist aus, im Player einschalten"
   },
   "commonUi": {
     "loading": "Lädt…",

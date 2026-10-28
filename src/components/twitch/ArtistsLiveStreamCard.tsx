@@ -4,7 +4,7 @@
  * <ArtistsLiveStreamCard /> (v2.30, ADR-005 Sektion E)
  *
  * /artists-Page-Modul für den Twitch-Live-Slot. Drei Zustände:
- *   - "live": Embed wird gerendert + Title + Viewer-Count
+ *   - "live": LIVE-Marke, Kanal, Zuschauer, Laufzeit, Titel und Embed
  *   - "offline" (configured): Channel-Login + "OFFLINE · poll every 30s"
  *   - "coming-soon" (unconfigured): bisheriger Coming-Soon-Block
  *
@@ -86,67 +86,49 @@ export function ArtistsLiveStreamCard() {
   if (status.state === 'live') {
     return (
       <div
-        className="kbk-obsidian framed kbk-frame-red"
-        style={{ ...obsidianFrameVars(RED), padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}
+        // Rahmen steht still, solange der Stream läuft (kbk-frame-still).
+        className="kbk-obsidian framed kbk-frame-red kbk-frame-still"
+        style={{ ...obsidianFrameVars(RED), padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}
       >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 12,
-            flexWrap: 'wrap',
-          }}
-        >
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-            <span
-              style={{
-                display: 'inline-block',
-                width: 9,
-                height: 9,
-                borderRadius: 999,
-                background: RED,
-                boxShadow: `0 0 12px ${RED}`,
-                animation: 'kbk-pulse 1.2s ease-in-out infinite',
-              }}
-            />
-            <span
-              style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: 10.5,
-                color: RED,
-                letterSpacing: '0.22em',
-              }}
-            >
-              {t('onAir')} · TWITCH · {status.channel}
-            </span>
-          </div>
-          <span
-            style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: 11,
-              color: 'rgba(255,255,255,0.6)',
-              letterSpacing: '0.05em',
-            }}
-          >
-            👥 {t('watching', { count: status.viewerCount })}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <span className="kbk-live-marke">
+            <i className="kbk-live-punkt" aria-hidden />
+            {t('liveBadge')}
           </span>
+          <span className="kbk-live-kanal">
+            Twitch <span>/</span> {status.channel}
+          </span>
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: 16 }}>
+            <span className="kbk-live-zahl">{t('watching', { count: status.viewerCount })}</span>
+            <LiveSince startedAt={status.startedAt} />
+          </div>
         </div>
-        <p
+        <h3
+          className="font-heading"
           style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: 13,
-            color: '#fff',
+            fontSize: 'clamp(18px, 2.6vw, 24px)',
+            fontWeight: 900,
             margin: 0,
-            lineHeight: 1.4,
+            color: '#fff',
+            letterSpacing: '0.02em',
+            lineHeight: 1.25,
           }}
         >
           {status.title}
-        </p>
-        <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', inset: 0 }}>
-            <TwitchEmbed channel={status.channel} muted autoplay />
-          </div>
+        </h3>
+        <div className="kbk-live-bild">
+          <TwitchEmbed channel={status.channel} muted autoplay />
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+          <span className="kbk-live-zahl">{t('liveSoundHint')}</span>
+          <a
+            className="kbk-live-knopf"
+            href={`https://www.twitch.tv/${status.channel}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {t('openOnTwitch')}
+          </a>
         </div>
       </div>
     );
@@ -317,4 +299,21 @@ export function ArtistsLiveStreamCard() {
       </div>
     </div>
   );
+}
+
+/** Laufzeit seit Streamstart, einmal je Minute neu gerechnet. */
+function LiveSince({ startedAt }: { startedAt: string }) {
+  const t = useTranslations('widgetsUi');
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  const start = Date.parse(startedAt);
+  if (Number.isNaN(start)) return null;
+  const minutes = Math.max(0, Math.floor((now - start) / 60_000));
+  const duration = `${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, '0')}`;
+  return <span className="kbk-live-zahl">{t('liveSince', { duration })}</span>;
 }

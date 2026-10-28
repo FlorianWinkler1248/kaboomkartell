@@ -765,9 +765,9 @@
       "channelLive": "(LIVE)",
       "channelOffAir": "(off air)",
       "watchLiveTwitch": "Ver en directo en Twitch: {channel}",
-      "livestreamNow": "¡LIVESTREAM AHORA!",
-      "tapToWatch": "toca para ver ↗",
-      "aiTag": "Etiqueta IA: {label}"
+      "aiTag": "Etiqueta IA: {label}",
+      "liveBadge": "EN VIVO",
+      "watchNow": "VER"
     },
     "vote": {
       "markAura": "Dar AURA+",
@@ -1245,8 +1245,6 @@
     "openOnTwitch": "ABRIR EN TWITCH ↗",
     "comingSoon": "PRÓXIMAMENTE",
     "streamingSlotComingSoonHint": "Cuando 4Flow o un invitado se ponga en directo en Twitch, el reproductor cambia al stream y el espacio se ilumina aquí. La configuración está en marcha — guarda este sitio.",
-    "livestreamNow": "¡LIVESTREAM AHORA!",
-    "watch": "Ver ↗",
     "watchLiveStreamAria": "Ver el directo de {channel} en Twitch",
     "interactiveTutorial": "Tutorial interactivo",
     "synthTagline": "Aprende diseño de sonido — de cero a héroe del bajo.",
@@ -1257,7 +1255,11 @@
     "humanMade": "Hecho por humanos",
     "likelyAi": "Probablemente IA",
     "noVotesYet": "Aún no hay votos. ¡Escucha para votar!",
-    "voteCount": "{count, plural, one {# voto} other {# votos}}"
+    "voteCount": "{count, plural, one {# voto} other {# votos}}",
+    "liveBadge": "EN VIVO",
+    "watchNow": "VER",
+    "liveSince": "desde hace {duration} h",
+    "liveSoundHint": "El sonido está apagado, actívalo en el reproductor"
   },
   "commonUi": {
     "loading": "Cargando…",

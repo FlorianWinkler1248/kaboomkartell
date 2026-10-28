@@ -53,6 +53,7 @@ export function TwitchEmbed({
   return (
     <iframe
       src={src}
+      allow="autoplay; fullscreen"
       allowFullScreen
       title={`Twitch · ${channel}`}
       style={{

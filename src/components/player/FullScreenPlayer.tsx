@@ -268,18 +268,8 @@ export default function FullScreenPlayer() {
                   dann direkt aus dem Embed, der Audio-Player ist im useRadioSync-Hook
                   bereits pausiert. */}
               {liveTwitchChannel ? (
-                <div
-                  className="kbk-livestream-pulse mb-8 rounded-2xl overflow-hidden"
-                  style={{
-                    width: '100%',
-                    maxWidth: 960,
-                    position: 'relative',
-                    paddingBottom: 'min(56.25%, 540px)',
-                    height: 0,
-                    border: '2px solid rgba(145,70,255,0.85)',
-                  }}
-                >
-                  <div style={{ position: 'absolute', inset: 0 }}>
+                <div className="kbk-live-bild mb-8" style={{ width: '100%', maxWidth: 960 }}>
+                  <div>
                     <TwitchEmbed channel={liveTwitchChannel} autoplay muted={false} />
                   </div>
                 </div>

@@ -765,9 +765,9 @@
       "channelLive": "(LIVE)",
       "channelOffAir": "(off air)",
       "watchLiveTwitch": "Watch live on Twitch: {channel}",
-      "livestreamNow": "LIVESTREAM NOW!",
-      "tapToWatch": "tap to watch ↗",
-      "aiTag": "AI tag: {label}"
+      "aiTag": "AI tag: {label}",
+      "liveBadge": "LIVE",
+      "watchNow": "WATCH"
     },
     "vote": {
       "markAura": "Mark AURA+",
@@ -1245,8 +1245,6 @@
     "openOnTwitch": "OPEN ON TWITCH ↗",
     "comingSoon": "COMING SOON",
     "streamingSlotComingSoonHint": "When 4Flow or a guest goes live on Twitch, the player switches to the stream and the slot lights up here. Setup is in flight — bookmark this spot.",
-    "livestreamNow": "LIVESTREAM NOW!",
-    "watch": "Watch ↗",
     "watchLiveStreamAria": "Watch the live stream from {channel} on Twitch",
     "interactiveTutorial": "Interactive Tutorial",
     "synthTagline": "Learn sound design — from zero to bass hero.",
@@ -1257,7 +1255,11 @@
     "humanMade": "Human Made",
     "likelyAi": "Likely AI",
     "noVotesYet": "No votes yet. Listen to vote!",
-    "voteCount": "{count, plural, one {# vote} other {# votes}}"
+    "voteCount": "{count, plural, one {# vote} other {# votes}}",
+    "liveBadge": "LIVE",
+    "watchNow": "WATCH",
+    "liveSince": "for {duration} h",
+    "liveSoundHint": "Sound is off, turn it on in the player"
   },
   "commonUi": {
     "loading": "Loading…",

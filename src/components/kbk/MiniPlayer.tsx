@@ -103,7 +103,7 @@ export default function MiniPlayer() {
   // Aura+-Likes (ADR-041): speist den MINE-Channel + die AURA-Pill für Anonyme.
   const likes = useMyPlaylist();
   // v2.31: Wenn der aktive Slot ein Twitch-Live-Event ist, übernehmen wir die
-  // Track-Info-Box mit einem prominenten LIVESTREAM-Block + Link zu /radio.
+  // Track-Info-Box mit einem Live-Block samt Link zu /artists#live.
   const liveTwitchChannel = isLiveEvent ? extractTwitchChannelFromUrl(liveStreamUrl) : null;
   const { data: session } = useSession();
   const current = audio.currentTrack;
@@ -497,70 +497,33 @@ export default function MiniPlayer() {
               borderRadius: 2,
             }}
           >
-            {/* v2.31: LIVESTREAM-Übernahme. Wenn der Slot ein Twitch-Live-Event
-                ist, ersetzen wir die normale Track-Info komplett mit einem
-                pulsierenden LIVESTREAM-Block, der zu /radio führt. */}
+            {/* Während eines Twitch-Live-Events ersetzt ein ruhiger Live-Block
+                die Track-Info und führt zur Stream-Karte auf /artists. */}
             {liveTwitchChannel ? (
               <Link
-                href="/radio"
+                href="/artists#live"
                 aria-label={t('mini.watchLiveTwitch', { channel: liveTwitchChannel })}
-                className="kbk-livestream-pulse kbk-livestream-bg"
                 style={{
                   display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: 10,
                   textDecoration: 'none',
                   color: '#fff',
-                  padding: '6px 10px',
-                  margin: '-6px -10px',
-                  borderRadius: 2,
-                  border: '1px solid rgba(145,70,255,0.85)',
-                  minHeight: 56,
+                  minHeight: 44,
+                  minWidth: 0,
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span
-                    aria-hidden="true"
-                    className="kbk-livestream-blink"
-                    style={{
-                      display: 'inline-block',
-                      width: 9,
-                      height: 9,
-                      borderRadius: '50%',
-                      background: '#FF3B6B',
-                      color: '#FF3B6B',
-                      flexShrink: 0,
-                    }}
-                  />
-                  <span
-                    className="kbk-livestream-shake"
-                    style={{
-                      fontFamily: 'var(--font-display)',
-                      fontSize: 13,
-                      fontWeight: 900,
-                      letterSpacing: '0.1em',
-                      color: '#fff',
-                      textShadow: '0 0 8px rgba(145,70,255,0.95), 0 1px 2px rgba(0,0,0,0.95)',
-                      textTransform: 'uppercase',
-                    }}
-                  >
-                    🔴 {t('mini.livestreamNow')}
-                  </span>
-                </div>
-                <div
-                  style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: 10,
-                    color: 'rgba(255,255,255,0.92)',
-                    letterSpacing: '0.05em',
-                    marginTop: 2,
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  }}
+                <span className="kbk-live-marke">
+                  <i className="kbk-live-punkt" aria-hidden />
+                  {t('mini.liveBadge')}
+                </span>
+                <span
+                  className="kbk-live-kanal"
+                  style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}
                 >
-                  twitch.tv/{liveTwitchChannel} · {t('mini.tapToWatch')}
-                </div>
+                  Twitch <span>/</span> {liveTwitchChannel}
+                </span>
+                <span className="kbk-live-knopf">{t('mini.watchNow')}</span>
               </Link>
             ) : (
             <>
