@@ -68,38 +68,19 @@ CSS-Variablen: `--font-heading`, `--font-body`
 
 ## Komponenten-Bibliothek
 
-### UI-Basis
+### UI-Basis (`src/components/ui/`)
 
-| Komponente | Varianten | Beschreibung |
-|-----------|-----------|-------------|
-| `Button` | primary, secondary, outline, ghost, danger | Grün-primär, Hover-States |
-| `Input` | standard, error | Dark-themed, Label + Fehlermeldung |
-| `Card` | standard, mit Header | Surface-Container (bg-surface) |
-| `Badge` | live, draft, archived, admin, kuenstler, helfer | Farbige Status-Pillen |
-| `LoadingSpinner` | sm, md, lg | Rasta-grüner Border-Spinner |
-
-### Player-Komponenten
-
-| Komponente | Beschreibung |
+| Baustein | Beschreibung |
 |-----------|-------------|
-| `MusicPlayer` | Orchestrator (verbindet Audio + Playlist) |
-| `NowPlaying` | Track-Info + Equalizer-Animation bei Play |
-| `ProgressBar` | Klickbar, Drag-to-Seek, Hover-Zeit-Tooltip |
-| `PlayerControls` | Shuffle, Skip, Play/Pause, Repeat |
-| `VolumeControl` | Custom-Styled Range + Mute + Prozent |
-| `PlayerStats` | Gesamt / Gespielt / Dauer |
-| `Playlist` | Track-Liste + Drag&Drop-Upload-Zone |
-| `PlaylistItem` | Nummer, Titel, Dauer, Active/Played-State |
-| `MiniPlayer` | Fixierte Bottom-Bar (alle Seiten) |
+| `LoadingSpinner` | Rasta-grüner Border-Spinner (sm, md, lg) |
+| `RouteSkeleton` | Platzhalter beim Laden einer Route |
+| `SafeImg` | Bild mit Ausweichdarstellung bei Ladefehler |
 
-### Section-Komponenten
+### KBK-Bausteine (`src/components/kbk/`)
 
-| Komponente | Beschreibung |
-|-----------|-------------|
-| `HeroSection` | Vollbild: Wolf-Logo, Gradient-Text, CTAs |
-| `FeaturedTracks` | Neueste Tracks aus DB (Server-Component) |
-| `AboutTeaser` | Feature-Highlights mit farbigen Icons |
-| `CallToAction` | Registrierungs-Aufforderung |
+Player-Leiste (`MiniPlayer`, `PlayerBarShell`, `PlayerModeBar`, `PlayerQueueDrawer`),
+Rahmen (`TopNavBar`, `SiteFooter`, `Marquee`, `Intro`) und die Sektionen der
+Startseite unter `kbk/sections/`.
 
 ## Keyboard-Shortcuts
 

@@ -77,11 +77,10 @@ kaboomkartell/
 │   │   ├── admin/             # Dashboard: Tracks, Users, Pools, Radio, Timetable, ...
 │   │   └── api/               # 80 API-Routes (siehe API.md)
 │   ├── components/
-│   │   ├── kbk/               # KBK-spezifische Sektionen (Radio-Cockpit, Ticker, ...)
-│   │   ├── player/            # Wiedergabe-UI (FullScreenPlayer, MiniPlayer, Controls)
+│   │   ├── kbk/               # KBK-Bausteine: Player-Leiste, Rahmen, sections/ der Startseite
+│   │   ├── player/            # Wiedergabe-Zusätze (SoundCloud-Embed, Equalizer)
 │   │   ├── synth/             # Synth-Lab (Web-Audio-Tutorial)
-│   │   ├── admin/ artists/ profile/ tracks/ twitch/ layout/ providers/ ui/
-│   │   └── sections/          # Homepage-Sektionen (RadioHero, ...)
+│   │   └── admin/ artists/ profile/ studio/ tracks/ twitch/ providers/ ui/
 │   ├── hooks/                 # useAudioPlayer, useRadioSync, useAudioAnalyser, ...
 │   ├── lib/                   # Domänen-Logik (siehe unten)
 │   ├── generated/prisma/      # Generierter Prisma-Client
