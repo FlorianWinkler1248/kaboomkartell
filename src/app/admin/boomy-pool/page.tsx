@@ -147,16 +147,15 @@ export default function BoomyPoolPage() {
   }, [loadBoomyUser, loadTracks]);
 
   // === MP3-Upload für SUNO-Track ===
-  const handleFileSelect = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      handleUpload(file);
-      e.target.value = '';
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
-  );
+  // Bewusst kein useCallback: mit leeren Abhängigkeiten rief der Handler das
+  // handleUpload des ersten Renders auf, und jeder Upload lief mit den
+  // Startwerten (Genre Phonk, AI) statt der Auswahl im Formular.
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    handleUpload(file);
+    e.target.value = '';
+  };
 
   const handleUpload = async (file: File) => {
     // Retry statt harter Abbruch: schlug der Initial-Load fehl (transienter
