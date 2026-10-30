@@ -116,6 +116,9 @@ export default function BoomyPoolPage() {
       const res = await fetch('/api/tracks?pageSize=200');
       const json = await res.json();
       if (json.success && json.data) {
+        // Boomy-Tracks: er ist Künstler (KI) oder Feature (Hybrid).
+        const isBoomyTrack = (t: TrackData) =>
+          t.artist?.username === 'boomy' || t.featuringArtist?.username === 'boomy';
         const all = json.data as TrackData[];
         // Wartende Boomy-Tracks: noch nicht öffentlich UND nicht archiviert.
         // Der Status-Filter ist nicht kosmetisch: ohne ihn blieb ein
@@ -126,12 +129,12 @@ export default function BoomyPoolPage() {
             (t) =>
               !t.isPublic &&
               t.status !== 'ARCHIVED' &&
-              t.artist?.username === 'boomy'
+              isBoomyTrack(t)
           )
         );
         // Öffentliche Boomy-Tracks
         setPublishedTracks(
-          all.filter((t) => t.isPublic && t.artist?.username === 'boomy')
+          all.filter((t) => t.isPublic && isBoomyTrack(t))
         );
       }
     } catch (err) {
@@ -209,7 +212,9 @@ export default function BoomyPoolPage() {
           trackType: 'LOCAL',
           aiDisclosure: uploadAiDisclosure,
           aiSource: uploadAiDisclosure === AI_DISCLOSURE.HUMAN ? null : 'suno',
-          artistId,
+          // Nur reine KI-Tracks gehören Boomy. Hybrid und Human laufen auf den
+          // Hochladenden (4Flow), der Server hängt Boomy beim Hybrid als Feature an.
+          artistId: uploadAiDisclosure === AI_DISCLOSURE.AI_GENERATED ? artistId : undefined,
           fileName: uploadJson.data.fileName,
           filePath: uploadJson.data.filePath,
           fileSize: uploadJson.data.fileSize,

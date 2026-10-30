@@ -128,6 +128,24 @@ describe('Hybrid-Regel: ai_assisted trägt Boomy als Feature', () => {
     expect(findUser).not.toHaveBeenCalled();
   });
 
+  it('macht aus Boomy als Hauptkünstler 4Flow feat. Boomy', async () => {
+    findUser.mockResolvedValue({ id: 'boomy-id' });
+    expect(
+      await hybridFeaturingDefaults(
+        AI_DISCLOSURE.AI_ASSISTED,
+        { featuringArtistId: null, aiSource: 'suno', artistId: 'boomy-id' },
+        'flow-id'
+      )
+    ).toEqual({ featuringArtistId: 'boomy-id', artistId: 'flow-id' });
+    expect(
+      await hybridFeaturingDefaults(
+        AI_DISCLOSURE.AI_ASSISTED,
+        { featuringArtistId: null, aiSource: 'suno', artistId: 'flow-id' },
+        'flow-id'
+      )
+    ).toEqual({ featuringArtistId: 'boomy-id' });
+  });
+
   it('tut nichts für reine KI-Tracks, Human-Tracks und ohne Angabe', async () => {
     expect(await hybridFeaturingDefaults(AI_DISCLOSURE.AI_GENERATED)).toEqual({});
     expect(await hybridFeaturingDefaults(AI_DISCLOSURE.HUMAN)).toEqual({});

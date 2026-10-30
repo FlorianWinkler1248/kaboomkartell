@@ -108,13 +108,19 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     // Slug aktualisieren wenn Titel sich ändert
     const updateData: Record<string, unknown> = { ...result.data };
     // Hybrid-Regel: Wird der Track auf ai_assisted gestellt, trägt er Boomy
-    // als Feature; ein schon gesetztes Featuring bleibt.
+    // als Feature; ein schon gesetztes Featuring bleibt. Stand Boomy als
+    // Hauptkünstler drin, übernimmt der Admin diese Rolle.
     Object.assign(
       updateData,
-      await hybridFeaturingDefaults(result.data.aiDisclosure, {
-        featuringArtistId: existing.featuringArtistId,
-        aiSource: result.data.aiSource ?? existing.aiSource,
-      })
+      await hybridFeaturingDefaults(
+        result.data.aiDisclosure,
+        {
+          featuringArtistId: existing.featuringArtistId,
+          aiSource: result.data.aiSource ?? existing.aiSource,
+          artistId: existing.artistId,
+        },
+        session.user.id
+      )
     );
     if (result.data.title && result.data.title !== existing.title) {
       let newSlug = slugify(result.data.title);

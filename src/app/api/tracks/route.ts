@@ -300,14 +300,21 @@ export async function POST(request: NextRequest) {
         description: description || null,
         aiDisclosure: aiDisclosure || null,
         aiSource: aiSource || null,
-        // Hybrid-Regel: ai_assisted trägt Boomy als Feature.
-        ...(await hybridFeaturingDefaults(aiDisclosure, {
-          featuringArtistId: null,
-          aiSource: aiSource || null,
-        })),
         isPublic: isPublic === true,
         artistId: artistId || session.user.id,
         uploaderId: session.user.id,
+        // Hybrid-Regel: ai_assisted trägt Boomy als Feature, Hauptkünstler
+        // ist dann der Hochladende statt Boomy. Steht nach artistId, damit
+        // die Korrektur greift.
+        ...(await hybridFeaturingDefaults(
+          aiDisclosure,
+          {
+            featuringArtistId: null,
+            aiSource: aiSource || null,
+            artistId: artistId || session.user.id,
+          },
+          session.user.id
+        )),
       },
       include: {
         artist: {

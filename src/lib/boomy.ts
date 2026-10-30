@@ -135,19 +135,28 @@ export async function pickReleaseCandidate(opts?: { trackId?: string }): Promise
  * Boomy als Feature („4Flow feat. Boomy"). Liefert die Felder, die dafür zu
  * setzen sind, oder ein leeres Objekt, wenn der Track kein Hybrid ist. Ein
  * schon gesetztes Featuring bleibt unangetastet.
+ *
+ * Boomy ist beim Hybrid nie Hauptkünstler: Steht er als artistId (etwa weil
+ * der Boomy-Pool-Upload ihn setzt), wandert der Track auf `mainArtistId`.
+ * Sonst stünde dort „Boomy feat. Boomy“ (Nobody Home, 30.10.2026).
  */
 export async function hybridFeaturingDefaults(
   aiDisclosure: string | null | undefined,
-  current?: { featuringArtistId: string | null; aiSource: string | null }
-): Promise<{ featuringArtistId?: string; aiSource?: string }> {
+  current?: { featuringArtistId: string | null; aiSource: string | null; artistId?: string },
+  mainArtistId?: string
+): Promise<{ featuringArtistId?: string; aiSource?: string; artistId?: string }> {
   if (aiDisclosure !== AI_DISCLOSURE.AI_ASSISTED) return {};
-  const out: { featuringArtistId?: string; aiSource?: string } = {};
-  if (!current?.featuringArtistId) {
-    const boomy = await prisma.user.findUnique({
-      where: { username: BOOMY_CONFIG.username },
-      select: { id: true },
-    });
-    if (boomy) out.featuringArtistId = boomy.id;
+  const out: { featuringArtistId?: string; aiSource?: string; artistId?: string } = {};
+  const needsBoomy = !current?.featuringArtistId || (current.artistId && mainArtistId);
+  const boomy = needsBoomy
+    ? await prisma.user.findUnique({
+        where: { username: BOOMY_CONFIG.username },
+        select: { id: true },
+      })
+    : null;
+  if (!current?.featuringArtistId && boomy) out.featuringArtistId = boomy.id;
+  if (boomy && mainArtistId && current?.artistId === boomy.id && mainArtistId !== boomy.id) {
+    out.artistId = mainArtistId;
   }
   if (!current?.aiSource) out.aiSource = 'boomy';
   return out;
